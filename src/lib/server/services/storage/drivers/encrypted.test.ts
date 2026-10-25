@@ -1,5 +1,6 @@
-import { afterAll, describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, spyOn, test } from "bun:test";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -102,5 +103,83 @@ describe("EncryptedStorageDriver", () => {
 		await driver(true).writeObject("empty", new Uint8Array());
 		expect(readFileSync(join(root, "empty")).length).toBe(sealedSize(0));
 		expect(await driver(true).getObjectSize("empty")).toBe(0);
+	});
+});
+
+describe("EncryptedStorageDriver writes", () => {
+	test("a blob is sealed like bytes", async () => {
+		const plain = pattern(CHUNK_SIZE + 9);
+		await driver(true).writeObject("blob.bin", new Blob([plain]));
+		expect(isSealed(readFileSync(join(root, "blob.bin")))).toBe(true);
+		expect(new Uint8Array(await driver(true).readObject("blob.bin"))).toEqual(
+			plain,
+		);
+	});
+
+	test("a failed write leaves neither the file nor its stage", async () => {
+		await mkdir(join(root, "failing"), { recursive: true });
+		const broken = new ReadableStream<Uint8Array>({
+			pull(controller) {
+				controller.error(new Error("source went away"));
+			},
+		});
+		await expect(
+			driver(true).writeObject("failing/out.bin", broken),
+		).rejects.toThrow("source went away");
+		expect(readdirSync(join(root, "failing"))).toEqual([]);
+	});
+
+	test("without a key, an encrypted root writes plaintext", async () => {
+		await driver(true, { current: undefined, previous: [] }).writeObject(
+			"unkeyed.txt",
+			new TextEncoder().encode("open"),
+		);
+		expect(readFileSync(join(root, "unkeyed.txt"), "utf8")).toBe("open");
+	});
+});
+
+describe("EncryptedStorageDriver passes the rest through", () => {
+	test("a link of a sealed file is the same sealed bytes", async () => {
+		await driver(true).writeObject("linked/src", new TextEncoder().encode("s"));
+		await driver(true).linkObject("linked/src", "linked/dest");
+		expect(readFileSync(join(root, "linked/dest"))).toEqual(
+			readFileSync(join(root, "linked/src")),
+		);
+		expect(
+			new TextDecoder().decode(await driver(false).readObject("linked/dest")),
+		).toBe("s");
+	});
+
+	test("existence, listing and deletion reach the inner driver", async () => {
+		const d = driver(true);
+		await d.ensureRootExists();
+		await d.writeObject("listed/a", new Uint8Array([1]));
+		await d.writeObject("listed/b", new Uint8Array([2]));
+		await d.writeObject("listed/c", new Uint8Array([3]));
+		expect(await d.objectExists("listed/a")).toBe(true);
+		expect((await d.listObjectKeys("listed")).toSorted()).toEqual([
+			"listed/a",
+			"listed/b",
+			"listed/c",
+		]);
+
+		await d.deleteObject("listed/a");
+		expect(await d.objectExists("listed/a")).toBe(false);
+		await d.deleteObjectsByPrefix("listed/");
+		expect(await d.objectExists("listed/b")).toBe(false);
+		expect(await d.objectExists("listed/c")).toBe(false);
+	});
+
+	test("disk space is the inner driver's", () => {
+		const inner = new LocalStorageDriver(root);
+		spyOn(inner, "getAvailableDiskSpace").mockReturnValue(1234);
+		expect(
+			new EncryptedStorageDriver(
+				inner,
+				root,
+				keys,
+				true,
+			).getAvailableDiskSpace(),
+		).toBe(1234);
 	});
 });

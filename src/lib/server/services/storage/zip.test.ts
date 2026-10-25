@@ -1,6 +1,13 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdir, rm, utimes, writeFile } from "node:fs/promises";
+import {
+	mkdir,
+	readlink,
+	rm,
+	symlink,
+	utimes,
+	writeFile,
+} from "node:fs/promises";
 import { join } from "node:path";
 
 import { seal } from "#lib/server/crypto/envelope.js";
@@ -347,5 +354,152 @@ describe("sweepStaleZips", () => {
 	test("never throws when the zip directory does not exist", async () => {
 		await rm(ZIP_DIR, { recursive: true, force: true });
 		await expect(sweepStaleZips()).resolves.toBeUndefined();
+	});
+});
+
+describe("ZipService archives", () => {
+	beforeEach(() => {
+		enqueueJob.mockClear();
+		awaitJob.mockClear();
+		awaitJob.mockImplementation(async () => {
+			await writeFile(lastJobOutput(), "zip");
+			return { status: "succeeded" };
+		});
+	});
+
+	function entries(): unknown[] {
+		const call = enqueueJob.mock.calls.at(-1)?.[0] as {
+			spec: { entries: unknown[] };
+		};
+		return call.spec.entries;
+	}
+
+	test("a history is numbered oldest first, the file itself last", async () => {
+		const stream = await new ZipService(fakeCtx(fakeDb({}))).createVersionsZip(
+			{ id: "f", path: "Songs/Song.wav", name: "Song.wav" },
+			[
+				{ id: "v1", name: "Song-001.wav" },
+				{ id: "v2", name: null },
+			],
+		);
+		expect(await new Response(stream).text()).toBe("zip");
+		expect(entries()).toEqual([
+			{ source: join("/vol", ".versions/f/v1"), name: "01 - Song-001.wav" },
+			{ source: join("/vol", ".versions/f/v2"), name: "02 - Song.wav" },
+			{ source: join("/vol", "Songs/Song.wav"), name: "03 - Song.wav" },
+		]);
+	});
+
+	test("a long history widens the numbers so they still sort", async () => {
+		const versions = Array.from({ length: 120 }, (_, i) => ({
+			id: `v${i}`,
+			name: `take ${i}.wav`,
+		}));
+		await new Response(
+			await new ZipService(fakeCtx(fakeDb({}))).createVersionsZip(
+				{ id: "f", path: "take.wav", name: "take.wav" },
+				versions,
+			),
+		).text();
+		const names = (entries() as Array<{ name: string }>).map(
+			(entry) => entry.name,
+		);
+		expect(names[0]).toBe("001 - take 0.wav");
+		expect(names.at(-1)).toBe("121 - take.wav");
+	});
+
+	test("a folder named with a trailing slash among paths is zipped whole", async () => {
+		const db = fakeDb({
+			files: [
+				[],
+				[
+					{ path: "f1/f2/k", name: "beach.png" },
+					{ path: "f1/top.txt", name: "top.txt" },
+				],
+			],
+			folders: [
+				[{ path: "f1", name: "Photos" }],
+				[{ path: "f1/f2", name: "2024" }],
+			],
+		});
+		await new Response(
+			await new ZipService(fakeCtx(db)).createZipFromPaths(["f1/"]),
+		).text();
+
+		expect(entries()).toEqual([
+			{ source: join("/vol", "f1/f2/k"), name: "Photos/2024/beach.png" },
+			{ source: join("/vol", "f1/top.txt"), name: "Photos/top.txt" },
+		]);
+	});
+
+	test("a folder path with a trailing slash finds its folder", async () => {
+		const db = fakeDb({
+			folders: [[{ path: "f1", name: "Photos" }], []],
+			files: [[{ path: "f1/a.png", name: "a.png" }]],
+		});
+		await new Response(
+			await new ZipService(fakeCtx(db)).createZipFromFolder("f1/"),
+		).text();
+		expect(entries()).toEqual([
+			{ source: join("/vol", "f1/a.png"), name: "Photos/a.png" },
+		]);
+	});
+
+	test("files missing on disk are skipped, not a failed archive", async () => {
+		awaitJob.mockImplementationOnce(async () => {
+			await writeFile(lastJobOutput(), "partial");
+			return {
+				status: "succeeded",
+				result: JSON.stringify({ skipped: ["/vol/gone.txt"] }),
+			} as never;
+		});
+		const db = fakeDb({ files: [[{ path: "gone.txt", name: "gone.txt" }]] });
+		const stream = await new ZipService(fakeCtx(db)).createZipFromPaths([
+			"gone.txt",
+		]);
+		expect(await new Response(stream).text()).toBe("partial");
+	});
+
+	test("every download is named the same", () => {
+		expect(
+			new ZipService(fakeCtx(fakeDb({}))).generateZipFilename(["a", "b"]),
+		).toBe("penombre-download.zip");
+	});
+});
+
+describe("streamAndCleanUp refusals", () => {
+	beforeEach(async () => {
+		await mkdir(ZIP_DIR, { recursive: true });
+	});
+
+	test("a sealed archive whose key is not loaded is refused and deleted", async () => {
+		const path = join(ZIP_DIR, "foreign.zip");
+		await writeFile(path, seal(Buffer.alloc(32, 9), Buffer.from("secret")));
+
+		await expect(
+			streamAndCleanUp(path, { current: Buffer.alloc(32, 1), previous: [] }),
+		).rejects.toThrow();
+
+		await waitUntil(() => !existsSync(path));
+		expect(existsSync(path)).toBe(false);
+	});
+});
+
+describe("sweepStaleZips failures", () => {
+	test("an entry it cannot stat is left and the sweep goes on", async () => {
+		await mkdir(ZIP_DIR, { recursive: true });
+		const dangling = join(ZIP_DIR, "dangling.zip");
+		const stale = join(ZIP_DIR, "stale.zip");
+		await rm(dangling, { force: true });
+		await symlink(join(ZIP_DIR, "nowhere"), dangling);
+		await writeFile(stale, "x");
+		const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+		await utimes(stale, twoHoursAgo, twoHoursAgo);
+
+		await expect(sweepStaleZips()).resolves.toBeUndefined();
+
+		expect(existsSync(stale)).toBe(false);
+		expect(await readlink(dangling)).toBe(join(ZIP_DIR, "nowhere"));
+		await rm(dangling, { force: true });
 	});
 });

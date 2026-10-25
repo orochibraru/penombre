@@ -1,6 +1,26 @@
-import { describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, spyOn, test } from "bun:test";
 
-const { DrivesService, driveVolume, driveVolumeId } = await import("./drives");
+import type { Database } from "#lib/server/db/index.js";
+import * as dbModule from "#lib/server/db/index.js";
+import {
+	driveMembers,
+	drives,
+	files,
+	folders,
+	user,
+} from "#lib/server/db/schema.js";
+import { migratedSqlite } from "#lib/server/db/test-utils.js";
+import { DriveAccessError } from "#lib/server/errors.js";
+import * as storageIndex from "#lib/server/services/storage/index.js";
+
+const {
+	DrivesService,
+	drivePath,
+	driveStorage,
+	driveVolume,
+	driveVolumeId,
+	rethrowRefusal,
+} = await import("./drives");
 
 /**
  * The db is stubbed per-call rather than by mocking `#lib/server/db/index.js` — a
@@ -150,5 +170,183 @@ describe("driveVolume", () => {
 	// volume, whose name can only ever be `[a-z0-9-]`.
 	test("volume ids are namespaced", () => {
 		expect(driveVolumeId("d1")).toBe("drive:d1");
+	});
+});
+
+describe("rethrowRefusal", () => {
+	test("lets a drive refusal through and swallows anything else", () => {
+		const refusal = new DriveAccessError(403, "no");
+		expect(() => rethrowRefusal(refusal)).toThrow(refusal);
+		expect(() => rethrowRefusal(new Error("disk full"))).not.toThrow();
+	});
+});
+
+describe("drivePath", () => {
+	test("each drive has its own root under the storage path", () => {
+		expect(drivePath("d1")).toBe("/tmp/penombre-test-storage/drives/d1");
+	});
+});
+
+describe("drives over the real migrations", () => {
+	let database: Database;
+	let svc: InstanceType<typeof DrivesService>;
+
+	beforeEach(async () => {
+		database = migratedSqlite();
+		await database.insert(user).values([
+			{ id: "owner", name: "Owner", email: "owner@x.test" },
+			{ id: "ada", name: "Ada", email: "ada@x.test" },
+			{ id: "bob", name: "Bob", email: "bob@x.test" },
+		]);
+		await database.insert(drives).values([
+			{ id: "d1", name: "Zebra", ownerId: "owner" },
+			{ id: "d2", name: "Alpha", ownerId: "ada" },
+			{ id: "d3", name: "Nobody's", ownerId: "bob" },
+		]);
+		await database.insert(driveMembers).values([
+			{ id: "m1", driveId: "d1", userId: "ada", role: "editor" },
+			{ id: "m2", driveId: "d1", userId: "bob", role: "viewer" },
+		]);
+		svc = new DrivesService();
+		Object.defineProperty(svc, "db", { value: database, configurable: true });
+	});
+
+	test("lists the drives a user owns or belongs to, by name", async () => {
+		expect(await svc.listForUser("ada")).toEqual([
+			{ id: "d2", name: "Alpha", owner: true, role: "manager" },
+			{ id: "d1", name: "Zebra", owner: false, role: "editor" },
+		]);
+		expect(await svc.listForUser("nobody")).toEqual([]);
+	});
+
+	test("a created drive belongs to its creator, who manages it", async () => {
+		const created = await svc.create("bob", "Band");
+		expect(created).toMatchObject({
+			name: "Band",
+			owner: true,
+			role: "manager",
+		});
+		expect(await svc.access(created.id, "bob")).toMatchObject({
+			role: "manager",
+		});
+	});
+
+	test("a manager renames a drive, an editor may not", async () => {
+		await svc.rename("d1", "owner", "Renamed");
+		await expect(svc.rename("d1", "bob", "Mine")).rejects.toMatchObject({
+			status: 403,
+		});
+		const names = await database.select({ name: drives.name }).from(drives);
+		expect(names.map((row) => row.name)).toContain("Renamed");
+		expect(names.map((row) => row.name)).not.toContain("Mine");
+	});
+
+	test("the owner deletes the drive with its rows, and nothing else", async () => {
+		await database.insert(folders).values([
+			{
+				id: "folder-1",
+				name: "Mix",
+				ownerId: "owner",
+				path: "Mix",
+				volumeId: "drive:d1",
+			},
+			{ id: "folder-2", name: "Mine", ownerId: "owner", path: "Mine" },
+		]);
+		await database.insert(files).values([
+			{
+				id: "fi1",
+				name: "a.wav",
+				ownerId: "owner",
+				path: "Mix/a.wav",
+				volumeId: "drive:d1",
+			},
+			{ id: "fi2", name: "b.wav", ownerId: "owner", path: "b.wav" },
+			{
+				id: "fi3",
+				name: "c.wav",
+				ownerId: "ada",
+				path: "c.wav",
+				volumeId: "drive:d2",
+			},
+		]);
+
+		await svc.remove("d1", "owner");
+
+		const fileIds = await database.select({ id: files.id }).from(files);
+		const folderIds = await database.select({ id: folders.id }).from(folders);
+		const driveIds = await database.select({ id: drives.id }).from(drives);
+		expect(fileIds.map((row) => row.id).toSorted()).toEqual(["fi2", "fi3"]);
+		expect(folderIds.map((row) => row.id)).toEqual(["folder-2"]);
+		expect(driveIds.map((row) => row.id).toSorted()).toEqual(["d2", "d3"]);
+	});
+
+	test("lists the owner first, as a manager, then the members", async () => {
+		expect(await svc.members("d1", "bob")).toEqual([
+			{
+				userId: "owner",
+				name: "Owner",
+				email: "owner@x.test",
+				image: null,
+				role: "manager",
+				owner: true,
+			},
+			{
+				userId: "ada",
+				name: "Ada",
+				email: "ada@x.test",
+				image: null,
+				role: "editor",
+				owner: false,
+			},
+			{
+				userId: "bob",
+				name: "Bob",
+				email: "bob@x.test",
+				image: null,
+				role: "viewer",
+				owner: false,
+			},
+		]);
+		await expect(svc.members("d2", "bob")).rejects.toMatchObject({
+			status: 404,
+		});
+	});
+});
+
+describe("driveStorage", () => {
+	const drive = { id: "d1", name: "Team", ownerId: "owner" } as never;
+	const actor = { id: "ada", name: "Ada" } as never;
+
+	test("a drive whose owner is gone is reported missing", async () => {
+		await expect(driveStorage(drive, "editor", actor)).rejects.toMatchObject({
+			status: 404,
+		});
+	});
+
+	test("opens the owner's rows as the actor and makes the drive's directory", async () => {
+		const database = migratedSqlite();
+		await database
+			.insert(user)
+			.values({ id: "owner", name: "Owner", email: "owner@x.test" });
+		const made: unknown[][] = [];
+		const getDb = spyOn(dbModule, "getDb").mockReturnValue(database);
+		const constructed = spyOn(
+			storageIndex,
+			"StorageService",
+		).mockImplementation(function (...args: unknown[]) {
+			made.push(args);
+			return { ensureUserDirectory: async () => made.push(["mkdir"]) };
+		} as never);
+		try {
+			await driveStorage(drive, "viewer", actor);
+			const [owner, volume, by] = made[0] ?? [];
+			expect(owner).toMatchObject({ id: "owner" });
+			expect(volume).toMatchObject({ name: "drive:d1", readOnly: true });
+			expect(by).toBe(actor);
+			expect(made[1]).toEqual(["mkdir"]);
+		} finally {
+			getDb.mockRestore();
+			constructed.mockRestore();
+		}
 	});
 });

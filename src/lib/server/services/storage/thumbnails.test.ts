@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -17,6 +18,8 @@ mock.module("#lib/server/services/jobs.js", () => ({
 const { ThumbnailService } = await import("./thumbnails");
 const { LocalStorageDriver } = await import("./drivers/local");
 const { seal } = await import("#lib/server/crypto/envelope.js");
+const { migratedSqlite } = await import("#lib/server/db/test-utils.js");
+const { files, user } = await import("#lib/server/db/schema.js");
 
 describe("ThumbnailService", () => {
 	let root = "";
@@ -177,5 +180,178 @@ describe("ThumbnailService", () => {
 			priority: "background",
 		});
 		expect(awaitJob).not.toHaveBeenCalled();
+	});
+});
+
+describe("ThumbnailService renders on disk", () => {
+	let root = "";
+	const service = () => new ThumbnailService({ storagePath: root } as never);
+	const thumbs = () => join(root, ".thumbnails");
+
+	beforeEach(async () => {
+		root = await mkdtemp(join(tmpdir(), "penombre-thumbs-"));
+		enqueueJob.mockClear();
+		awaitJob.mockClear();
+	});
+	afterEach(async () => {
+		await rm(root, { recursive: true, force: true });
+	});
+
+	test("deleting a key's renders keeps every other key's", async () => {
+		await mkdir(thumbs());
+		for (const name of [
+			"a_b.png_300.webp",
+			"a_b.png_1600.webp",
+			"a_b.png.old_300.webp",
+			"c.png_300.webp",
+		]) {
+			await writeFile(join(thumbs(), name), "x");
+		}
+		await service().deleteThumbnails("a/b.png");
+		expect((await readdir(thumbs())).toSorted()).toEqual([
+			"a_b.png.old_300.webp",
+			"c.png_300.webp",
+		]);
+	});
+
+	test("deleting renders where there are none does nothing", async () => {
+		await service().deleteThumbnails("a.png");
+		expect(existsSync(thumbs())).toBe(false);
+	});
+
+	test("an unreadable cache never fails the delete", async () => {
+		await writeFile(thumbs(), "not a directory");
+		await expect(service().deleteThumbnails("a.png")).resolves.toBeUndefined();
+	});
+
+	test("adopting skips staged renders and renders already adopted", async () => {
+		await mkdir(thumbs());
+		await writeFile(join(thumbs(), "f.wav_peaks.json"), "[1]");
+		await writeFile(join(thumbs(), "f.wav_300.webp.job.tmp"), "half");
+		await writeFile(join(thumbs(), "g.wav_peaks.json"), "mine");
+		await service().adopt("f.wav", "g.wav");
+		expect((await readdir(thumbs())).toSorted()).toEqual([
+			"f.wav_300.webp.job.tmp",
+			"f.wav_peaks.json",
+			"g.wav_peaks.json",
+		]);
+		expect(await Bun.file(join(thumbs(), "g.wav_peaks.json")).text()).toBe(
+			"mine",
+		);
+	});
+
+	test("adopting with no cache does nothing", async () => {
+		await expect(service().adopt("f.wav", "g.wav")).resolves.toBeUndefined();
+	});
+
+	test("a PDF is rendered by the worker from the file itself", async () => {
+		await service().warm("doc.pdf", "application/pdf");
+		expect(enqueueJob.mock.calls[0]?.[0]).toMatchObject({
+			spec: { kind: "pdf", source: join(root, "doc.pdf"), size: 300 },
+		});
+	});
+
+	test("warming what is already rendered enqueues nothing", async () => {
+		await mkdir(thumbs());
+		await writeFile(join(thumbs(), "v.mp4_300.webp"), "x");
+		await service().warm("v.mp4", "video/mp4");
+		await service().warm("x.zip", "application/zip");
+		expect(enqueueJob).not.toHaveBeenCalled();
+	});
+
+	test("a failed enqueue never fails the warm-up", async () => {
+		enqueueJob.mockImplementationOnce(async () => {
+			throw new Error("database is locked");
+		});
+		await expect(service().warm("v.mp4", "video/mp4")).resolves.toBeUndefined();
+	});
+
+	test("a job that succeeded without a render is a miss", async () => {
+		expect(
+			await service().generateThumbnail("x.png", "image/png", 100),
+		).toBeNull();
+		expect(enqueueJob).toHaveBeenCalledTimes(1);
+	});
+
+	test("a document laid out before is not laid out again", async () => {
+		const readObject = mock(async () => new ArrayBuffer(0));
+		await mkdir(thumbs());
+		await writeFile(join(thumbs(), "r.docx_page.pdf"), "%PDF-1.7");
+		const paged = new ThumbnailService({
+			storagePath: root,
+			driver: { readObject },
+		} as never);
+		await paged.generateThumbnail(
+			"r.docx",
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+		);
+		expect(readObject).not.toHaveBeenCalled();
+		expect(enqueueJob).toHaveBeenCalledTimes(1);
+	});
+
+	test("a document that cannot be read has no thumbnail and no job", async () => {
+		const paged = new ThumbnailService({
+			storagePath: root,
+			driver: {
+				readObject: async () => {
+					throw new Error("gone");
+				},
+			},
+		} as never);
+		expect(
+			await paged.generateThumbnail(
+				"r.docx",
+				"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			),
+		).toBeNull();
+		expect(enqueueJob).not.toHaveBeenCalled();
+	});
+});
+
+describe("ThumbnailService.getThumbnail", () => {
+	let root = "";
+
+	beforeEach(async () => {
+		root = await mkdtemp(join(tmpdir(), "penombre-thumbs-"));
+	});
+	afterEach(async () => {
+		await rm(root, { recursive: true, force: true });
+	});
+
+	async function context() {
+		const db = migratedSqlite();
+		await db.insert(user).values({
+			id: "u",
+			name: "u",
+			email: "u@x",
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
+		await db.insert(files).values({
+			id: "f",
+			name: "a.png",
+			ownerId: "u",
+			path: "a.png",
+			contentType: "image/png",
+		});
+		return { user: { id: "u" }, volumeId: null, storagePath: root, db };
+	}
+
+	test("renders by the row's content type", async () => {
+		await mkdir(join(root, ".thumbnails"));
+		await writeFile(join(root, ".thumbnails", "a.png_300.webp"), "tile");
+		const result = await new ThumbnailService(
+			(await context()) as never,
+		).getThumbnail("a.png");
+		expect(result).toMatchObject({ contentType: "image/webp" });
+		expect(result?.buffer?.toString()).toBe("tile");
+	});
+
+	test("a key with no row has no thumbnail", async () => {
+		expect(
+			await new ThumbnailService((await context()) as never).getThumbnail(
+				"b.png",
+			),
+		).toBeNull();
 	});
 });

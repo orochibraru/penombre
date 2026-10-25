@@ -4,6 +4,7 @@ import { describe, expect, test } from "bun:test";
 import { fail } from "@sveltejs/kit";
 
 import { auth } from "#lib/server/auth/index.js";
+import { getConfig } from "#lib/server/config.js";
 import type { UserWithSession } from "#lib/server/db/schema.js";
 
 const mockGetSession = auth.api.getSession as unknown as Mock<
@@ -16,7 +17,9 @@ const mockAdminUpdateUser = auth.api.adminUpdateUser as unknown as Mock<
 	typeof auth.api.adminUpdateUser
 >;
 
-const { actions } = await import("./+page.server");
+const mockGetConfig = getConfig as unknown as Mock<typeof getConfig>;
+
+const { actions, load } = await import("./+page.server");
 
 function createRequest(data: Record<string, string>) {
 	const formData = new FormData();
@@ -57,6 +60,26 @@ const sessionUser: UserWithSession = {
 		impersonatedBy: null,
 	},
 };
+
+describe("load", () => {
+	test("offers address changes only when mail can be sent", async () => {
+		expect(await load()).toEqual({ smtpAvailable: false });
+
+		mockGetConfig.mockReturnValueOnce({
+			...getConfig(),
+			smtp: {
+				enabled: true,
+				host: "smtp.example",
+				port: 587,
+				user: "mailer",
+				password: "secret",
+				from: "drive@example",
+				secure: false,
+			},
+		} as never);
+		expect(await load()).toEqual({ smtpAvailable: true });
+	});
+});
 
 describe("updateAccount", () => {
 	test("returns 400 when both name and email are missing", async () => {

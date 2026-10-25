@@ -473,6 +473,59 @@ describe("the sheet's keyboard", () => {
 		expect(last()).toBe("y,=SUM(\n");
 	});
 
+	it("fills, redoes, and walks to the row's ends and up a page", async () => {
+		const { gridKey } = await import("./keys");
+		const { sheet, last } = open("1,2\n3,4\n5,6\n");
+		const { context: ctx } = context();
+		sheet.selectCell({ row: 0, col: 0 });
+		sheet.selectCell({ row: 2, col: 0 }, true);
+		expect(gridKey(sheet, press("d", { ctrlKey: true }), ctx)).toBe("prevent");
+		expect(last()).toBe("1,2\n1,4\n1,6\n");
+		sheet.selectCell({ row: 0, col: 0 });
+		sheet.selectCell({ row: 0, col: 1 }, true);
+		gridKey(sheet, press("r", { metaKey: true }), ctx);
+		expect(last()).toBe("1,1\n1,4\n1,6\n");
+		gridKey(sheet, press("z", { ctrlKey: true }), ctx);
+		expect(last()).toBe("1,2\n1,4\n1,6\n");
+		gridKey(sheet, press("y", { ctrlKey: true }), ctx);
+		expect(last()).toBe("1,1\n1,4\n1,6\n");
+
+		sheet.selectCell({ row: 1, col: 0 });
+		gridKey(sheet, press("End"), ctx);
+		expect(sheet.selection.anchor).toEqual({ row: 1, col: 1 });
+		gridKey(sheet, press("Backspace"), ctx);
+		expect(last()).toBe("1,1\n1,\n1,6\n");
+
+		sheet.selectCell({ row: 15, col: 0 });
+		gridKey(sheet, press("PageUp"), ctx);
+		expect(sheet.selection.anchor.row).toBe(5);
+		gridKey(sheet, press("PageUp", { shiftKey: true }), ctx);
+		expect(sheet.rect).toMatchObject({ top: 0, bottom: 5 });
+		expect(gridKey(sheet, press("F5"), ctx)).toBeNull();
+	});
+
+	it("hands formatting shortcuts to the page, never in view mode", async () => {
+		const { gridKey } = await import("./keys");
+		const { sheet } = open("a\n");
+		const seen: string[] = [];
+		const ctx = {
+			...context().context,
+			format: (event: KeyboardEvent) => {
+				seen.push(event.key);
+				return event.key === "b";
+			},
+		};
+		expect(gridKey(sheet, press("b", { metaKey: true }), ctx)).toBe("prevent");
+		expect(sheet.editing).toBeNull();
+		// Not a format: falls through to typing.
+		expect(gridKey(sheet, press("k"), ctx)).toBe("prevent");
+		expect(sheet.editing?.draft).toBe("k");
+		sheet.cancel();
+		sheet.readOnly = true;
+		expect(gridKey(sheet, press("b", { metaKey: true }), ctx)).toBeNull();
+		expect(seen).toEqual(["b", "k"]);
+	});
+
 	it("in view mode, selects and copies but changes nothing", () => {
 		const { sheet, saved } = open("a,b\n1,2\n");
 		sheet.readOnly = true;
@@ -654,6 +707,7 @@ describe("SheetState layout", () => {
 		const { sheet, last } = open();
 		sheet.header = false;
 		sheet.frozen = true;
+		expect(sheet.frozen).toBe(true);
 		const saved = last().sheets[0];
 		expect(saved?.freeze).toEqual({ rows: 0, cols: 1 });
 		expect(saved?.tables).toEqual([
@@ -674,5 +728,134 @@ describe("SheetState layout", () => {
 			{ part: "xl/tables/table1.xml", ref: "A1:B3" },
 		]);
 		expect(last().sheets[0]?.widths).toEqual([201]);
+	});
+});
+
+describe("SheetState charts", () => {
+	const content = JSON.stringify({
+		nextId: 2,
+		sheets: [
+			{
+				id: 1,
+				name: "Data",
+				rows: [
+					["Month", "Sales"],
+					["Jan", "3"],
+					["Feb", "5"],
+				],
+			},
+		],
+	});
+
+	interface Saved {
+		sheets: { charts?: { id: string; anchor: { row: number } }[] }[];
+	}
+
+	function open(workbook = true) {
+		const saved: string[] = [];
+		const sheet = new SheetState(
+			workbook ? content : "Month,Sales\nJan,3\n",
+			workbook,
+			(text) => saved.push(text),
+		);
+		return {
+			sheet,
+			saved,
+			last: () => JSON.parse(saved.at(-1) ?? "{}") as Saved,
+		};
+	}
+
+	it("inserts a chart over the region around the cell, editor open", () => {
+		const { sheet, last } = open();
+		sheet.selectCell({ row: 1, col: 1 });
+		sheet.insertChart();
+		expect(sheet.charts).toHaveLength(1);
+		expect(sheet.chartPanel).toBe(true);
+		expect(sheet.chart?.id).toBe(sheet.chartId ?? "");
+		expect(sheet.chart?.anchor).toMatchObject({ row: 0, col: 3 });
+		expect(sheet.chart?.series).toHaveLength(1);
+		expect(sheet.chart?.series[0]?.color).toBe("#2a78d6");
+		expect(last().sheets[0]?.charts?.[0]?.id).toBe(sheet.chartId ?? "");
+	});
+
+	it("starts below a frozen header row", () => {
+		const { sheet } = open();
+		sheet.header = true;
+		sheet.selectCell({ row: 0, col: 0 });
+		sheet.selectCell({ row: 2, col: 1 }, true);
+		sheet.insertChart();
+		expect(sheet.chart?.anchor).toMatchObject({ row: 1, col: 3 });
+	});
+
+	it("picks, copies, pastes, edits and deletes", () => {
+		const { sheet, last } = open();
+		sheet.insertChart();
+		const first = sheet.chartId;
+		sheet.selectChart(null);
+		expect(sheet.chart).toBeNull();
+		expect(sheet.chartPanel).toBe(false);
+		sheet.selectChart(first);
+		// Picking a chart does not open its editor.
+		expect(sheet.chartPanel).toBe(false);
+
+		sheet.copyChart();
+		sheet.pasteChart();
+		expect(sheet.charts).toHaveLength(2);
+		expect(sheet.chartId).not.toBe(first);
+		expect(sheet.chart?.anchor).toMatchObject({ row: 1, col: 4 });
+
+		const pasted = sheet.chart;
+		if (!pasted) {
+			throw new Error("no chart picked");
+		}
+		sheet.updateChart({ ...pasted, title: "Sales by month" });
+		expect(sheet.chart?.title).toBe("Sales by month");
+		expect(sheet.charts.find((chart) => chart.id === first)?.title).toBe(
+			undefined,
+		);
+
+		sheet.deleteChart();
+		expect(sheet.charts.map((chart) => chart.id)).toEqual([first ?? ""]);
+		expect(sheet.chartId).toBeNull();
+		expect(last().sheets[0]?.charts).toHaveLength(1);
+		sheet.undo();
+		expect(sheet.charts).toHaveLength(2);
+	});
+
+	it("never pastes a chart it cannot edit", () => {
+		const { sheet } = open();
+		sheet.insertChart();
+		const chart = sheet.chart;
+		if (!chart) {
+			throw new Error("no chart picked");
+		}
+		sheet.pasteChart({ ...chart, unsupported: ["trendline"] });
+		expect(sheet.charts).toHaveLength(1);
+		// Nothing copied yet.
+		sheet.pasteChart();
+		expect(sheet.charts).toHaveLength(1);
+	});
+
+	it("changes no chart in view mode or in a CSV", () => {
+		const { sheet, saved } = open();
+		sheet.insertChart();
+		const chart = sheet.chart;
+		if (!chart) {
+			throw new Error("no chart picked");
+		}
+		sheet.copyChart();
+		const count = saved.length;
+		sheet.readOnly = true;
+		sheet.insertChart();
+		sheet.updateChart({ ...chart, title: "x" });
+		sheet.pasteChart();
+		sheet.deleteChart();
+		expect(saved).toHaveLength(count);
+		expect(sheet.charts).toHaveLength(1);
+
+		const csv = open(false);
+		csv.sheet.insertChart();
+		expect(csv.sheet.charts).toHaveLength(0);
+		expect(csv.saved).toHaveLength(0);
 	});
 });

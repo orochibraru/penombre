@@ -340,3 +340,190 @@ describe("searchUsers", () => {
 		expect(await names("oro")).toEqual([]);
 	});
 });
+
+describe("against real SQLite", () => {
+	async function seeded() {
+		const database = migratedSqlite();
+		await database.insert(user).values([
+			{ id: "owner", name: "Owner", email: "owner@x.test" },
+			{ id: "u2", name: "Recipient", email: "u2@x.test" },
+			{ id: "u3", name: "Other", email: "u3@x.test" },
+		]);
+		await database.insert(folders).values([
+			{ id: "docs", name: "Docs", ownerId: "owner", path: "docs" },
+			{
+				id: "binned",
+				name: "Binned",
+				ownerId: "owner",
+				path: "binned",
+				isTrashed: true,
+			},
+		]);
+		await database.insert(files).values([
+			{
+				id: "f1",
+				name: "a.txt",
+				ownerId: "owner",
+				path: "docs/a.txt",
+				size: 12,
+				category: "DOCUMENT",
+			},
+			{ id: "f2", name: "b.txt", ownerId: "owner", path: "b.txt" },
+		]);
+		const service = new SharingService();
+		(service as any).db = database;
+		return service;
+	}
+
+	const grant = (overrides: Record<string, unknown> = {}) =>
+		({
+			ownerId: "owner",
+			resourceType: "file",
+			resourceId: "f1",
+			userIds: ["u2"],
+			permission: "read",
+			...overrides,
+		}) as never;
+
+	test("onShared hears only the people newly granted", async () => {
+		const service = await seeded();
+		const heard: unknown[] = [];
+		const onShared = async (granted: unknown) => {
+			heard.push(granted);
+		};
+
+		await service.share({ ...grant(), onShared } as never);
+		await service.share({
+			...grant({ userIds: ["u2", "u3"] }),
+			onShared,
+		} as never);
+
+		expect(heard).toEqual([
+			{ userIds: ["u2"], resourceName: "a.txt" },
+			{ userIds: ["u3"], resourceName: "a.txt" },
+		]);
+	});
+
+	test("a failing announcement does not fail the share", async () => {
+		const service = await seeded();
+		const shared = await service.share({
+			...grant(),
+			onShared: () => Promise.reject(new Error("mail down")),
+		} as never);
+
+		expect(shared).toBe(true);
+		expect(await service.listForResource("owner", "file", "f1")).toHaveLength(
+			1,
+		);
+	});
+
+	test("listForResource names each recipient and their permission", async () => {
+		const service = await seeded();
+		await service.share(grant());
+		await service.share(grant({ userIds: ["u3"], permission: "write" }));
+
+		const listed = await service.listForResource("owner", "file", "f1");
+		expect(
+			listed
+				.map((entry) => [entry.user.email, entry.permission, entry.expiration])
+				.sort((left, right) => String(left[0]).localeCompare(String(right[0]))),
+		).toEqual([
+			["u2@x.test", "read", null],
+			["u3@x.test", "write", null],
+		]);
+		expect(await service.listForResource("u2", "file", "f1")).toEqual([]);
+	});
+
+	test("changing someone's permission replaces the old grant", async () => {
+		const service = await seeded();
+		await service.share(grant());
+		await service.share(grant({ permission: "admin" }));
+
+		expect(
+			(await service.listForResource("owner", "file", "f1")).map(
+				(entry) => entry.permission,
+			),
+		).toEqual(["admin"]);
+	});
+
+	test("listSharedWithMe lists files from their folder and skips trashed items", async () => {
+		const service = await seeded();
+		await service.share(grant());
+		await service.share(
+			grant({
+				resourceType: "folder",
+				resourceId: "docs",
+				permission: "write",
+			}),
+		);
+		await service.share(
+			grant({ resourceType: "folder", resourceId: "binned" }),
+		);
+
+		const listed = await service.listSharedWithMe("u2");
+		expect(
+			listed
+				.map((entry) => ({
+					name: entry.name,
+					category: entry.category,
+					size: entry.size,
+					path: entry.path,
+					permission: entry.permission,
+					owner: entry.owner,
+				}))
+				.sort((left, right) => left.name.localeCompare(right.name)),
+		).toEqual([
+			{
+				name: "a.txt",
+				category: "DOCUMENT",
+				size: 12,
+				path: "docs",
+				permission: "read",
+				owner: { name: "Owner", email: "owner@x.test" },
+			},
+			{
+				name: "Docs",
+				category: "FOLDER",
+				size: 0,
+				path: "docs",
+				permission: "write",
+				owner: { name: "Owner", email: "owner@x.test" },
+			},
+		]);
+		expect(await service.listSharedWithMe("u3")).toEqual([]);
+	});
+
+	test("a file at the owner's root is browsed from the root", async () => {
+		const service = await seeded();
+		await service.share(grant({ resourceId: "f2" }));
+		expect(await service.listSharedWithMe("u2")).toMatchObject([
+			{ name: "b.txt", path: "" },
+		]);
+	});
+
+	test("resolveAccess answers only the recipient of that grant", async () => {
+		const service = await seeded();
+		await service.share(grant({ permission: "write" }));
+		const [entry] = await service.listForResource("owner", "file", "f1");
+		const sharedWithId = entry?.sharedWithId ?? "";
+
+		expect(await service.resolveAccess("u2", sharedWithId)).toEqual({
+			ownerId: "owner",
+			resourceType: "file",
+			resourceId: "f1",
+			permission: "write",
+		});
+		expect(await service.resolveAccess("u3", sharedWithId)).toBeNull();
+		expect(await service.resolveAccess("u2", "missing")).toBeNull();
+	});
+
+	test("revoking the last recipient removes the sharing", async () => {
+		const service = await seeded();
+		await service.share(grant());
+		const [entry] = await service.listForResource("owner", "file", "f1");
+
+		expect(await service.revoke("owner", entry?.sharedWithId ?? "")).toBe(true);
+		expect(await service.listSharedWithMe("u2")).toEqual([]);
+		expect(await (service as any).db.select().from(sharings)).toEqual([]);
+	});
+});

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
-import type { Database } from "#lib/server/db/index.js";
+import { type Database, getDb } from "#lib/server/db/index.js";
 import { filePresence, files, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 
@@ -70,5 +70,21 @@ describe("presence", () => {
 		).toBeNull();
 		const rows = await db.select().from(filePresence);
 		expect(rows.map((row) => row.userId)).toEqual(["bob"]);
+	});
+});
+
+describe("presence through a storage service", () => {
+	test("someone who can open the file is marked and sees the others", async () => {
+		await presence.beat("f1", "bob", "editing");
+		const reader = { findFileById: () => Promise.resolve("f1") };
+		expect(
+			await presence.beatIfReachable(reader, "f1", "cy", "viewing"),
+		).toEqual([{ userId: "bob", name: "Bob", mode: "editing" }]);
+		const rows = await db.select().from(filePresence);
+		expect(rows.map((row) => row.userId).toSorted()).toEqual(["bob", "cy"]);
+	});
+
+	test("reads the app's database unless a test shadows it", () => {
+		expect(Reflect.get(new PresenceService(), "db")).toBe(getDb());
 	});
 });

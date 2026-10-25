@@ -18,7 +18,7 @@ import { getDb } from "#lib/server/db/index.js";
 // ---------------------------------------------------------------------------
 
 mock.module("#lib/server/config.js", () => ({
-	getConfig: () => ({
+	getConfig: mock(() => ({
 		smtp: undefined,
 		appName: "Penombre",
 		origin: "http://localhost:5173",
@@ -28,18 +28,22 @@ mock.module("#lib/server/config.js", () => ({
 			minPasswordLength: 8,
 		},
 		worker: { mode: "embedded", concurrency: 4 },
-	}),
-	getStoragePath: () => "/tmp/penombre-test-storage",
-	envProvided: () => ({
+	})),
+	getStoragePath: mock(() => "/tmp/penombre-test-storage"),
+	envProvided: mock(() => ({
 		emailSignIn: true,
 		oauthSignIn: true,
 		passkeySignIn: false,
 		minPasswordLength: true,
 		smtp: true,
-	}),
-	isSimpleMode: () => false,
-	isAuthBypassed: () => false,
-	getVolume: () => undefined,
+		versionCheck: false,
+		releaseChannel: false,
+		dataRetention: false,
+	})),
+	isSimpleMode: mock(() => false),
+	isAuthBypassed: mock(() => false),
+	getVolume: mock(() => undefined),
+	getVolumes: mock(() => []),
 }));
 
 // ---------------------------------------------------------------------------

@@ -104,6 +104,13 @@ Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks
 a database or Redis running. `bunfig.toml` also sets `rerunEach = 3` (each test
 runs 3x to catch flakiness) and coverage thresholds.
 
+**The coverage threshold is per file.** Every source file a test loads must
+reach it on its own; the "All files" total is not checked. The keys are
+`lines`/`functions`: the singular spellings were silently ignored, a key left
+out of the table stays at Bun's 0.9, and `statements` is accepted and never
+measured. A new test that imports an untested module can therefore fail the push
+on that module.
+
 Git hooks run via [prek](https://github.com/j178/prek)
 (`.pre-commit-config.yaml`, wired by `bun install`'s `prepare` script; the
 installed hook types come from `default_install_hook_types`). Commits run the
@@ -2603,9 +2610,8 @@ native binary in its postinstall. Bun skips install scripts for packages not in
 `bun fmt` (`[fmt]` in `bunfig.toml`) formats and sorts imports in every language
 it knows, Svelte markup included, which Biome never touched. A `.prettierrc` or
 `.oxfmtrc.json` anywhere switches it to that tool's behaviour, Svelte off, so
-the repo must not carry one. `tabWidth = 2` and `newlinesBetween = false` keep
-Biome's line widths and ungrouped imports; without them `.editorconfig`'s
-`indent_size = 4` re-wrapped half the codebase.
+the repo must not carry one. `tabWidth = 2` keeps Biome's line widths; without
+it `.editorconfig`'s `indent_size = 4` re-wrapped half the codebase.
 
 `bun check` only replaces `tsc` for `tsconfig.scripts.json`: it reads no
 `.svelte` file and none of Kit's injected load types, so the app stays on

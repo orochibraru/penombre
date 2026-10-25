@@ -10,7 +10,7 @@ import { migratedSqlite } from "#lib/server/db/test-utils.js";
 
 import type { StorageContext } from "./context";
 import type { ThumbnailService } from "./thumbnails";
-import { matchDiskNames } from "./uuid-names";
+import { matchDiskNames, renameOnDisk } from "./uuid-names";
 
 const A = "810aa574-41f8-43c8-8767-a3f071b34020";
 const B = "68f60a88-23e8-418e-a944-6990d7cf8038";
@@ -123,5 +123,84 @@ describe("matching disk names to row names", () => {
 			"Song-take3.wav",
 			"Song.wav",
 		]);
+	});
+});
+
+describe("renaming on disk", () => {
+	test("a name that is already the disk name moves nothing", async () => {
+		await writeFile(join(root, "Song.wav"), "x");
+		await db
+			.insert(files)
+			.values({ id: A, name: "Song.wav", ownerId: "u", path: "Song.wav" });
+
+		expect(
+			await renameOnDisk(ctx, thumbnails, {
+				path: "Song.wav",
+				name: "Song.wav",
+				kind: "file",
+			}),
+		).toBe("Song.wav");
+
+		expect(await readdir(root)).toEqual(["Song.wav"]);
+		expect(await paths()).toEqual(["Song.wav"]);
+	});
+
+	test("a folder whose directory is gone throws and drops its claim", async () => {
+		await db
+			.insert(folders)
+			.values({ id: A, name: "Old", ownerId: "u", path: "Old" });
+
+		await expect(
+			renameOnDisk(ctx, thumbnails, {
+				path: "Old",
+				name: "New",
+				kind: "folder",
+			}),
+		).rejects.toThrow();
+
+		expect(await readdir(root)).toEqual([]);
+		expect(await paths()).toEqual(["Old"]);
+	});
+
+	test("a row update that fails puts the bytes back", async () => {
+		await writeFile(join(root, "take.wav"), "bytes");
+		await db
+			.insert(files)
+			.values({ id: A, name: "take.wav", ownerId: "u", path: "take.wav" });
+		const failing = {
+			...ctx,
+			db: new Proxy(db, {
+				get: (target, property) =>
+					property === "update"
+						? () => {
+								throw new Error("database is locked");
+							}
+						: Reflect.get(target, property),
+			}),
+		} as StorageContext;
+
+		await expect(
+			renameOnDisk(failing, thumbnails, {
+				path: "take.wav",
+				name: "Final.wav",
+				kind: "file",
+			}),
+		).rejects.toThrow("database is locked");
+
+		expect(await readdir(root)).toEqual(["take.wav"]);
+		expect(await paths()).toEqual(["take.wav"]);
+	});
+
+	test("a database it cannot read renames nothing", async () => {
+		const broken = {
+			...ctx,
+			db: {
+				select: () => {
+					throw new Error("no database");
+				},
+			},
+		} as unknown as StorageContext;
+
+		expect(await matchDiskNames(broken, thumbnails)).toBe(0);
 	});
 });

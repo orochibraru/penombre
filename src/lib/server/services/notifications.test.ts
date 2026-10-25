@@ -1,4 +1,25 @@
-import { describe, expect, test } from "bun:test";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	type Mock,
+	spyOn,
+	test,
+} from "bun:test";
+
+import { getDb } from "#lib/server/db/index.js";
+import type { Database } from "#lib/server/db/index.js";
+import {
+	fileNotes,
+	files,
+	notifications,
+	user,
+} from "#lib/server/db/schema.js";
+import { migratedSqlite } from "#lib/server/db/test-utils.js";
+import type { EmailContent } from "#lib/server/email-template.js";
+import { Email } from "#lib/server/email.js";
+import * as appSettings from "#lib/server/services/app-settings.js";
 
 const { NotificationService } = await import("./notifications");
 
@@ -156,5 +177,192 @@ describe("noteParticipants", () => {
 	test("excludes the author", async () => {
 		const { svc } = serviceWith([[{ userId: "u2" }, { userId: "u3" }]]);
 		expect(await svc.noteParticipants("f1", "u1")).toEqual(["u2", "u3"]);
+	});
+});
+
+describe("over the real migrations", () => {
+	let database: Database;
+	let svc: InstanceType<typeof NotificationService>;
+	let sent: { to: string; content: EmailContent }[];
+	let smtp: Mock<typeof appSettings.getSmtpSettings>;
+	let send: Mock<typeof Email.sendTemplate>;
+
+	const mail = {
+		enabled: true,
+		host: "smtp.test",
+		port: 587,
+		user: "",
+		password: "",
+		from: "drive@x.test",
+		secure: false,
+	};
+
+	beforeEach(async () => {
+		database = migratedSqlite();
+		await database.insert(user).values([
+			{ id: "ada", name: "Ada", email: "ada@x.test" },
+			{ id: "bob", name: "Bob", email: "bob@x.test" },
+		]);
+		svc = new NotificationService();
+		Object.defineProperty(svc, "db", { value: database, configurable: true });
+		choosing(svc, {});
+		sent = [];
+		smtp = spyOn(appSettings, "getSmtpSettings").mockResolvedValue(mail);
+		send = spyOn(Email, "sendTemplate").mockImplementation(
+			async (to, content) => {
+				sent.push({ to, content });
+			},
+		);
+	});
+
+	afterEach(() => {
+		smtp.mockRestore();
+		send.mockRestore();
+	});
+
+	test("lists a user's own notifications, newest first", async () => {
+		await database.insert(notifications).values([
+			{
+				id: "n1",
+				userId: "ada",
+				type: "note",
+				actorName: "Bob",
+				resourceName: "take.wav",
+				link: "/go/file/f1",
+				createdAt: new Date(1_000),
+			},
+			{
+				id: "n2",
+				userId: "ada",
+				type: "share",
+				readAt: new Date(3_000),
+				createdAt: new Date(2_000),
+			},
+			{ id: "n3", userId: "bob", type: "share" },
+		]);
+		expect(await svc.list("ada")).toEqual([
+			{
+				id: "n2",
+				type: "share",
+				actorName: null,
+				resourceName: null,
+				link: null,
+				read: true,
+				createdAt: new Date(2_000).toISOString(),
+			},
+			{
+				id: "n1",
+				type: "note",
+				actorName: "Bob",
+				resourceName: "take.wav",
+				link: "/go/file/f1",
+				read: false,
+				createdAt: new Date(1_000).toISOString(),
+			},
+		]);
+		expect(await svc.list("ada", 1)).toHaveLength(1);
+	});
+
+	test("counts and clears only the caller's unread notifications", async () => {
+		await database.insert(notifications).values([
+			{ id: "n1", userId: "ada", type: "note" },
+			{ id: "n2", userId: "ada", type: "note" },
+			{ id: "n3", userId: "bob", type: "note" },
+		]);
+		expect(await svc.unreadCount("ada")).toBe(2);
+		// Someone else's id matches nothing.
+		expect(await svc.markRead("ada", ["n1", "n3"])).toBe(1);
+		expect(await svc.unreadCount("ada")).toBe(1);
+		expect(await svc.unreadCount("bob")).toBe(1);
+		expect(await svc.markRead("ada")).toBe(1);
+		expect(await svc.unreadCount("ada")).toBe(0);
+	});
+
+	test("note participants are everyone who wrote on the file but the author", async () => {
+		await database
+			.insert(files)
+			.values({ id: "f1", name: "take.wav", ownerId: "ada", path: "f1" });
+		await database.insert(fileNotes).values([
+			{ id: "c1", fileId: "f1", userId: "ada", body: "one" },
+			{ id: "c2", fileId: "f1", userId: "bob", body: "two" },
+			{ id: "c3", fileId: "f1", userId: "bob", body: "three" },
+		]);
+		expect(await svc.noteParticipants("f1", "ada")).toEqual(["bob"]);
+	});
+
+	test("a share is mailed to the recipient's address, with a link back", async () => {
+		await svc.notify(
+			{
+				userId: "bob",
+				type: "share",
+				actorName: "Ada",
+				resourceName: "Mix",
+				link: "/go/folder/x",
+			},
+			"https://drive.test",
+		);
+		expect(sent).toEqual([
+			{
+				to: "bob@x.test",
+				content: {
+					subject: "Something was shared with you",
+					heading: "Something was shared with you",
+					lines: ["Ada shared Mix with you."],
+					action: { label: "Open it", url: "https://drive.test/go/folder/x" },
+					footnote:
+						"You can choose which notifications are emailed to you in your settings.",
+				},
+			},
+		]);
+		expect(await svc.unreadCount("bob")).toBe(1);
+	});
+
+	test("every kind has its own line, and unnamed parts read naturally", async () => {
+		choosing(svc, { emailNotifications: true });
+		for (const type of [
+			"note",
+			"signature_completed",
+			"signature_declined",
+			"signature_requested",
+		] as const) {
+			await svc.notify({ userId: "bob", type });
+		}
+		expect(sent.map((mail) => mail.content.lines[0])).toEqual([
+			"Someone left a note on an item.",
+			"Everyone signed an item. The signed PDF is ready.",
+			"Someone declined to sign an item.",
+			"Someone asks you to sign an item.",
+		]);
+		expect(sent.every((mail) => !("action" in mail.content))).toBe(true);
+	});
+
+	test("nothing is mailed without SMTP, or to an account with no address", async () => {
+		smtp.mockResolvedValue(null);
+		await svc.notify({ userId: "bob", type: "share" });
+		smtp.mockResolvedValue(mail);
+		await svc.notify({ userId: "gone", type: "share" });
+		expect(sent).toEqual([]);
+	});
+
+	test("a mail server that fails does not fail the notification", async () => {
+		send.mockRejectedValue(new Error("connection refused"));
+		await expect(
+			svc.notify({ userId: "bob", type: "share" }),
+		).resolves.toBeUndefined();
+		expect(await svc.unreadCount("bob")).toBe(1);
+	});
+
+	test("unreadable preferences write nothing and send nothing", async () => {
+		Object.defineProperty(svc, "preferences", {
+			value: () => Promise.reject(new Error("db down")),
+			configurable: true,
+		});
+		await svc.notify({ userId: "bob", type: "share" });
+		expect(await svc.unreadCount("bob")).toBe(0);
+		expect(sent).toEqual([]);
+	});
+
+	test("reads the app's database unless a test shadows it", () => {
+		expect(Reflect.get(new NotificationService(), "db")).toBe(getDb());
 	});
 });

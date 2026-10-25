@@ -1,9 +1,18 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
-import { driveMembers, drives, files, user } from "#lib/server/db/schema.js";
+import { eq } from "drizzle-orm";
+
+import {
+	driveMembers,
+	drives,
+	files,
+	shares,
+	user,
+} from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 
-const { ShareService, unlockToken } = await import("./shares");
+const { ShareService, unlockCookieName, unlockToken } =
+	await import("./shares");
 
 /**
  * The lookup is stubbed on the instance rather than by mocking the db module:
@@ -256,5 +265,153 @@ describe("resolveShareable", () => {
 	test("managing a drive grants nothing on the creator's personal files", async () => {
 		const check = await drive();
 		expect(await check("manager", "f2")).toBe("forbidden");
+	});
+});
+
+describe("link lifecycle", () => {
+	async function linkable() {
+		const database = migratedSqlite();
+		await database.insert(user).values(
+			["alice", "bob"].map((id) => ({
+				id,
+				name: id,
+				email: `${id}@x.test`,
+			})),
+		);
+		await database.insert(files).values([
+			{ id: "f1", name: "a.wav", ownerId: "alice", path: "a.wav" },
+			{ id: "f2", name: "b.wav", ownerId: "alice", path: "b.wav" },
+		]);
+		const links = new ShareService();
+		(links as any).db = database;
+		return links;
+	}
+
+	const input = (overrides: Record<string, unknown> = {}) =>
+		({
+			ownerId: "alice",
+			resourceType: "file",
+			resourceId: "f1",
+			...overrides,
+		}) as never;
+
+	test("create stores the row's name, a hashed password and no expiry by default", async () => {
+		const links = await linkable();
+		const created = await links.create(input({ password: "correct-horse" }));
+		if (typeof created === "string") {
+			throw new Error(created);
+		}
+
+		expect(created.token).toMatch(/^[0-9a-f]{32}$/);
+		expect(created.resourceName).toBe("a.wav");
+		expect(created.requiresAuth).toBe(false);
+		expect(created.expiresAt).toBeNull();
+		expect(created.passwordHash).not.toBe("correct-horse");
+		expect(
+			await Bun.password.verify("correct-horse", created.passwordHash ?? ""),
+		).toBe(true);
+		expect(await links.findByToken(created.token)).toMatchObject({
+			id: created.id,
+		});
+	});
+
+	test("create sets an expiry in days and keeps requiresAuth", async () => {
+		const links = await linkable();
+		const created = await links.create(
+			input({ expiresInDays: 2, requiresAuth: true }),
+		);
+		if (typeof created === "string") {
+			throw new Error(created);
+		}
+
+		const remaining = (created.expiresAt?.getTime() ?? 0) - Date.now();
+		expect(remaining).toBeGreaterThan(86_400_000);
+		expect(remaining).toBeLessThanOrEqual(2 * 86_400_000);
+		expect(created.requiresAuth).toBe(true);
+		expect(created.passwordHash).toBeNull();
+	});
+
+	test("create refuses a missing resource and someone else's", async () => {
+		const links = await linkable();
+		expect(await links.create(input({ resourceId: "missing" }))).toBe(
+			"not-found",
+		);
+		expect(await links.create(input({ ownerId: "bob" }))).toBe("forbidden");
+		expect(await links.list("bob")).toEqual([]);
+	});
+
+	test("list returns only the caller's links, newest first", async () => {
+		const links = await linkable();
+		const first = await links.create(input());
+		const second = await links.create(input({ resourceId: "f2" }));
+		if (typeof first === "string" || typeof second === "string") {
+			throw new Error("create refused");
+		}
+		await (links as any).db
+			.update(shares)
+			.set({ createdAt: new Date(Date.now() - 60_000) })
+			.where(eq(shares.id, first.id));
+
+		expect((await links.list("alice")).map((link) => link.id)).toEqual([
+			second.id,
+			first.id,
+		]);
+		expect(await links.list("bob")).toEqual([]);
+	});
+
+	test("revoke is scoped to the link's owner", async () => {
+		const links = await linkable();
+		const created = await links.create(input());
+		if (typeof created === "string") {
+			throw new Error(created);
+		}
+
+		expect(await links.revoke("bob", created.id)).toBe(false);
+		expect(await links.findByToken(created.token)).not.toBeNull();
+		expect(await links.revoke("alice", created.id)).toBe(true);
+		expect(await links.findByToken(created.token)).toBeNull();
+		expect(await links.revoke("alice", created.id)).toBe(false);
+	});
+
+	test("recordDownload counts each download", async () => {
+		const links = await linkable();
+		const created = await links.create(input());
+		if (typeof created === "string") {
+			throw new Error(created);
+		}
+
+		await links.recordDownload(created.id);
+		await links.recordDownload(created.id);
+		expect((await links.findByToken(created.token))?.downloadCount).toBe(2);
+	});
+
+	test("purgeExpired drops past links only", async () => {
+		const links = await linkable();
+		const expired = await links.create(input({ expiresInDays: 1 }));
+		const lasting = await links.create(input({ expiresInDays: 1 }));
+		const forever = await links.create(input());
+		if (
+			typeof expired === "string" ||
+			typeof lasting === "string" ||
+			typeof forever === "string"
+		) {
+			throw new Error("create refused");
+		}
+		await (links as any).db
+			.update(shares)
+			.set({ expiresAt: new Date(Date.now() - 1000) })
+			.where(eq(shares.id, expired.id));
+
+		expect(await links.purgeExpired()).toBe(1);
+		expect(await links.findByToken(expired.token)).toBeNull();
+		expect(await links.findByToken(lasting.token)).not.toBeNull();
+		expect(await links.findByToken(forever.token)).not.toBeNull();
+	});
+});
+
+describe("unlockCookieName", () => {
+	test("names one cookie per token", () => {
+		expect(unlockCookieName("abc")).toBe("share_unlock_abc");
+		expect(unlockCookieName("abc")).not.toBe(unlockCookieName("xyz"));
 	});
 });

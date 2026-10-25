@@ -1,10 +1,26 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	type Mock,
+	spyOn,
+	test,
+} from "bun:test";
 
 import { files, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 
+import { drivesService } from "./drives";
 import { NoteService } from "./notes";
-import { type NoteReach, type NoteRequest, NotesApi } from "./notes-api";
+import {
+	announceNote,
+	type NoteReach,
+	type NoteRequest,
+	NotesApi,
+} from "./notes-api";
+import { NotificationService } from "./notifications";
+import { SharingService } from "./sharings";
 
 /**
  * The notes routes' logic over the real SQLite migrations, with a stand-in
@@ -185,5 +201,119 @@ describe("media notes", () => {
 
 	test("an empty note is refused", async () => {
 		expect((await api.create(request(), { body: "   " })).status).toBe(400);
+	});
+});
+
+describe("updates that change nothing", () => {
+	test("an empty patch is refused", async () => {
+		const root = await json(await api.create(request(), { body: "A" }));
+		expect((await api.update(request(), root.data?.id ?? "", {})).status).toBe(
+			400,
+		);
+	});
+
+	test("resolving a note that is not there is a 404", async () => {
+		expect(
+			(await api.update(request(), "missing", { resolved: true })).status,
+		).toBe(404);
+	});
+});
+
+describe("announceNote", () => {
+	const spies: { mockRestore(): void }[] = [];
+	let told: { recipients: string[]; input: unknown; origin?: string }[];
+	let participants: Mock<() => Promise<string[]>>;
+	let canReach: Mock<(owner: string, file: string, ids: string[]) => unknown>;
+
+	function on(volumeId: string | null): NoteReach {
+		return {
+			findFileById: () => Promise.resolve("f1"),
+			findFileOwner: () =>
+				Promise.resolve({ ownerId: "owner", name: "Plan.docx", volumeId }),
+		};
+	}
+
+	const note = { ...request(ada), origin: "https://drive.test" };
+
+	beforeEach(() => {
+		told = [];
+		participants = spyOn(
+			NotificationService.prototype,
+			"noteParticipants",
+		).mockResolvedValue(["bob", "cy"]);
+		canReach = spyOn(
+			SharingService.prototype,
+			"canReachFile",
+		).mockImplementation(async (_owner, _file, ids) =>
+			ids.filter((id) => id !== "cy"),
+		);
+		spies.push(
+			participants,
+			canReach,
+			spyOn(NotificationService.prototype, "notifyMany").mockImplementation(
+				async (recipients, input, origin) => {
+					told.push({ recipients, input, origin });
+				},
+			),
+		);
+	});
+
+	afterEach(() => {
+		for (const spy of spies.splice(0)) {
+			spy.mockRestore();
+		}
+	});
+
+	test("tells the owner and whoever in the thread can still open the file", async () => {
+		await announceNote(note, on(null));
+		expect(participants).toHaveBeenCalledWith("f1", "ada");
+		expect(canReach).toHaveBeenCalledWith("owner", "f1", ["bob", "cy"]);
+		expect(told).toEqual([
+			{
+				recipients: ["owner", "bob"],
+				input: {
+					type: "note",
+					actorName: "Ada",
+					resourceName: "Plan.docx",
+					link: "/go/file/f1",
+				},
+				origin: "https://drive.test",
+			},
+		]);
+	});
+
+	test("on a drive, only its members still hear about it", async () => {
+		const access = spyOn(drivesService, "access").mockImplementation(
+			async (driveId, userId) =>
+				driveId === "team" && userId === "cy" ? ({} as never) : null,
+		);
+		spies.push(access);
+		await announceNote(note, on("drive:team"));
+		expect(canReach).not.toHaveBeenCalled();
+		expect(told[0]?.recipients).toEqual(["owner", "cy"]);
+	});
+
+	test("the owner writing on their own file with nobody else tells no one", async () => {
+		participants.mockResolvedValue([]);
+		await announceNote(
+			{ ...note, user: { id: "owner", name: "Owner" } },
+			on(null),
+		);
+		expect(canReach).not.toHaveBeenCalled();
+		expect(told[0]?.recipients).toEqual([]);
+	});
+
+	test("a file that is gone is announced to nobody", async () => {
+		await announceNote(note, {
+			...on(null),
+			findFileOwner: () => Promise.resolve(null),
+		});
+		expect(told).toEqual([]);
+	});
+
+	test("never fails the note it reports on", async () => {
+		participants.mockRejectedValue(new Error("db down"));
+		await expect(announceNote(note, on(null))).resolves.toBeUndefined();
+		expect(told).toEqual([]);
 	});
 });

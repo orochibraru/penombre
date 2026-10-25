@@ -1,10 +1,15 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, mock } from "bun:test";
 
-import { createEditor, type NodeJSON } from "prosekit/core";
-import type { Command } from "prosekit/pm/state";
+import { defineBasicExtension } from "prosekit/basic";
+import { createEditor, type NodeJSON, union } from "prosekit/core";
+import type { Command, Plugin, Transaction } from "prosekit/pm/state";
+import type { EditorView } from "prosekit/pm/view";
 
+import { PARAGRAPH_CHANGE } from "./changes";
 import { defineDocumentExtension } from "./document-extension";
+import { inkFor } from "./presence";
 import {
+	defineSuggestionClicks,
 	reviewSuggestions,
 	settleComposition,
 	suggestAs,
@@ -406,5 +411,194 @@ describe("review", () => {
 		editor.exec(type("X"));
 		editor.commands.undo();
 		expect(spans(editor)).toEqual(["hello"]);
+	});
+});
+
+/** The attributes a DOM output spec puts on its element. */
+function outputAttrs(output: unknown): Record<string, unknown> {
+	const [, attrs] = Array.isArray(output) ? output : [];
+	return typeof attrs === "object" && attrs !== null ? attrs : {};
+}
+
+describe("the suggestion schema's DOM rules", () => {
+	const schema = editorOver([paragraph(text("x"))]).state.schema;
+	const change = {
+		id: "s1",
+		author: "Ann",
+		authorId: "u-ann",
+		date: "2026-01-02T03:04:05.000Z",
+	};
+	const element = (attributes: Record<string, string>) =>
+		({
+			nodeType: 1,
+			nodeName: "P",
+			style: { getPropertyValue: () => "" },
+			attributes: Object.entries(attributes).map(([name, value]) => ({
+				name,
+				value,
+			})),
+			getAttribute: (name: string) => attributes[name] ?? null,
+		}) as unknown as HTMLElement;
+	const getAttrs = (rule: unknown) =>
+		(rule as { getAttrs: (node: HTMLElement) => unknown }).getAttrs;
+
+	it("writes a suggestion as ins or del, coloured by its author", () => {
+		const { insertion, deletion } = schema.marks;
+		const inserted = insertion?.create(change);
+		expect(inserted && insertion?.spec.toDOM?.(inserted, true)).toEqual([
+			"ins",
+			{
+				"data-suggestion": "s1",
+				"data-author": "Ann",
+				"data-author-id": "u-ann",
+				"data-date": change.date,
+				class: `suggestion ${inkFor("u-ann")}`,
+			},
+			0,
+		]);
+		const fromWord = deletion?.create({ ...change, authorId: "" });
+		const output = fromWord && deletion?.spec.toDOM?.(fromWord, true);
+		expect(Array.isArray(output) && output[0]).toBe("del");
+		expect(outputAttrs(output).class).toBe(`suggestion ${inkFor("Ann")}`);
+	});
+
+	it("reads a suggestion back, above a plain strikethrough", () => {
+		const rule = schema.marks.deletion?.spec.parseDOM?.[0];
+		expect(rule).toMatchObject({ tag: "del[data-suggestion]", priority: 60 });
+		const read = getAttrs(rule);
+		expect(
+			read(
+				element({
+					"data-suggestion": "s1",
+					"data-author": "Ann",
+					"data-author-id": "u-ann",
+					"data-date": change.date,
+				}),
+			),
+		).toEqual(change);
+		expect(read(element({ class: "plain" }))).toBe(false);
+	});
+
+	it("writes and reads a suggested paragraph break", () => {
+		const { paragraph: type } = schema.nodes;
+		const suggested = { kind: "insert" as const, ...change };
+		const node = type?.create({ paragraphChange: suggested });
+		const written = outputAttrs(node && type?.spec.toDOM?.(node));
+		expect(JSON.parse(String(written[PARAGRAPH_CHANGE]))).toEqual(suggested);
+		const plain = type?.create();
+		expect(outputAttrs(plain && type?.spec.toDOM?.(plain))).not.toHaveProperty(
+			PARAGRAPH_CHANGE,
+		);
+
+		const read = getAttrs(type?.spec.parseDOM?.[0]);
+		expect(
+			read(element({ [PARAGRAPH_CHANGE]: JSON.stringify(suggested) })),
+		).toMatchObject({ paragraphChange: suggested });
+		expect(read(element({}))).toMatchObject({ paragraphChange: null });
+	});
+
+	it("refuses a schema without the suggestion marks", () => {
+		const plain = createEditor({ extension: defineBasicExtension() });
+		expect(() => suggestionsOf(plain.state.doc)).toThrow(
+			"The suggestion marks are not in the schema",
+		);
+	});
+});
+
+describe("clicking a suggestion", () => {
+	it("opens the suggestion under the caret and lets the click through", () => {
+		const onOpen = mock((_id: string, _pos: number) => undefined);
+		const editor = createEditor({
+			extension: union(
+				defineDocumentExtension({
+					onDocChange: () => undefined,
+					onUpdate: () => undefined,
+					keys: {},
+				}),
+				defineSuggestionClicks(onOpen),
+			),
+			defaultContent: { type: "doc", content: [paragraph(text("hello"))] },
+			defaultSelection: { type: "text", anchor: 3, head: 3 },
+		});
+		editor.exec(suggestAs(ann));
+		editor.exec(type("X"));
+		const view = { state: editor.state } as unknown as EditorView;
+		const click = (pos: number) =>
+			editor.state.plugins.some((plugin) =>
+				plugin.props.handleClick?.call(
+					plugin,
+					view,
+					pos,
+					{} as unknown as MouseEvent,
+				),
+			);
+		const [only] = suggestionsOf(editor.state.doc);
+		expect(click(3)).toBe(false);
+		expect(onOpen).toHaveBeenCalledWith(only?.id ?? "", 3);
+		onOpen.mockClear();
+		expect(click(1)).toBe(false);
+		expect(onOpen).not.toHaveBeenCalled();
+	});
+});
+
+describe("settling a composition from the view", () => {
+	function composing() {
+		const editor = editorOver([paragraph(text("hello"))], 3);
+		editor.exec(suggestAs(ann));
+		editor.exec(compose(3, 3, "字"));
+		const plugin = editor.state.plugins.find((candidate) =>
+			String((candidate as Plugin & { key: string }).key).startsWith(
+				"suggestions",
+			),
+		);
+		let isComposing = true;
+		const view = {
+			get state() {
+				return editor.state;
+			},
+			get composing() {
+				return isComposing;
+			},
+			dispatch: (tr: Transaction) =>
+				editor.exec((_state, dispatch) => {
+					dispatch?.(tr);
+					return true;
+				}),
+		} as unknown as EditorView;
+		const pluginView = plugin?.spec.view?.(view);
+		const compositionEnd = () =>
+			plugin?.props.handleDOMEvents?.compositionend?.call(
+				plugin,
+				view,
+				{} as CompositionEvent,
+			);
+		const finish = () => {
+			isComposing = false;
+		};
+		return { editor, view, pluginView, compositionEnd, finish };
+	}
+
+	it("waits for the composition to end, then suggests it", () => {
+		const { editor, view, pluginView, finish } = composing();
+		pluginView?.update?.(view, editor.state);
+		expect(spans(editor)).toEqual(["he字llo"]);
+		finish();
+		pluginView?.update?.(view, editor.state);
+		expect(spans(editor)).toEqual(["he", "+字", "llo"]);
+		pluginView?.destroy?.();
+	});
+
+	it("settles shortly after compositionend, unless the view is gone", async () => {
+		const settled = composing();
+		settled.finish();
+		expect(settled.compositionEnd()).toBe(false);
+		const destroyed = composing();
+		destroyed.finish();
+		destroyed.compositionEnd();
+		destroyed.pluginView?.destroy?.();
+		await Bun.sleep(100);
+		expect(spans(settled.editor)).toEqual(["he", "+字", "llo"]);
+		expect(spans(destroyed.editor)).toEqual(["he字llo"]);
+		settled.pluginView?.destroy?.();
 	});
 });

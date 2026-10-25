@@ -1,5 +1,12 @@
 import type { Mock } from "bun:test";
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import {
+	afterAll,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	test,
+} from "bun:test";
 
 import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";
 import { getConfig, isAuthBypassed } from "#lib/server/config.js";
@@ -237,5 +244,128 @@ describe("lookup", () => {
 	test("an unknown address is a 404", async () => {
 		queue([]);
 		expect(await lookup()).toMatchObject({ status: 404 });
+	});
+});
+
+describe("lookup refusals", () => {
+	function lookupFrom(clientAddress: string, email: string) {
+		const body = new FormData();
+		body.set("email", email);
+		return actions.lookup({
+			request: new Request("http://localhost/auth/sign-in?/lookup", {
+				method: "POST",
+				body,
+			}),
+			getClientAddress: () => clientAddress,
+		} as never);
+	}
+
+	test("an empty address asks for one", async () => {
+		expect(await lookupFrom(crypto.randomUUID(), "   ")).toMatchObject({
+			status: 400,
+			data: { step: "email" },
+		});
+	});
+
+	test("one address is throttled after thirty lookups", async () => {
+		const clientAddress = crypto.randomUUID();
+		for (let attempt = 0; attempt < 30; attempt++) {
+			expect(await lookupFrom(clientAddress, "")).toMatchObject({
+				status: 400,
+			});
+		}
+		expect(await lookupFrom(clientAddress, "a@example.com")).toMatchObject({
+			status: 429,
+			data: { step: "email" },
+		});
+		expect(await lookupFrom(crypto.randomUUID(), "")).toMatchObject({
+			status: 400,
+		});
+	});
+});
+
+describe("passwordLink", () => {
+	const api = auth.api as unknown as Record<string, unknown>;
+	let resets: unknown[];
+
+	beforeEach(() => {
+		mockGetConfig.mockReturnValue(defaultConfig as never);
+		resets = [];
+		api.requestPasswordReset = (input: unknown) => {
+			resets.push(input);
+			return Promise.resolve({});
+		};
+	});
+
+	afterEach(() => {
+		delete api.requestPasswordReset;
+	});
+
+	/** SMTP for the next config read, which is the mail check's. */
+	function mailConfigured() {
+		mockGetConfig.mockReturnValueOnce({
+			...defaultConfig,
+			smtp: {
+				enabled: true,
+				host: "smtp.example",
+				port: 587,
+				user: "mailer",
+				password: "secret",
+				from: "drive@example",
+				secure: false,
+			},
+		} as never);
+	}
+
+	function passwordLink(email: string) {
+		const body = new FormData();
+		body.set("email", email);
+		return actions.passwordLink({
+			request: new Request("http://localhost/auth/sign-in?/passwordLink", {
+				method: "POST",
+				body,
+			}),
+			getClientAddress: () => crypto.randomUUID(),
+		} as never);
+	}
+
+	test("needs an address", async () => {
+		expect(await passwordLink("")).toMatchObject({ status: 400 });
+	});
+
+	test("without mail the link cannot be sent", async () => {
+		expect(await passwordLink("a@example.com")).toMatchObject({
+			status: 503,
+			data: { outcome: "unavailable" },
+		});
+		expect(resets).toEqual([]);
+	});
+
+	test("mails a link to set the password", async () => {
+		mailConfigured();
+		const email = `${crypto.randomUUID()}@example.com`;
+		expect(await passwordLink(email.toUpperCase())).toEqual({ sent: email });
+		expect(resets).toEqual([
+			{
+				body: {
+					email,
+					redirectTo: "http://localhost:5173/auth/reset-password",
+				},
+			},
+		]);
+	});
+
+	test("an address asked for too often is throttled", async () => {
+		const email = `${crypto.randomUUID()}@example.com`;
+		for (let attempt = 0; attempt < 3; attempt++) {
+			mailConfigured();
+			await passwordLink(email);
+		}
+		mailConfigured();
+		expect(await passwordLink(email)).toMatchObject({
+			status: 429,
+			data: { outcome: "limited" },
+		});
+		expect(resets).toHaveLength(3);
 	});
 });

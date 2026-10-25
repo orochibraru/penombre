@@ -1,10 +1,16 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 
 import type { Database } from "#lib/server/db/index.js";
+import * as dbModule from "#lib/server/db/index.js";
 import { appInstances, jobs } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
+import * as storageFor from "#lib/server/services/storage-for.js";
 
-import { reconcileOrphanedJobs, type Reconciler } from "./job-reconcile";
+import {
+	reconcileOrphanedJobs,
+	type Reconciler,
+	startJobReconciler,
+} from "./job-reconcile";
 import { INSTANCE_ID } from "./jobs";
 
 let database: Database;
@@ -148,5 +154,113 @@ describe("reconcileOrphanedJobs", () => {
 		}));
 		expect(seen).toContainEqual({ copied: [], failed: [{ dest: "/r/a" }] });
 		expect(seen).toContainEqual({ deleted: ["/r/b"], deletedDirs: ["/r/d"] });
+	});
+});
+
+describe("reconcileOrphanedJobs without a resolver", () => {
+	test("opens the job's root through its storage service", async () => {
+		await job("orphan", {});
+		const applied: unknown[] = [];
+		const serviceForRoot = spyOn(
+			storageFor,
+			"serviceForRoot",
+		).mockResolvedValue({
+			getStoragePath: () => "/r",
+			reconcileOrphanedJob: async (_type: string, outcome: unknown) => {
+				applied.push(outcome);
+				return 1;
+			},
+		} as never);
+		try {
+			await reconcileOrphanedJobs(database);
+			expect(serviceForRoot).toHaveBeenCalledWith(context);
+		} finally {
+			serviceForRoot.mockRestore();
+		}
+		expect(applied).toEqual([{ copied: ["/r/x"], failed: [] }]);
+		expect(await remaining()).toEqual([]);
+	});
+
+	test("a database it cannot read leaves every job alone", async () => {
+		await job("orphan", {});
+		const broken = {
+			select: () => {
+				throw new Error("database is gone");
+			},
+		} as unknown as Database;
+		await expect(reconcileOrphanedJobs(broken)).resolves.toBeUndefined();
+		expect(await remaining()).toEqual(["orphan"]);
+	});
+});
+
+describe("startJobReconciler", () => {
+	const timers = globalThis as unknown as {
+		__reconcile_timer?: unknown;
+		__reconcile_running?: boolean;
+	};
+	let ticks: (() => void)[];
+	let applied: string[];
+	const spies: { mockRestore(): void }[] = [];
+
+	async function settled() {
+		while (timers.__reconcile_running) {
+			await Bun.sleep(1);
+		}
+	}
+
+	beforeEach(() => {
+		ticks = [];
+		applied = [];
+		spies.push(
+			spyOn(globalThis, "setInterval").mockImplementation(((
+				callback: () => void,
+			) => {
+				ticks.push(callback);
+				return { unref: () => undefined };
+			}) as never),
+			spyOn(dbModule, "getDb").mockReturnValue(database),
+			spyOn(storageFor, "serviceForRoot").mockResolvedValue({
+				getStoragePath: () => "/r",
+				reconcileOrphanedJob: async (type: string) => {
+					applied.push(type);
+					return 0;
+				},
+			} as never),
+		);
+	});
+
+	afterEach(async () => {
+		await settled();
+		for (const spy of spies.splice(0)) {
+			spy.mockRestore();
+		}
+		delete timers.__reconcile_timer;
+		delete timers.__reconcile_running;
+	});
+
+	test("reconciles at once, then every minute, from one timer", async () => {
+		await job("at-boot", {});
+		startJobReconciler();
+		startJobReconciler();
+		await settled();
+		expect(applied).toEqual(["copy"]);
+		expect(ticks).toHaveLength(1);
+
+		await job("later", { type: "delete" });
+		ticks[0]?.();
+		await settled();
+		expect(applied).toEqual(["copy", "delete"]);
+		expect(await remaining()).toEqual([]);
+	});
+
+	test("a tick while a pass is running waits for the next one", async () => {
+		startJobReconciler();
+		await settled();
+		await job("orphan", {});
+		timers.__reconcile_running = true;
+		ticks[0]?.();
+		timers.__reconcile_running = false;
+		expect(applied).toEqual([]);
+		expect(await remaining()).toEqual(["orphan"]);
 	});
 });

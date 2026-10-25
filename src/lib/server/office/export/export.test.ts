@@ -179,6 +179,42 @@ describe("documentPdf", () => {
 			.content as { width: number }[];
 		expect(wide?.width).toBe(TEXT_WIDTH);
 	});
+
+	it("skips a picture pdfkit cannot read, or whose header is not one", () => {
+		const skipped = documentPdf(
+			[
+				{ type: "image", src: "data:image/gif;base64,R0lGODlh" },
+				{ type: "image", src: "data:image/png;base64,AAAA" },
+				{ type: "unknown" } as never,
+			],
+			"x",
+		);
+		expect(skipped.content).toEqual([]);
+	});
+
+	it("rules a quote on its left edge only", () => {
+		const [quote] = documentPdf(
+			[
+				{
+					type: "quote",
+					blocks: [{ type: "paragraph", runs: [{ text: "said", marks: {} }] }],
+				},
+			],
+			"x",
+		).content as ContentTable[];
+		const layout = quote?.layout as Record<
+			string,
+			(index: number) => number | string
+		>;
+		expect(quote?.table.body[0]?.[0]).toMatchObject({
+			stack: [[{ text: [{ text: "said" }] }]],
+		});
+		expect([0, 1].map((index) => layout.vLineWidth?.(index))).toEqual([2, 0]);
+		expect(layout.hLineWidth?.(0)).toBe(0);
+		expect(layout.vLineColor?.(0)).toBe("#bbbbbb");
+		expect(layout.paddingLeft?.(0)).toBe(10);
+		expect([layout.paddingTop?.(0), layout.paddingBottom?.(0)]).toEqual([0, 0]);
+	});
 });
 
 describe("text formats", () => {

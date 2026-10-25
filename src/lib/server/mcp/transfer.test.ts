@@ -1,6 +1,8 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 
-import { readGrant, transferUrl } from "./transfer";
+import { getDb } from "#lib/server/db/index.js";
+
+import { grantUsers, readGrant, transferUrl } from "./transfer";
 
 const grant = {
 	user: "u1",
@@ -41,5 +43,55 @@ describe("transfer links", () => {
 		expect(readGrant(`${body}.AAAA`, "GET")).toBeNull();
 		expect(readGrant(body ?? "", "GET")).toBeNull();
 		expect(readGrant(null, "GET")).toBeNull();
+	});
+});
+
+describe("grant users", () => {
+	const database = getDb() as unknown as { select: unknown };
+	const select = database.select;
+	afterEach(() => {
+		database.select = select;
+	});
+
+	function rows(found: Record<string, unknown>[]) {
+		database.select = () => ({
+			from: () => ({ where: async () => found }),
+		});
+	}
+
+	const signed = { ...grant, owner: "o1", expires: Date.now() + 60_000 };
+
+	test("returns both accounts while they exist and are not banned", async () => {
+		rows([
+			{ id: "o1", banned: false },
+			{ id: "u1", banned: null },
+		]);
+		expect(await grantUsers(signed)).toEqual({
+			user: { id: "u1", banned: null },
+			owner: { id: "o1", banned: false },
+		} as never);
+	});
+
+	test("refuses a grant whose account is gone or banned", async () => {
+		rows([{ id: "u1", banned: false }]);
+		expect(await grantUsers(signed)).toBeNull();
+		rows([
+			{ id: "u1", banned: false },
+			{ id: "o1", banned: true },
+		]);
+		expect(await grantUsers(signed)).toBeNull();
+		rows([
+			{ id: "u1", banned: true },
+			{ id: "o1", banned: false },
+		]);
+		expect(await grantUsers(signed)).toBeNull();
+	});
+
+	test("one account can be both the user and the owner", async () => {
+		rows([{ id: "u1", banned: false }]);
+		expect(await grantUsers({ ...signed, owner: "u1" })).toEqual({
+			user: { id: "u1", banned: false },
+			owner: { id: "u1", banned: false },
+		} as never);
 	});
 });

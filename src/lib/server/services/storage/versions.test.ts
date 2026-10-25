@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -9,16 +9,25 @@ import { sql } from "drizzle-orm";
 import type { Database } from "#lib/server/db/index.js";
 import { files, fileVersions, folders, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
+import * as appSettings from "#lib/server/services/app-settings.js";
 
 import type { StorageContext } from "./context";
 import { LocalStorageDriver } from "./drivers/local";
 import {
+	adminVersioning,
+	DEFAULT_MAX_VERSIONS,
+	deleteVersion,
 	dropVersionBytes,
+	folderVersioning,
+	getVersion,
 	latestSeqs,
 	listVersions,
 	pathPrefixes,
+	reorderVersions,
+	setFolderSettings,
 	snapshot,
 	versioningAt,
+	versioningForFile,
 	versionKey,
 } from "./versions";
 
@@ -146,5 +155,179 @@ describe("snapshot", () => {
 		}
 		await dropVersionBytes(ctx, ["f"]);
 		expect(await readdir(thumbs)).toEqual([".versions_g_v1_300.webp"]);
+	});
+});
+
+describe("adminVersioning", () => {
+	test("is off with the default cap until the admin says otherwise", async () => {
+		const settings = spyOn(appSettings, "getAppSettings").mockResolvedValue(
+			{} as never,
+		);
+		try {
+			expect(await adminVersioning()).toEqual({
+				enabled: false,
+				max: DEFAULT_MAX_VERSIONS,
+			});
+			settings.mockResolvedValue({
+				versioningEnabled: true,
+				maxVersionsPerFile: 4,
+			} as never);
+			expect(await adminVersioning()).toEqual({ enabled: true, max: 4 });
+		} finally {
+			settings.mockRestore();
+		}
+	});
+});
+
+describe("versioningForFile", () => {
+	test("a file follows its folder's setting", async () => {
+		await folder("a", { versioning: false });
+		expect((await versioningForFile(ctx, { folderId: "a" }, on)).enabled).toBe(
+			false,
+		);
+	});
+
+	test("a root file, or one whose folder is gone, follows the admin", async () => {
+		expect(await versioningForFile(ctx, { folderId: null }, on)).toEqual(on);
+		expect(await versioningForFile(ctx, { folderId: "gone" }, on)).toEqual(on);
+	});
+});
+
+describe("snapshot failures", () => {
+	test("a version that cannot be recorded leaves no bytes behind", async () => {
+		const f = await file("f", "f.txt", "x");
+		const failing = {
+			...ctx,
+			db: new Proxy(db, {
+				get: (target, property) =>
+					property === "insert"
+						? () => {
+								throw new Error("UNIQUE constraint failed");
+							}
+						: Reflect.get(target, property),
+			}),
+		} as StorageContext;
+
+		await expect(snapshot(failing, f, 10)).rejects.toThrow("UNIQUE");
+
+		expect(await readdir(join(root, ".versions/f"))).toEqual([]);
+		expect(await listVersions(ctx, "f")).toEqual([]);
+	});
+});
+
+describe("reading and deleting a version", () => {
+	test("a version is found under its own file only", async () => {
+		const f = await file("f", "f.txt", "x");
+		await file("g", "g.txt", "y");
+		const version = await snapshot(ctx, f, 10);
+		expect((await getVersion(ctx, "f", version.id))?.id).toBe(version.id);
+		expect(await getVersion(ctx, "g", version.id)).toBeNull();
+	});
+
+	test("deleting removes the row and its bytes", async () => {
+		const f = await file("f", "f.txt", "x");
+		const version = await snapshot(ctx, f, 10);
+		expect(await deleteVersion(ctx, "f", version.id)).toBe(true);
+		expect(await listVersions(ctx, "f")).toEqual([]);
+		expect(existsSync(join(root, versionKey("f", version.id)))).toBe(false);
+		expect(await deleteVersion(ctx, "f", version.id)).toBe(false);
+	});
+
+	test("no file ids, no query", async () => {
+		expect(await latestSeqs(ctx, [])).toEqual(new Map());
+	});
+});
+
+describe("reorderVersions", () => {
+	test("renumbers in the order given, oldest first", async () => {
+		const f = await file("f", "f.txt", "x");
+		const first = await snapshot(ctx, f, 10);
+		const second = await snapshot(ctx, f, 10);
+		const third = await snapshot(ctx, f, 10);
+
+		expect(
+			await reorderVersions(ctx, "f", [third.id, first.id, second.id]),
+		).toBe(true);
+
+		const seqs = new Map(
+			(await listVersions(ctx, "f")).map((v) => [v.id, v.seq]),
+		);
+		expect([
+			seqs.get(third.id),
+			seqs.get(first.id),
+			seqs.get(second.id),
+		]).toEqual([1, 2, 3]);
+	});
+
+	test("refuses anything but exactly the file's versions", async () => {
+		const f = await file("f", "f.txt", "x");
+		const first = await snapshot(ctx, f, 10);
+		const second = await snapshot(ctx, f, 10);
+
+		expect(await reorderVersions(ctx, "f", [first.id])).toBe(false);
+		expect(await reorderVersions(ctx, "f", [first.id, first.id])).toBe(false);
+		expect(await reorderVersions(ctx, "f", [first.id, "other"])).toBe(false);
+		expect((await listVersions(ctx, "f")).map((v) => [v.id, v.seq])).toEqual([
+			[second.id, 2],
+			[first.id, 1],
+		]);
+	});
+
+	test("a file with no versions has nothing to reorder", async () => {
+		await file("f", "f.txt", "x");
+		expect(await reorderVersions(ctx, "f", [])).toBe(true);
+	});
+});
+
+describe("dropVersionBytes failures", () => {
+	test("nothing to drop touches nothing", async () => {
+		await mkdir(join(root, ".versions/f"), { recursive: true });
+		await dropVersionBytes(ctx, []);
+		expect(existsSync(join(root, ".versions/f"))).toBe(true);
+	});
+
+	test("bytes it cannot remove are logged, never thrown", async () => {
+		const stuck = {
+			...ctx,
+			driver: {
+				deleteObjectsByPrefix: () => Promise.reject(new Error("EBUSY")),
+			},
+		} as unknown as StorageContext;
+		await expect(dropVersionBytes(stuck, ["f"])).resolves.toBeUndefined();
+	});
+});
+
+describe("folder settings", () => {
+	test("reads what a folder sets and what it would inherit", async () => {
+		await folder("a", { maxVersions: 4 });
+		await folder("a/b", { versioning: false });
+
+		const byId = await folderVersioning(ctx, "a-b", on);
+		expect(byId).toEqual({
+			path: "a/b",
+			settings: { versioning: false },
+			effective: { enabled: false, max: 4 },
+			inherited: { enabled: true, max: 4 },
+			adminEnabled: true,
+			adminMax: 10,
+		});
+		expect((await folderVersioning(ctx, "a/b", on))?.path).toBe("a/b");
+	});
+
+	test("a folder that sets nothing has empty settings", async () => {
+		await folder("a");
+		expect((await folderVersioning(ctx, "a", on))?.settings).toEqual({});
+		expect(await folderVersioning(ctx, "missing", on)).toBeNull();
+	});
+
+	test("saves settings on the folder, by id or by path", async () => {
+		await folder("a/b");
+		expect(await setFolderSettings(ctx, "a/b", { maxVersions: 2 })).toBe(true);
+		expect((await versioningAt(ctx, "a/b", on)).max).toBe(2);
+		expect(await setFolderSettings(ctx, "a-b", { versioning: false })).toBe(
+			true,
+		);
+		expect((await versioningAt(ctx, "a/b", on)).enabled).toBe(false);
+		expect(await setFolderSettings(ctx, "missing", {})).toBe(false);
 	});
 });

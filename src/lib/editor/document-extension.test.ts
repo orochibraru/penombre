@@ -1,13 +1,21 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, mock } from "bun:test";
 
-import { createEditor, type NodeJSON } from "prosekit/core";
+import { createEditor, isApple, type NodeJSON } from "prosekit/core";
+import type { TagParseRule } from "prosekit/pm/model";
+import type { EditorState, Plugin } from "prosekit/pm/state";
+import type { EditorView } from "prosekit/pm/view";
 
 import { leaveCodeDown } from "./code-block";
 import {
 	blockValue,
+	clearFormatting,
 	defineDocumentExtension,
+	type DocumentHandlers,
 	hasHeaderRow,
 	markValue,
+	setMark,
+	shiftIndent,
+	toggleHeaderRow,
 } from "./document-extension";
 import {
 	firstFamily,
@@ -192,5 +200,226 @@ describe("leaving a code block", () => {
 		expect(leaveCodeDown(first.state)).toBe(false);
 		const followed = editorOver([code("a"), paragraph(text("x"))], 2);
 		expect(leaveCodeDown(followed.state)).toBe(false);
+	});
+});
+
+const handlers = (
+	overrides: Partial<DocumentHandlers> = {},
+): DocumentHandlers => ({
+	onDocChange: () => undefined,
+	onUpdate: () => undefined,
+	keys: {},
+	...overrides,
+});
+
+describe("refusing what does not apply", () => {
+	it("sets no mark the schema lacks", () => {
+		const editor = editorOver([paragraph(text("x"))], 1, 2);
+		expect(setMark("nonsense", { size: "1pt" })(editor.state)).toBe(false);
+	});
+
+	it("indents nothing when no paragraph or heading is selected", () => {
+		const editor = createEditor({
+			extension: defineDocumentExtension(handlers()),
+			defaultContent: {
+				type: "doc",
+				content: [{ type: "horizontalRule" }, paragraph(text("x"))],
+			},
+			defaultSelection: { type: "node", anchor: 0, head: 0 },
+		});
+		expect(shiftIndent(1)(editor.state)).toBe(false);
+		expect(editor.commands.setLineHeight.canExec("2")).toBe(false);
+	});
+
+	it("toggles no header row outside a table", () => {
+		const editor = editorOver([paragraph(text("x"))]);
+		expect(toggleHeaderRow()(editor.state)).toBe(false);
+		expect(hasHeaderRow(editor.state)).toBe(false);
+	});
+});
+
+describe("formatting at a caret", () => {
+	it("keeps a link and suggestions for the next keystroke, nothing else", () => {
+		const editor = editorOver(
+			[
+				paragraph(
+					text("ab", [
+						{ type: "italic" },
+						{ type: "link", attrs: { href: "https://a.example" } },
+					]),
+				),
+			],
+			2,
+		);
+		editor.exec(clearFormatting());
+		const stored = editor.state.storedMarks ?? [];
+		expect(stored.map((mark) => mark.type.name)).toEqual(["link"]);
+		expect(markValue(editor.state, "link", "href")).toBe("https://a.example");
+	});
+
+	it("reads no value from a mark that is not there, or not a string", () => {
+		const editor = editorOver([paragraph(text("x"))], 1);
+		expect(markValue(editor.state, "fontSize", "size")).toBeNull();
+		expect(blockValue(editor.state, "lineHeight")).toBeNull();
+	});
+});
+
+describe("lists", () => {
+	const list = (...items: string[]): NodeJSON[] =>
+		items.map((item) => ({
+			type: "list",
+			attrs: { kind: "bullet" },
+			content: [paragraph(text(item))],
+		}));
+
+	it("moves a list item a level instead of indenting its paragraph", () => {
+		const editor = editorOver(list("a", "b"), 7);
+		editor.commands.shiftIndent(1);
+		const [first] = editor.getDocJSON().content ?? [];
+		expect(first?.content?.map((node) => node.type)).toEqual([
+			"paragraph",
+			"list",
+		]);
+		expect(blockValue(editor.state, "indent")).toBeNull();
+		editor.commands.shiftIndent(-1);
+		expect(editor.getDocJSON().content?.map((node) => node.type)).toEqual([
+			"list",
+			"list",
+		]);
+	});
+});
+
+/** The attributes a DOM output spec puts on its element. */
+function outputAttrs(output: unknown): Record<string, unknown> {
+	const [, attrs] = Array.isArray(output) ? output : [];
+	return typeof attrs === "object" && attrs !== null ? attrs : {};
+}
+
+describe("the schema's DOM rules", () => {
+	const element = (
+		styles: Record<string, string>,
+		attributes: Record<string, string> = {},
+	) =>
+		({
+			nodeType: 1,
+			nodeName: "P",
+			style: {
+				...styles,
+				getPropertyValue: (name: string) => styles[name] ?? "",
+			},
+			getAttribute: (name: string) => attributes[name] ?? null,
+			hasAttribute: (name: string) => name in attributes,
+			attributes: [],
+		}) as unknown as HTMLElement;
+
+	const schema = editorOver([paragraph(text("x"))]).state.schema;
+
+	it("writes a paragraph's formatting as style, and nothing when unformatted", () => {
+		const { paragraph: type } = schema.nodes;
+		const formatted = type?.create({
+			textAlign: "center",
+			lineHeight: "1.5",
+			indent: "36pt",
+		});
+		const plain = type?.create();
+		expect(outputAttrs(formatted && type?.spec.toDOM?.(formatted)).style).toBe(
+			"margin-left:36pt; line-height:1.5; text-align:center",
+		);
+		expect(outputAttrs(plain && type?.spec.toDOM?.(plain))).not.toHaveProperty(
+			"style",
+		);
+	});
+
+	it("reads a paragraph's formatting back, refusing nonsense", () => {
+		const rule = schema.nodes.paragraph?.spec.parseDOM?.[0] as TagParseRule;
+		const read = (styles: Record<string, string>) =>
+			rule.getAttrs?.(element(styles));
+		expect(
+			read({
+				"text-align": "right",
+				"line-height": "2",
+				"margin-left": "18pt",
+			}),
+		).toMatchObject({ textAlign: "right", lineHeight: "2", indent: "18pt" });
+		expect(
+			read({ "text-align": "", "line-height": "normal", "margin-left": "2em" }),
+		).toMatchObject({ textAlign: null, lineHeight: null, indent: null });
+		expect(read({ "line-height": "0" })).toMatchObject({ lineHeight: null });
+	});
+
+	it("writes and reads font sizes in points", () => {
+		const type = schema.marks.fontSize;
+		const mark = type?.create({ size: "14pt" });
+		expect(mark && type?.spec.toDOM?.(mark, true)).toEqual([
+			"span",
+			{ style: "font-size: 14pt;", "data-font-size": "14pt" },
+			0,
+		]);
+		const rule = type?.spec.parseDOM?.[0] as TagParseRule;
+		const read = (node: HTMLElement) => rule.getAttrs?.(node);
+		expect(read(element({ fontSize: "16px" }))).toEqual({ size: "12pt" });
+		expect(
+			read(element({ fontSize: "" }, { "data-font-size": "9pt" })),
+		).toEqual({ size: "9pt" });
+		expect(read(element({ fontSize: "1em" }))).toBe(false);
+	});
+});
+
+describe("the page's handlers", () => {
+	const pluginNamed = (state: EditorState, name: string) =>
+		state.plugins.find((plugin) =>
+			String((plugin as Plugin & { key: string }).key).startsWith(name),
+		);
+
+	it("answers the page's keys", () => {
+		const find = mock(() => undefined);
+		const replace = mock(() => undefined);
+		const editor = createEditor({
+			extension: defineDocumentExtension(
+				handlers({ keys: { "Alt-p": find, "Ctrl-h": replace } }),
+			),
+			defaultContent: { type: "doc", content: [paragraph(text("x"))] },
+		});
+		const view = {
+			state: editor.state,
+			dispatch: () => undefined,
+			endOfTextblock: () => false,
+		} as unknown as EditorView;
+		const press = (event: Partial<KeyboardEvent>) =>
+			editor.state.plugins.some((plugin) =>
+				plugin.props.handleKeyDown?.call(plugin, view, {
+					altKey: false,
+					ctrlKey: false,
+					metaKey: false,
+					shiftKey: false,
+					...event,
+				} as KeyboardEvent),
+			);
+		expect(press({ key: "p", keyCode: 80, altKey: true })).toBe(true);
+		expect(find).toHaveBeenCalledTimes(1);
+		// Ctrl-H is the system's delete-backward on Apple platforms.
+		press({ key: "h", keyCode: 72, ctrlKey: true });
+		expect(replace).toHaveBeenCalledTimes(isApple ? 0 : 1);
+	});
+
+	it("tells the page about every update, and about document changes", () => {
+		const onDocChange = mock((_doc: unknown) => undefined);
+		const onUpdate = mock(() => undefined);
+		const editor = createEditor({
+			extension: defineDocumentExtension(handlers({ onDocChange, onUpdate })),
+			defaultContent: { type: "doc", content: [paragraph(text("x"))] },
+		});
+		const handler = pluginNamed(editor.state, "prosekit-plugin-view-handler");
+		const viewOf = (state: EditorState) =>
+			({ state, isDestroyed: false }) as unknown as EditorView;
+		const before = editor.state;
+		const pluginView = handler?.spec.view?.(viewOf(before));
+		pluginView?.update?.(viewOf(before), before);
+		expect(onUpdate).toHaveBeenCalledTimes(1);
+		expect(onDocChange).not.toHaveBeenCalled();
+		editor.commands.setLineHeight("2");
+		pluginView?.update?.(viewOf(editor.state), before);
+		expect(onUpdate).toHaveBeenCalledTimes(2);
+		expect(onDocChange).toHaveBeenCalledWith(editor.state.doc);
 	});
 });

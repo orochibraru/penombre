@@ -1,6 +1,6 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 
-import { clock, readMessage, slideKey } from "./present";
+import { clock, deckChannel, post, readMessage, slideKey } from "./present";
 
 describe("slideKey", () => {
 	test("steps and clamps", () => {
@@ -38,6 +38,10 @@ test("readMessage refuses what is not one", () => {
 	expect(readMessage({ type: "go", index: -1 })).toBeNull();
 	expect(readMessage({ type: "state", index: 0 })).toBeNull();
 	expect(readMessage("hello")).toBeNull();
+	expect(readMessage(null)).toBeNull();
+	expect(readMessage({ type: "hello", index: 3 })).toEqual({ type: "hello" });
+	expect(readMessage({ type: "go", index: 1.5 })).toBeNull();
+	expect(readMessage({ type: "close" })).toBeNull();
 	expect(readMessage({ type: "state", index: 1, markdown: "# A" })).toEqual({
 		type: "state",
 		index: 1,
@@ -49,4 +53,20 @@ test("clock", () => {
 	expect(clock(5)).toBe("0:05");
 	expect(clock(754)).toBe("12:34");
 	expect(clock(3723)).toBe("1:02:03");
+});
+
+describe("the presenter's channel", () => {
+	test("is named after the deck", () => {
+		const channel = deckChannel("abc");
+		expect(channel.name).toBe("penombre-deck:abc");
+		channel.close();
+	});
+
+	test("posts a message, and nothing without a channel", () => {
+		const postMessage = mock((_message: unknown) => undefined);
+		const channel = { postMessage } as unknown as BroadcastChannel;
+		post(channel, { type: "go", index: 3 });
+		expect(postMessage).toHaveBeenCalledWith({ type: "go", index: 3 });
+		expect(() => post(undefined, { type: "hello" })).not.toThrow();
+	});
 });

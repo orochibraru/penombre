@@ -1,13 +1,28 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
+import { existsSync } from "node:fs";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { eq } from "drizzle-orm";
 
 import { sealedSize } from "#lib/server/crypto/envelope.js";
+import type { Database } from "#lib/server/db/index.js";
+import { files, folders, shares, user } from "#lib/server/db/schema.js";
+import { migratedSqlite } from "#lib/server/db/test-utils.js";
+import * as jobs from "#lib/server/services/jobs.js";
 
+import type { StorageContext } from "./context";
+import { LocalStorageDriver } from "./drivers/local";
 import {
 	ancestorFolders,
 	estimateRemaining,
 	isScannable,
+	listStorageRoot,
+	type ScanEntry,
 	ScanOperations,
 } from "./scan";
+import type { ThumbnailService } from "./thumbnails";
 
 describe("isScannable", () => {
 	test("accepts ordinary files at any depth", () => {
@@ -322,5 +337,246 @@ describe("estimateRemaining", () => {
 
 	test("says nothing once every file is done", () => {
 		expect(estimateRemaining(100, 100, 5000)).toBeUndefined();
+	});
+});
+
+describe("listStorageRoot", () => {
+	const spies: Array<{ mockRestore: () => void }> = [];
+
+	afterEach(() => {
+		for (const spy of spies.splice(0)) {
+			spy.mockRestore();
+		}
+	});
+
+	function job(result: unknown) {
+		const enqueue = spyOn(jobs, "enqueueJob").mockResolvedValue("job-1");
+		spies.push(
+			enqueue,
+			spyOn(jobs, "awaitJob").mockResolvedValue(result as never),
+		);
+		return enqueue;
+	}
+
+	test("asks the worker to walk the root and returns what it found", async () => {
+		const entries = [{ key: "a.txt", size: 1, mtime: 5, ino: "9" }];
+		const enqueue = job({
+			status: "succeeded",
+			result: JSON.stringify({ entries }),
+		});
+
+		expect(await listStorageRoot("/library")).toEqual(entries);
+		expect(enqueue).toHaveBeenCalledWith({
+			type: "scan-list",
+			spec: { root: "/library" },
+			priority: "mutation",
+		});
+	});
+
+	test("a failed walk fails the scan instead of emptying the drive", async () => {
+		job({ status: "failed", error: "permission denied" });
+		await expect(listStorageRoot("/library")).rejects.toThrow(
+			"permission denied",
+		);
+	});
+
+	test("a walk that never finished fails too", async () => {
+		job(undefined);
+		await expect(listStorageRoot("/library")).rejects.toThrow("timed out");
+	});
+});
+
+describe("scanning against the real schema", () => {
+	let db: Database;
+	let root: string;
+	let ctx: StorageContext;
+	const warmed: string[] = [];
+	const thumbnails = {
+		warm: (key: string) => {
+			warmed.push(key);
+			return Promise.resolve();
+		},
+		deleteThumbnails: () => Promise.resolve(),
+		adopt: () => Promise.resolve(),
+	} as unknown as ThumbnailService;
+
+	beforeEach(async () => {
+		warmed.length = 0;
+		db = migratedSqlite();
+		root = await mkdtemp(join(tmpdir(), "penombre-scan-"));
+		await db.insert(user).values({
+			id: "u",
+			name: "u",
+			email: "u@x",
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
+		ctx = {
+			user: { id: "u" },
+			actor: { id: "u" },
+			volumeId: null,
+			storagePath: root,
+			db,
+			driver: new LocalStorageDriver(root),
+		} as unknown as StorageContext;
+	});
+
+	afterEach(async () => {
+		await rm(root, { recursive: true, force: true });
+	});
+
+	function scanner(entries: ScanEntry[], context = ctx) {
+		return new ScanOperations(context, thumbnails, {
+			listStorageRoot: async () => entries,
+		});
+	}
+
+	test("creates every folder above a file, parents first", async () => {
+		const result = await scanner([
+			{ key: "Music/Album/one.mp3", size: 3 },
+			{ key: "Music/two.mp3", size: 4 },
+		]).scan();
+
+		expect(result).toMatchObject({ addedFolders: 2, addedFiles: 2 });
+		const byPath = new Map(
+			(await db.select().from(folders)).map((row) => [row.path, row]),
+		);
+		expect(byPath.get("Music")?.parentId).toBeNull();
+		expect(byPath.get("Music/Album")?.parentId).toBe(byPath.get("Music")?.id);
+		expect(byPath.get("Music/Album")?.name).toBe("Album");
+		const [one] = await db
+			.select()
+			.from(files)
+			.where(eq(files.path, "Music/Album/one.mp3"));
+		expect(one).toMatchObject({
+			name: "one.mp3",
+			folderId: byPath.get("Music/Album")?.id,
+			category: "MUSIC",
+			size: 3,
+		});
+		expect(warmed.toSorted()).toEqual(["Music/Album/one.mp3", "Music/two.mp3"]);
+	});
+
+	test("a folder another pass inserted first becomes the parent", async () => {
+		let raced = false;
+		const racing = {
+			...ctx,
+			db: new Proxy(db, {
+				get: (target, property) =>
+					property === "insert"
+						? (table: unknown) => {
+								if (table === folders && !raced) {
+									raced = true;
+									target
+										.insert(folders)
+										.values({
+											id: "theirs",
+											name: "a",
+											ownerId: "u",
+											path: "a",
+										})
+										.run();
+								}
+								return target.insert(table as typeof folders);
+							}
+						: Reflect.get(target, property),
+			}),
+		} as StorageContext;
+
+		const result = await scanner([{ key: "a/b.txt", size: 1 }], racing).scan();
+
+		expect(result.addedFolders).toBe(0);
+		expect(await db.select({ id: folders.id }).from(folders)).toEqual([
+			{ id: "theirs" },
+		]);
+		const [file] = await db.select().from(files);
+		expect(file?.folderId).toBe("theirs");
+	});
+
+	test("a changed video drops its duration, a changed text file has none", async () => {
+		await db.insert(files).values([
+			{
+				id: "v",
+				name: "clip.mp4",
+				ownerId: "u",
+				path: "clip.mp4",
+				size: 1,
+				videoDuration: 30,
+			},
+			{ id: "t", name: "notes.txt", ownerId: "u", path: "notes.txt", size: 1 },
+		]);
+		await writeFile(join(root, "clip.mp4"), "xx");
+		await writeFile(join(root, "notes.txt"), "xx");
+
+		const result = await scanner([
+			{ key: "clip.mp4", size: 2 },
+			{ key: "notes.txt", size: 2 },
+		]).scan();
+
+		expect(result.updatedFiles).toBe(2);
+		const rows = new Map(
+			(await db.select().from(files)).map((row) => [row.id, row]),
+		);
+		expect(rows.get("v")).toMatchObject({ size: 2, videoDuration: null });
+		expect(rows.get("t")?.size).toBe(2);
+	});
+
+	test("rows whose bytes are gone go, with their grants and versions", async () => {
+		await mkdir(join(root, "kept"));
+		await mkdir(join(root, ".versions", "gone"), { recursive: true });
+		await writeFile(join(root, ".versions", "gone", "v1"), "old");
+		await db.insert(folders).values([
+			{ id: "kept", name: "kept", ownerId: "u", path: "kept" },
+			{ id: "lost", name: "lost", ownerId: "u", path: "lost" },
+		]);
+		await db.insert(files).values([
+			{ id: "gone", name: "gone.txt", ownerId: "u", path: "gone.txt" },
+			{ id: "here", name: "here.txt", ownerId: "u", path: "here.txt" },
+		]);
+		await writeFile(join(root, "here.txt"), "");
+		await db.insert(shares).values([
+			{
+				id: "s1",
+				token: "t1",
+				ownerId: "u",
+				resourceType: "file",
+				resourceId: "gone",
+				resourceName: "gone.txt",
+			},
+			{
+				id: "s2",
+				token: "t2",
+				ownerId: "u",
+				resourceType: "folder",
+				resourceId: "lost",
+				resourceName: "lost",
+			},
+		] as never);
+
+		const result = await scanner([{ key: "here.txt", size: 0 }]).scan();
+
+		expect(result).toMatchObject({ removedFiles: 1, removedFolders: 1 });
+		expect(
+			(await db.select({ id: files.id }).from(files)).map((row) => row.id),
+		).toEqual(["here"]);
+		expect(
+			(await db.select({ id: folders.id }).from(folders)).map((row) => row.id),
+		).toEqual(["kept"]);
+		expect(await db.select().from(shares)).toEqual([]);
+		expect(existsSync(join(root, ".versions", "gone"))).toBe(false);
+	});
+
+	test("a row renamed since the listing keeps its row", async () => {
+		await db
+			.insert(files)
+			.values({ id: "moved", name: "new.txt", ownerId: "u", path: "new.txt" });
+		await writeFile(join(root, "new.txt"), "x");
+
+		const result = await scanner([]).scan();
+
+		expect(result.removedFiles).toBe(0);
+		expect(await db.select({ id: files.id }).from(files)).toEqual([
+			{ id: "moved" },
+		]);
 	});
 });

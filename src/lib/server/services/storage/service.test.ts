@@ -1,6 +1,17 @@
-import { beforeEach, describe, expect, type Mock, mock, test } from "bun:test";
+import {
+	afterAll,
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	type Mock,
+	mock,
+	spyOn,
+	test,
+} from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -47,8 +58,11 @@ mock.module("./driver", () => ({
 	},
 }));
 
+/** Where `getStoragePath()` points; the cleanup tests aim it at a temp dir. */
+const storageBase = { path: "/tmp/penombre-test-storage" };
+
 mock.module("#lib/server/config.js", () => ({
-	getConfig: () => ({
+	getConfig: mock(() => ({
 		smtp: undefined,
 		appName: "Penombre",
 		origin: "http://localhost:5173",
@@ -58,18 +72,22 @@ mock.module("#lib/server/config.js", () => ({
 			minPasswordLength: 8,
 		},
 		worker: { mode: "embedded", concurrency: 4 },
-	}),
-	getStoragePath: () => "/tmp/penombre-test-storage",
-	envProvided: () => ({
+	})),
+	getStoragePath: mock(() => storageBase.path),
+	envProvided: mock(() => ({
 		emailSignIn: true,
 		oauthSignIn: true,
 		passkeySignIn: false,
 		minPasswordLength: true,
 		smtp: true,
-	}),
-	isSimpleMode: () => false,
-	isAuthBypassed: () => false,
-	getVolume: () => undefined,
+		versionCheck: false,
+		releaseChannel: false,
+		dataRetention: false,
+	})),
+	isSimpleMode: mock(() => false),
+	isAuthBypassed: mock(() => false),
+	getVolume: mock(() => undefined),
+	getVolumes: mock(() => []),
 }));
 
 mock.module("#lib/server/services/activity.js", () => ({
@@ -1177,5 +1195,602 @@ describe("StorageService", () => {
 				),
 			).toThrow(ReadOnlyVolumeError);
 		});
+	});
+});
+
+// ---------------------------------------------------------------------------
+// The facade over a real tree: SQLite with the app's migrations, bytes in a
+// temp directory, behind a volume so names on disk read as written.
+// ---------------------------------------------------------------------------
+const { migratedSqlite } = await import("#lib/server/db/test-utils.js");
+const { files, fileVersions, folders, user } =
+	await import("#lib/server/db/schema.js");
+const { LocalStorageDriver } = await import("./drivers/local");
+const appSettings = await import("#lib/server/services/app-settings.js");
+const { eq } = await import("drizzle-orm");
+
+type Service = InstanceType<typeof StorageService>;
+type Internals = Record<string, Record<string, unknown>>;
+
+describe("StorageService over a real tree", () => {
+	let database: ReturnType<typeof migratedSqlite>;
+	let root: string;
+	let service: Service;
+
+	const volumeAt = (path: string, readOnly = false) => ({
+		name: "media",
+		label: "Media",
+		path,
+		readOnly,
+	});
+
+	/** A service on the temp tree, reading and writing the real database. */
+	function onTree(
+		options: ConstructorParameters<typeof StorageService>[3] = {},
+		readOnly = false,
+	): Service {
+		const built = new StorageService(
+			testUser,
+			volumeAt(root, readOnly),
+			undefined,
+			options,
+		);
+		Object.assign((built as unknown as Internals).ctx ?? {}, {
+			db: database,
+			driver: new LocalStorageDriver(root),
+		});
+		return built;
+	}
+
+	/** Stubs one method of one of the service's private helpers. */
+	function stub(target: Service, helper: string, method: string) {
+		const fake = mock(async (..._args: unknown[]) => "stubbed" as unknown);
+		const internals = (target as unknown as Internals)[helper];
+		if (internals) {
+			internals[method] = fake;
+		}
+		return fake;
+	}
+
+	async function rowOf(id: string) {
+		const [row] = await database.select().from(files).where(eq(files.id, id));
+		return row;
+	}
+
+	async function upload(name: string, body: string, folder?: string) {
+		const created = await service.createFile({ name, size: 0 }, folder);
+		await service.uploadFileBody(created.id, new TextEncoder().encode(body), {
+			snapshot: false,
+		});
+		return created;
+	}
+
+	const text = (path: string) => readFile(join(root, path), "utf8");
+
+	beforeEach(async () => {
+		database = migratedSqlite();
+		await database.insert(user).values({
+			id: testUser.id,
+			name: testUser.name,
+			email: testUser.email,
+		});
+		root = await mkdtemp(join(tmpdir(), "penombre-facade-"));
+		service = onTree();
+	});
+
+	afterEach(async () => {
+		await rm(root, { recursive: true, force: true });
+	});
+
+	describe("identity", () => {
+		test("names its tree and its mount", () => {
+			expect(service.locationKey).toBe("user-1:media");
+			expect(service.getVolume()?.path).toBe(root);
+			expect(service.getStoragePath()).toBe(root);
+			expect(service.readOnly).toBe(false);
+			expect(onTree({}, true).readOnly).toBe(true);
+		});
+
+		test("the admin view reads the configured storage path", () => {
+			expect(StorageService.getAdminStoragePath()).toBe(storageBase.path);
+			expect(StorageService.getAvailableStorageSize()).toBeGreaterThanOrEqual(
+				0,
+			);
+		});
+	});
+
+	describe("files", () => {
+		test("a created file is found every way it can be addressed", async () => {
+			const created = await upload("note.txt", "hello");
+
+			expect(created.finalName).toBe("note.txt");
+			expect(await service.findFileById(created.id)).toBe("note.txt");
+			expect(await service.findFileOwner(created.id)).toEqual({
+				ownerId: testUser.id,
+				name: "note.txt",
+				volumeId: "media",
+			});
+			expect(await service.fileExists("note.txt")).toBe(true);
+			expect(await service.fileExistsById(created.id)).toBe(true);
+			expect((await service.getFile("note.txt")).size).toBe(5);
+			const raw = await service.getRawFileData("note.txt");
+			expect(new TextDecoder().decode(raw?.buffer)).toBe("hello");
+			const opened = await service.openRawFile("note.txt");
+			expect(await new Response(await opened?.stream()).text()).toBe("hello");
+		});
+
+		test("a batch lands in its folder with unique names", async () => {
+			const folder = await service.createFolder("Takes");
+
+			const results = await service.createBatchFiles(
+				[
+					{ name: "a.txt", size: 1 },
+					{ name: "a.txt", size: 1 },
+				],
+				folder.path,
+			);
+
+			expect(results.map((result) => result.finalName)).toEqual([
+				"Takes/a.txt",
+				"Takes/a (1).txt",
+			]);
+		});
+
+		test("rename, move, duplicate and delete keep rows and bytes together", async () => {
+			const created = await upload("note.txt", "body");
+			const folder = await service.createFolder("Notes");
+
+			await service.updateFile("note.txt", { key: "Renamed.txt" });
+			expect(await text("Renamed.txt")).toBe("body");
+
+			await service.moveFile("Renamed.txt", folder.path);
+			expect((await rowOf(created.id))?.path).toBe("Notes/Renamed.txt");
+
+			const copy = await service.duplicateFile("Notes/Renamed.txt");
+			expect((await rowOf(copy.metadata.id))?.path).toBe(
+				"Notes/Renamed (1).txt",
+			);
+			expect(await text("Notes/Renamed (1).txt")).toBe("body");
+
+			await service.deleteFile("Notes/Renamed (1).txt");
+			expect(await rowOf(copy.metadata.id)).toBeUndefined();
+			expect(existsSync(join(root, "Notes/Renamed (1).txt"))).toBe(false);
+		});
+
+		test("writeFile replaces the bytes in place", async () => {
+			await upload("note.txt", "old");
+
+			await service.writeFile("note.txt", new TextEncoder().encode("new"));
+
+			expect(await text("note.txt")).toBe("new");
+		});
+	});
+
+	describe("folders", () => {
+		test("create, star, trash, restore and delete a subtree", async () => {
+			const band = await service.createFolder("Band");
+			const demos = await service.createFolder("Demos", band.path);
+			await upload("take.txt", "123", demos.path);
+
+			expect(await service.getFolder(band.path)).toBe("Band/");
+			expect(await service.folderExists("Band/Demos")).toBe(true);
+			expect(await service.resolveListedFolder("Demos", "Band")).toBe(
+				"Band/Demos/",
+			);
+			expect(service.getFullFolderPath("Demos", "Band")).toBe("Band/Demos/");
+			expect(await service.listFolders("Band")).toEqual([demos.id]);
+			expect(
+				(await service.listFoldersWithMetadata("")).map((row) => row.path),
+			).toEqual(["Band", "Band/Demos"]);
+			expect(await service.calculateFolderSize("Band")).toBe(3);
+			expect(await service.calculateFolderSizes("")).toEqual(
+				new Map([[band.id, 0]]),
+			);
+			expect(await service.folderNames(["Band/Demos"])).toEqual(
+				new Map([
+					["Band", "Band"],
+					["Band/Demos", "Demos"],
+				]),
+			);
+
+			await service.updateFolderMeta("Band", { isStarred: true });
+			expect((await service.getFolderMeta("Band"))?.isStarred).toBe(true);
+
+			await service.trashFolder("Band");
+			expect(await service.countTrashedItems()).toBeGreaterThan(0);
+			await service.restoreFolder("Band");
+			expect(await service.countTrashedItems()).toBe(0);
+
+			await service.deleteFolder("Band");
+			expect(await database.select().from(folders)).toHaveLength(0);
+			expect(await database.select().from(files)).toHaveLength(0);
+		});
+
+		test("a moved folder takes its files", async () => {
+			const band = await service.createFolder("Band");
+			const archive = await service.createFolder("Archive");
+			const take = await upload("take.txt", "x", band.path);
+
+			await service.moveFolder(band.path, archive.path);
+
+			expect((await rowOf(take.id))?.path).toBe("Archive/Band/take.txt");
+			expect(await text("Archive/Band/take.txt")).toBe("x");
+		});
+	});
+
+	describe("listings", () => {
+		test("every listing reads the same rows", async () => {
+			const folder = await service.createFolder("Band");
+			const take = await upload("take.txt", "x", folder.path);
+			await upload("loose.txt", "y");
+			await service.updateFile("loose.txt", { isStarred: true });
+
+			const page = await service.listFolderPage("Band");
+			expect(page.list.map((item) => item.metadata.id)).toEqual([take.id]);
+			const listed = await service.listFiles();
+			expect(listed.list.map((item) => item.key).toSorted()).toEqual([
+				"Band/",
+				"loose.txt",
+			]);
+			const everything = await service.abstractListFiles({ recursive: true });
+			expect(everything.list.length).toBeGreaterThanOrEqual(2);
+			const documents = await service.listFilesPerCategory("DOCUMENTS");
+			expect(documents.total).toBe(2);
+			expect((await service.listRecentFiles()).list).toHaveLength(2);
+			const starred = await service.listStarredFiles();
+			expect(starred.list.map((item) => item.key)).toEqual(["loose.txt"]);
+			expect(await service.countStarredItems()).toBe(1);
+			const found = await service.searchFiles("take");
+			expect(found.list.map((item) => item.metadata.id)).toEqual([take.id]);
+
+			const entries = await service.treeEntries("Band");
+			expect(entries?.map((entry) => entry.name)).toEqual(["take.txt"]);
+			expect((await service.treeEntry("", "Band"))?.type).toBe("folder");
+			expect((await service.treeEntryById("file", take.id))?.path).toBe(
+				"Band/take.txt",
+			);
+		});
+
+		test("the trash lists what was trashed, and emptying it removes the rows", async () => {
+			await upload("gone.txt", "12345");
+			await service.updateFile("gone.txt", { isTrashed: true });
+
+			const trash = await service.listTrashFiles();
+			expect(trash.list.map((item) => item.key)).toEqual(["gone.txt"]);
+
+			const result = await service.emptyTrash();
+
+			expect(result).toEqual({ deleted: 1, freed: 5, failed: 0 });
+			expect(await database.select().from(files)).toHaveLength(0);
+			expect(mockEnqueueJob.mock.calls[0]?.[0]?.type).toBe("delete");
+		});
+	});
+
+	describe("versions", () => {
+		const settings = spyOn(appSettings, "getAppSettings");
+
+		beforeAll(() => {
+			settings.mockResolvedValue({
+				versioningEnabled: true,
+				maxVersionsPerFile: 3,
+			} as never);
+		});
+
+		afterAll(() => settings.mockRestore());
+
+		test("snapshot, restore, reorder and delete a file's versions", async () => {
+			const { id } = await upload("note.txt", "first");
+
+			const first = await service.snapshotFile(id);
+			await service.uploadFileBody(id, new TextEncoder().encode("second"), {
+				snapshot: false,
+			});
+			expect(first).not.toBeNull();
+			const opened = await service.openVersion(id, first?.id ?? "");
+			expect(await new Response(await opened?.stream()).text()).toBe("first");
+
+			expect(await service.restoreVersion(id, first?.id ?? "")).toBe(true);
+			expect(await text("note.txt")).toBe("first");
+			const listed = await service.listFileVersions(id);
+			expect(listed?.versions).toHaveLength(2);
+
+			const ids = listed?.versions.map((version) => version.id) ?? [];
+			expect(await service.reorderFileVersions(id, ids.toReversed())).toBe(
+				true,
+			);
+			expect(await service.reorderFileVersions("missing", ids)).toBe(false);
+			expect((await service.latestVersionSeqs([id])).get(id)).toBe(2);
+			expect(await service.fileVersioning(id)).toEqual({
+				enabled: true,
+				max: 3,
+			});
+			expect(
+				await service.versionThumbnail(id, first?.id ?? "", 200),
+			).toBeNull();
+
+			expect(await service.deleteFileVersion(id, ids[0] ?? "")).toBe(true);
+			expect((await service.listFileVersions(id))?.versions).toHaveLength(1);
+		});
+
+		test("a history is zipped oldest first, and none is no archive", async () => {
+			const kept = await upload("kept.txt", "a");
+			const bare = await upload("bare.txt", "b");
+			await service.snapshotFile(kept.id);
+			const zip = stub(service, "zip", "createVersionsZip");
+
+			expect(await service.versionsZip(bare.id)).toBeNull();
+			expect(await service.versionsZip(kept.id)).toBe("stubbed");
+			expect(zip.mock.calls[0]?.[0]).toMatchObject({ id: kept.id });
+		});
+
+		test("versions come back out as files beside their file", async () => {
+			const { id } = await upload("note.txt", "first");
+			await service.snapshotFile(id);
+
+			const extracted = await service.extractVersions(id);
+
+			expect(extracted).toHaveLength(1);
+			expect((await service.listFileVersions(id))?.versions).toHaveLength(0);
+			expect((await rowOf(extracted?.[0] ?? ""))?.name.startsWith("note")).toBe(
+				true,
+			);
+		});
+
+		test("a merge keeps the last file and makes the others its versions", async () => {
+			const older = await upload("take 1.txt", "one");
+			const newer = await upload("take 2.txt", "two");
+
+			const kept = await service.mergeAsVersions([older.id, newer.id], "Take");
+
+			expect(kept).toBe(newer.id);
+			expect(await rowOf(older.id)).toBeUndefined();
+			expect((await rowOf(newer.id))?.name).toBe("Take");
+			const history = await database
+				.select()
+				.from(fileVersions)
+				.where(eq(fileVersions.fileId, newer.id));
+			expect(history).toHaveLength(1);
+		});
+
+		test("a save by rename keeps the target's row with the new bytes", async () => {
+			const target = await upload("doc.txt", "old");
+			const source = await upload("doc.tmp.txt", "new");
+
+			expect(await service.replaceFile(target.id, source.id)).toBe(true);
+
+			expect(await rowOf(source.id)).toBeUndefined();
+			expect(await text("doc.txt")).toBe("new");
+		});
+
+		test("folder settings are read and written by id", async () => {
+			const folder = await service.createFolder("Takes");
+
+			expect(
+				await service.setFolderSettings(folder.id, { maxVersions: 2 }),
+			).toBe(true);
+			const versioning = await service.getFolderVersioning(folder.id);
+			expect(versioning?.effective).toEqual({ enabled: true, max: 2 });
+			expect(await service.setFolderSettings("missing", {})).toBe(false);
+		});
+
+		test("a share recipient may not change the shared folder's own settings", async () => {
+			const folder = await service.createFolder("Shared");
+			const recipient = onTree({ scope: { kind: "folder", path: "Shared" } });
+
+			await expect(recipient.setFolderSettings(folder.id, {})).rejects.toThrow(
+				DriveAccessError,
+			);
+		});
+	});
+
+	describe("proxy", () => {
+		test("serves bytes, metadata and no render for a text file", async () => {
+			await upload("note.txt", "hello");
+
+			const raw = (await service.handleProxyRequest({
+				itemName: "note.txt",
+				raw: true,
+			})) as Response;
+			expect(await raw.text()).toBe("hello");
+			const ranged = await service.handleRawFile(
+				"note.txt",
+				undefined,
+				"bytes=1-2",
+			);
+			expect(await ranged.text()).toBe("el");
+			expect((await service.handleMetadata("note.txt")).key).toBe("note.txt");
+			expect(await service.handleThumbnailRequest("note.txt")).toBeNull();
+		});
+	});
+
+	describe("work handed to other helpers", () => {
+		test("a scan passes its reporter and options through", async () => {
+			const scan = stub(service, "scanOperations", "scan");
+			const report = () => {};
+
+			expect(await service.scanStorage(report, { full: true })).toBe(
+				"stubbed" as never,
+			);
+			expect(scan.mock.calls[0]).toEqual([report, { full: true }]);
+		});
+
+		test("a share recipient may not scan", () => {
+			const recipient = onTree({ scope: { kind: "folder", path: "Shared" } });
+
+			expect(() => recipient.scanStorage()).toThrow(DriveAccessError);
+		});
+
+		test("archives are built by the zip helper", async () => {
+			const fromPaths = stub(service, "zip", "createZipFromPaths");
+			const fromFolder = stub(service, "zip", "createZipFromFolder");
+			const account = stub(service, "zip", "createAccountExport");
+
+			await service.createZipFromPaths(["a.txt"]);
+			await service.createZipFromFolder("Band");
+			await service.createAccountExport();
+
+			expect(fromPaths.mock.calls[0]).toEqual([["a.txt"]]);
+			expect(fromFolder.mock.calls[0]).toEqual(["Band"]);
+			expect(account).toHaveBeenCalledTimes(1);
+			expect(service.generateZipFilename(["a.txt"])).toBe(
+				"penombre-download.zip",
+			);
+		});
+
+		test("a tree exports with every file under it", async () => {
+			const folder = await service.createFolder("Band");
+			await upload("take.txt", "x", folder.path);
+
+			const tree = await service.exportTree("Band/", "folder");
+
+			expect(tree.files.map((file) => file.name)).toEqual(["take.txt"]);
+		});
+
+		test("an orphaned copy loses the bytes no row points at", async () => {
+			await upload("kept.txt", "row");
+			await writeFile(join(root, "stray.txt"), "no row");
+
+			const removed = await service.reconcileOrphanedJob("copy", {
+				copied: [join(root, "stray.txt"), join(root, "kept.txt")],
+				failed: [],
+			} as never);
+
+			expect(removed).toBe(1);
+			expect(existsSync(join(root, "stray.txt"))).toBe(false);
+			expect(existsSync(join(root, "kept.txt"))).toBe(true);
+		});
+
+		test("an orphaned delete drops the trash rows whose bytes are gone", async () => {
+			const gone = await upload("gone.txt", "x");
+			await service.updateFile("gone.txt", { isTrashed: true });
+			await rm(join(root, "gone.txt"));
+
+			const removed = await service.reconcileOrphanedJob("delete", {
+				deleted: [join(root, "gone.txt")],
+				deletedDirs: [],
+			} as never);
+
+			expect(removed).toBe(1);
+			expect(await rowOf(gone.id)).toBeUndefined();
+		});
+
+		test("probing durations with nothing missing enqueues nothing", async () => {
+			await upload("note.txt", "x");
+
+			await service.probeMissingDurations();
+
+			expect(mockEnqueueJob).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("guards", () => {
+		test("a read-only volume refuses every write before touching anything", async () => {
+			const created = await upload("note.txt", "x");
+			const folder = await service.createFolder("Band");
+			const frozen = onTree({}, true);
+			const writes: (() => unknown)[] = [
+				() => frozen.writeFile("note.txt"),
+				() => frozen.updateFile("note.txt", { isStarred: true }),
+				() => frozen.moveFile("note.txt", "Band"),
+				() => frozen.duplicateFile("note.txt"),
+				() => frozen.createBatchFiles([{ name: "b.txt", size: 0 }]),
+				() => frozen.uploadFileBody(created.id, Buffer.from("y")),
+				() => frozen.deleteFile("note.txt"),
+				() => frozen.snapshotFile(created.id),
+				() => frozen.restoreVersion(created.id, "v"),
+				() => frozen.deleteFileVersion(created.id, "v"),
+				() => frozen.mergeAsVersions([created.id]),
+				() => frozen.replaceFile(created.id, created.id),
+				() => frozen.extractVersions(created.id),
+				() => frozen.reorderFileVersions(created.id, []),
+				() => frozen.setFolderSettings(folder.id, {}),
+				() => frozen.moveFolder("Band", ""),
+				() => frozen.createFolder("New"),
+				() => frozen.deleteFolder("Band"),
+				() => frozen.trashFolder("Band"),
+				() => frozen.restoreFolder("Band"),
+				() => frozen.updateFolderMeta("Band", { isStarred: true }),
+				() => frozen.emptyTrash(),
+			];
+
+			for (const write of writes) {
+				await expect(
+					(async () => {
+						await write();
+					})(),
+				).rejects.toThrow(ReadOnlyVolumeError);
+			}
+			expect(await text("note.txt")).toBe("x");
+			expect(await database.select().from(folders)).toHaveLength(1);
+		});
+
+		test("a scoped write by key must find its row inside the scope", async () => {
+			const folder = await service.createFolder("Shared");
+			await upload("inside.txt", "in", folder.path);
+			await upload("outside.txt", "out");
+			const recipient = onTree({ scope: { kind: "folder", path: "Shared" } });
+
+			await recipient.writeFile(
+				"Shared/inside.txt",
+				new TextEncoder().encode("edited"),
+			);
+			expect(await text("Shared/inside.txt")).toBe("edited");
+			await expect(
+				recipient.writeFile("outside.txt", new TextEncoder().encode("no")),
+			).rejects.toThrow(FileOrFolderNotFoundError);
+			expect(await text("outside.txt")).toBe("out");
+		});
+	});
+});
+
+describe("cleanupDeletedUserStorage", () => {
+	let base: string;
+
+	beforeEach(async () => {
+		base = await mkdtemp(join(tmpdir(), "penombre-cleanup-"));
+		storageBase.path = base;
+	});
+
+	afterEach(async () => {
+		storageBase.path = "/tmp/penombre-test-storage";
+		await rm(base, { recursive: true, force: true });
+	});
+
+	test("removes the trees of users and drives that no longer exist", async () => {
+		await mkdir(join(base, "user-alive"), { recursive: true });
+		await mkdir(join(base, "user-ghost"), { recursive: true });
+		await mkdir(join(base, "drives/kept"), { recursive: true });
+		await mkdir(join(base, "drives/gone"), { recursive: true });
+		await mkdir(join(base, "volumes"), { recursive: true });
+		mockNextSelect([{ id: "alive" }]);
+		mockNextSelect([{ id: "kept" }]);
+
+		await StorageService.cleanupDeletedUserStorage();
+
+		expect(existsSync(join(base, "user-alive"))).toBe(true);
+		expect(existsSync(join(base, "user-ghost"))).toBe(false);
+		expect(existsSync(join(base, "drives/kept"))).toBe(true);
+		expect(existsSync(join(base, "drives/gone"))).toBe(false);
+		expect(existsSync(join(base, "volumes"))).toBe(true);
+	});
+
+	test("with no users at all, nothing is touched", async () => {
+		await mkdir(join(base, "user-ghost"), { recursive: true });
+		mockNextSelect([]);
+		mockNextSelect([]);
+
+		await StorageService.cleanupDeletedUserStorage();
+
+		expect(existsSync(join(base, "user-ghost"))).toBe(true);
+	});
+
+	test("a storage path that does not exist is skipped", async () => {
+		storageBase.path = join(base, "missing");
+		mockNextSelect([{ id: "alive" }]);
+		mockNextSelect([]);
+
+		await StorageService.cleanupDeletedUserStorage();
+
+		expect(existsSync(join(base, "missing"))).toBe(false);
 	});
 });
