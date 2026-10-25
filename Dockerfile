@@ -18,12 +18,13 @@ WORKDIR /app
 FROM base AS deps
 
 COPY package.json bun.lock ./
-
-RUN bun i --frozen-lockfile --ignore-scripts
+RUN bun pm fetch
 
 FROM deps AS app-builder
 
 COPY . .
+
+RUN bun i --frozen-lockfile --ignore-scripts --offline
 
 # The running app reports `package.json`'s version, which only moves when a
 # release PR merges, so a canary image would report the last stable one. The
