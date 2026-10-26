@@ -46,7 +46,7 @@
 		"ioredis": "6.0.0",
 		"marked": "18.0.14",
 		"mode-watcher": "1.1.0",
-		"nodemailer": "10.0.10",
+		"nodemailer": "10.1.4",
 		"openapi-fetch": "0.17.0",
 		"paneforge": "1.0.2",
 		"pdf-lib": "1.17.1",
