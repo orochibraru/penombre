@@ -139,7 +139,7 @@ fun PreviewSheet(preview: Preview, host: Host, onDismiss: () -> Unit) {
                         // The web app edits these, in a screen of the app's own.
                         preview.isEditable -> EditorScreen(preview.place, item)
 
-                        else -> WebScreen(rawUrl(host.server, preview.place, item.metadata.id))
+                        else -> WebScreen(rawUrl(host.server, preview.place, item.metadata.id), page = false)
                     },
                 )
                 onDismiss()

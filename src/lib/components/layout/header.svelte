@@ -19,9 +19,11 @@
 
 	interface Props {
 		user: User;
+		/** Inside the mobile app, which brings its own logo, bell and account. */
+		app?: boolean;
 	}
 
-	let { user }: Props = $props();
+	let { user, app = false }: Props = $props();
 
 	const isDesktop = new MediaQuery("(min-width: 768px)");
 </script>
@@ -33,14 +35,19 @@
 		<!-- Desktop only: on a phone the whole navigation lives in the
              bottom-bar drawer, and the sidebar's Sheet is not rendered. Which
              also leaves nothing branding the app there, hence the logo. -->
-		<Sidebar.Trigger class="-ml-1 hidden md:flex" />
-		<a href={resolve("/(app)")} class="-ml-1 me-1 flex items-center md:hidden">
-			<Logo label={`${page.data.config.appName} logo`} class="size-6" />
-		</a>
-		<Separator
-			orientation="vertical"
-			class="mx-2 hidden data-[orientation=vertical]:h-4 md:block"
-		/>
+		{#if !app}
+			<Sidebar.Trigger class="-ml-1 hidden md:flex" />
+			<a
+				href={resolve("/(app)")}
+				class="-ml-1 me-1 flex items-center md:hidden"
+			>
+				<Logo label={`${page.data.config.appName} logo`} class="size-6" />
+			</a>
+			<Separator
+				orientation="vertical"
+				class="mx-2 hidden data-[orientation=vertical]:h-4 md:block"
+			/>
+		{/if}
 
 		<Breadcrumb.Root>
 			<Breadcrumb.List>
@@ -113,7 +120,7 @@
 		</Breadcrumb.Root>
 		<div class="ml-auto flex items-center gap-2">
 			<div class="flex items-center gap-2">
-				{#if !page.data.authBypassed}
+				{#if !page.data.authBypassed && !app}
 					<!-- Both at every width: the bottom bar has no room for
                          either, so the header is the only place a phone can
                          see that something happened or reach the account. -->

@@ -2521,6 +2521,17 @@ Maestro's `openLink`, which is how a simulator with no camera tests it. iOS asks
 "Open in Penombre?" the first time, and a run that stopped there leaves that
 alert over the next launch; `paired.yaml` dismisses it.
 
+### Pages the app opens wear its look: `?app=`
+
+`WebScreen` adds `?app=light|dark` (`appViewUrl`) to every page it opens, not to
+raw files (`page = false`). `#lib/app-view.ts` reads it; `themeHandler` stamps
+`data-app` (and `dark`) and keeps it in a session cookie (`penombre-app`),
+because a click inside the page loses the query. `?app=0` clears it. The `(app)`
+layout then drops the sidebar, bottom bar, banner and onboarding, the header
+drops its logo, bell and avatar, and `app.css` makes the ground transparent over
+the app's sky, like `data-embed`. The cookie lives in the web view's own cookie
+jar, not the phone's browser.
+
 ### The app's editor and PDF screens are native shells
 
 Documents, sheets and decks open in `EditorScreen` (`Editor.kt`): the app's

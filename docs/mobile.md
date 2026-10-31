@@ -143,7 +143,9 @@ The **+** button on **Home** and in a shared drive adds to the folder on screen:
 **Choose files** from the device or another app, **Take a photo**, or **Scan a
 document**, which uploads the pages as one PDF. A phone without a camera is
 offered files only, and scanning on Android needs Google Play services. Files
-over 200 MB are refused for now.
+over 200 MB are refused for now. Uploads go one at a time in a panel above the
+tab bar, with each file's progress and a **Retry** on any that failed; it stays
+while you browse elsewhere, and folds away with a tap.
 
 **New folder** is in the same menu. **Search** looks by name everywhere you have
 access: your drive, every shared drive and every mounted volume. Each result
@@ -154,7 +156,14 @@ The three dots on a row offer what the web interface's right-click does:
 **Versions** (playing, downloading or restoring one), **Star**, **Rename**,
 **Move to…**, **Duplicate**, **Copy to…** another folder or a shared drive, and
 **Move to trash**. On a drive you can only read, the ones that change it are
-absent.
+absent. **Rename** starts with the name selected but not its extension, so
+typing keeps `.wav`.
+
+A page the app opens in its own browser (a folder from **Recent**, a
+notification's link) uses the web interface's app view: the app's light or dark,
+its background, and no sidebar, tab bar or account menu of its own. Any page
+takes it with `?app=light` or `?app=dark`, and keeps it while you navigate from
+there; `?app=0` turns it off.
 
 ### Opening a file
 

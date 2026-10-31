@@ -38,6 +38,7 @@ import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material.icons.outlined.Slideshow
 import androidx.compose.material.icons.outlined.TableChart
 import androidx.compose.material.icons.outlined.ViewInAr
+import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,9 +64,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
@@ -75,6 +82,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -93,7 +101,11 @@ val LocalShown = compositionLocalOf { true }
 /** A screen pushed over the tabs. */
 sealed interface Screen
 
-data class WebScreen(val url: String) : Screen
+/** A web page; `page` ones get the web app's app view (`?app=`), a raw file does not. */
+data class WebScreen(val url: String, val page: Boolean = true) : Screen
+
+/** The web app's view for pages opened from here: the app's look, none of the web's chrome. */
+fun appViewUrl(url: String, dark: Boolean): String = url + (if ('?' in url) "&" else "?") + "app=" + if (dark) "dark" else "light"
 
 data class TrashScreen(val place: Place) : Screen
 
@@ -145,6 +157,8 @@ class Host(
     /** Opens a file's preview drawer; `siblings` are what it sits among. */
     val preview: (Place, List<Item>, Item) -> Unit,
     val screening: Screening,
+    /** The session's upload queue, shown over the bottom bar. */
+    val uploads: Uploads,
     val signedOut: () -> Unit,
     /** The bottom of every screen: the mini player over the tab bar. */
     val bar: @Composable () -> Unit,
@@ -316,6 +330,8 @@ fun Entry(
     title: String,
     detail: String? = null,
     tint: Color = brand.accent,
+    /** Drawn in place of the icon, with no tile behind it: a folder. */
+    glyph: (@Composable () -> Unit)? = null,
     picture: (@Composable () -> Unit)? = null,
     /** Beside the detail: the version chip on a file that has earlier ones. */
     badge: (@Composable () -> Unit)? = null,
@@ -328,10 +344,10 @@ fun Entry(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(44.dp).clip(Corner).background(tint.copy(alpha = 0.14f)),
+            Modifier.size(44.dp).then(if (glyph == null) Modifier.clip(Corner).background(tint.copy(alpha = 0.12f)) else Modifier),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, null, tint = tint)
+            if (glyph == null) Icon(icon, null, tint = tint) else glyph()
             // Over the icon: a picture that fails to load leaves it showing.
             picture?.invoke()
         }
@@ -388,6 +404,11 @@ fun ItemEntry(item: Item, place: Place, host: Host, trailing: @Composable RowSco
             }
         },
         tint = colour ?: if (item.isFolder) brand.accent else brand.muted,
+        glyph = if (item.isFolder) {
+            { FolderGlyph() }
+        } else {
+            null
+        },
         picture = if (pictured) {
             { Remote(thumbnailUrl(host.server, place, item.metadata.id, "small"), host, null, Modifier.fillMaxSize()) }
         } else {
@@ -524,6 +545,25 @@ fun Note(text: String, modifier: Modifier = Modifier, colour: Color = brand.mute
     Text(text, modifier.padding(28.dp), color = colour, textAlign = TextAlign.Center)
 }
 
+/** A filled folder in the logo's gradient: folders read apart from files at a glance. */
+@Composable
+fun FolderGlyph(size: Dp = 38.dp) {
+    val colors = brand
+    val from = if (colors.dark) colors.accent else colors.deep
+    Icon(
+        Icons.Rounded.Folder,
+        null,
+        Modifier.size(size).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
+            drawContent()
+            drawRect(
+                Brush.linearGradient(listOf(from, colors.glow), start = Offset(0f, this.size.height), end = Offset(this.size.width, 0f)),
+                blendMode = BlendMode.SrcIn,
+            )
+        },
+        tint = Color.Black,
+    )
+}
+
 /** Asks before something that cannot be undone. */
 @Composable
 fun Confirm(title: String, text: String, action: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
@@ -542,8 +582,16 @@ fun Confirm(title: String, text: String, action: String, onDismiss: () -> Unit, 
  * the start, with what is there selected, so typing replaces it.
  */
 @Composable
-fun Prompt(title: String, initial: String, action: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var field by remember { mutableStateOf(TextFieldValue(initial, TextRange(0, initial.length))) }
+fun Prompt(
+    title: String,
+    initial: String,
+    action: String,
+    onDismiss: () -> Unit,
+    /** What starts selected; all of it unless said. */
+    selection: TextRange = TextRange(0, initial.length),
+    onConfirm: (String) -> Unit,
+) {
+    var field by remember { mutableStateOf(TextFieldValue(initial, selection)) }
     val focus = remember { FocusRequester() }
     val text = field.text.trim()
     AlertDialog(
@@ -569,6 +617,13 @@ fun Prompt(title: String, initial: String, action: String, onDismiss: () -> Unit
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel), color = brand.muted) } },
     )
+}
+
+/** A file's name without its extension, so renaming keeps `.wav`; a folder's whole name. */
+fun nameSelection(item: Item): TextRange {
+    val name = item.title
+    val dot = name.lastIndexOf('.')
+    return if (!item.isFolder && dot > 0) TextRange(0, dot) else TextRange(0, name.length)
 }
 
 fun formatSize(bytes: Long): String {
