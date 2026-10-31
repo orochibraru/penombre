@@ -24,11 +24,14 @@ afterEach(() => {
 	delete api.requestPasswordReset;
 });
 
-function stubReset(outcome: Promise<unknown> = Promise.resolve({})) {
+/** `outcome` runs per call: a rejection made up front is unhandled while a real Redis answers. */
+function stubReset(
+	outcome: () => Promise<unknown> = () => Promise.resolve({}),
+) {
 	resets = [];
 	api.requestPasswordReset = (input: unknown) => {
 		resets.push(input);
-		return outcome;
+		return outcome();
 	};
 }
 
@@ -105,7 +108,7 @@ describe("actions.default", () => {
 	});
 
 	test("a failed send answers the same, so the address is not revealed", async () => {
-		stubReset(Promise.reject(new Error("No such user")));
+		stubReset(() => Promise.reject(new Error("No such user")));
 		mailConfigured();
 		const email = `${crypto.randomUUID()}@example.com`;
 

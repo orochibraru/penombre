@@ -1295,7 +1295,16 @@ file leaks into every file that runs after it. Two consequences:
 - A suite that calls `mockReturnValue` (not `...Once`) on a shared mock must
   restore it in `afterAll`, or it reconfigures everything downstream.
 
-Prefer stubbing a method on the instance under test over mocking a module.
+Prefer stubbing a method on the instance under test over mocking a module. A
+file that must mock one keeps the real exports and puts them back in `afterAll`
+(`storage/service.test.ts` with `./driver`): its fake driver answered every
+`objectExists` with `false`, and the signatures PDF store read back `null` in
+any full run.
+
+A stub's rejection is made when the stub is called, never up front
+(`() => Promise.reject(…)`). An eager one is unhandled until the code reaches
+it, which with CI's real Redis is a network round trip later: Bun failed the
+test, and the request it left running called the next test's stub.
 
 Module-level state bites the same way without mocking. `jobs.ts` remembers, per
 process, that a worker was seen after boot, which ends the boot grace for every
