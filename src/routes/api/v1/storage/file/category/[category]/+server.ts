@@ -1,20 +1,17 @@
 import { Http } from "#lib/server/http.js";
 import { listFilesByCategory } from "#lib/server/openapi/v1/storage.js";
-import {
-	allowedFileCategories,
-	type FileCategory,
-} from "#lib/server/schema.js";
+import { isFileCategory } from "#lib/server/schema.js";
 import { pageOptions } from "#lib/server/services/storage/listings.js";
 
 export const GET = listFilesByCategory.handler(
 	async ({ params, query, service }) => {
-		const cat = params.category?.toUpperCase();
-		if (!allowedFileCategories.includes(cat as FileCategory)) {
+		const cat = params.category?.toUpperCase() ?? "";
+		if (!isFileCategory(cat)) {
 			return Http.BadRequest("Invalid category");
 		}
 		try {
 			const objects = await service.listFilesPerCategory(
-				cat as FileCategory,
+				cat,
 				pageOptions(query),
 			);
 			return Http.Ok(objects);

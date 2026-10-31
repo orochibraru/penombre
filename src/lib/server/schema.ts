@@ -220,6 +220,13 @@ export type FolderItem = z.infer<typeof folderItemSchema>;
 export type FolderList = z.infer<typeof folderListSchema>;
 
 export type FileCategory = z.infer<typeof fileCategorySchema>;
+
+const FILE_CATEGORIES = new Set<string>(allowedFileCategories);
+
+/** Narrows a stored or requested string to a category without a cast. */
+export function isFileCategory(value: string): value is FileCategory {
+	return FILE_CATEGORIES.has(value);
+}
 export type FileContentType = z.infer<typeof fileContentTypeSchema>;
 export type FileMetadata = z.infer<typeof fileMetadataSchema>;
 

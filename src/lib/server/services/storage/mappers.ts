@@ -18,6 +18,7 @@ import type {
 	ObjectItem,
 	ObjectList,
 } from "#lib/server/schema.js";
+import { isFileCategory } from "#lib/server/schema.js";
 
 import fileTypesData from "./file-types.json" with { type: "json" };
 
@@ -115,7 +116,9 @@ export function fileDbToMetadata(file: DbFile): FileMetadata {
 	return {
 		id: file.id,
 		name: file.name,
-		category: file.category as FileCategory,
+		category: isFileCategory(file.category)
+			? file.category
+			: FileCategoryEnum.UNKNOWN,
 		contentType: file.contentType as FileContentType,
 		tags: file.tags ?? [],
 		createdAt: file.createdAt.toISOString(),

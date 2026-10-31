@@ -2717,7 +2717,13 @@ subpackages exactly, and an install that re-resolved them left the root on
 editor died on "[prosekit] Assertion failed" at creation (extensions from one
 copy fail the other's checks), which the E2E sees as a 500. Bump `prosekit`
 itself, never a subpackage, and check
-`find node_modules -path "*@prosekit/core/package.json"` finds one.
+`find node_modules -path "*@prosekit/core/package.json"` finds one. The same
+holds for every `prosemirror-*` package under it: a Renovate lock left
+`prosemirror-transform` 1.12.2 nested under seven packages beside a root 1.12.4,
+so `step instanceof ReplaceStep` in `suggestions.ts` was false for every step
+and suggesting mode silently deleted text; a nested `prosemirror-view` failed
+`svelte-check`. Delete the nested `<pkg>/prosemirror-*` entries from `bun.lock`
+and reinstall; `bun install --frozen-lockfile` accepts the result.
 
 The `{#if browser}` guard in the edit route stays regardless: `createEditor`
 parses its initial HTML with `DOMParser` at construction, so it throws "Unable

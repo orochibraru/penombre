@@ -54,7 +54,7 @@ export class Logger {
 			this.logLevel = LOG_LEVELS.DEBUG;
 		} else if (
 			config.logFormat === "console" &&
-			!Object.values(LOG_LEVELS).includes(config.logLevel as LOG_LEVELS)
+			!(Object.values(LOG_LEVELS) as string[]).includes(config.logLevel)
 		) {
 			throw new Error(
 				`Invalid log level: ${config.logLevel}. Valid levels are: ${Object.values(
@@ -171,14 +171,14 @@ export class Logger {
 	 * Otherwise, it will be logged as a JSON object with the level set to 'info'.
 	 */
 	info(input: unknown, ...optionalParams: unknown[]) {
-		const acceptedLogLevels = [
+		const acceptedLogLevels: string[] = [
 			LOG_LEVELS.INFO,
 			LOG_LEVELS.WARN,
 			LOG_LEVELS.ERROR,
 			LOG_LEVELS.DEBUG,
 			LOG_LEVELS.TRACE,
 		];
-		if (!acceptedLogLevels.includes(this.logLevel as LOG_LEVELS)) {
+		if (!acceptedLogLevels.includes(this.logLevel)) {
 			return;
 		}
 
@@ -207,14 +207,14 @@ export class Logger {
 	 * Otherwise, it will be logged as a JSON object with the level set to 'warn'.
 	 */
 	warn(input: unknown, ...optionalParams: unknown[]) {
-		const acceptedLogLevels = [
+		const acceptedLogLevels: string[] = [
 			LOG_LEVELS.WARN,
 			LOG_LEVELS.INFO,
 			LOG_LEVELS.ERROR,
 			LOG_LEVELS.DEBUG,
 			LOG_LEVELS.TRACE,
 		];
-		if (!acceptedLogLevels.includes(this.logLevel as LOG_LEVELS)) {
+		if (!acceptedLogLevels.includes(this.logLevel)) {
 			return;
 		}
 
@@ -243,14 +243,14 @@ export class Logger {
 	 * Otherwise, logs a JSON object with the level set to 'error' and the error as the message.
 	 */
 	error(err: any, ...optionalParams: unknown[]) {
-		const acceptedLogLevels = [
+		const acceptedLogLevels: string[] = [
 			LOG_LEVELS.ERROR,
 			LOG_LEVELS.INFO,
 			LOG_LEVELS.WARN,
 			LOG_LEVELS.DEBUG,
 			LOG_LEVELS.TRACE,
 		];
-		if (!acceptedLogLevels.includes(this.logLevel as LOG_LEVELS)) {
+		if (!acceptedLogLevels.includes(this.logLevel)) {
 			return;
 		}
 
@@ -279,8 +279,8 @@ export class Logger {
 	 * Otherwise, it will be logged as a JSON object with the level set to 'debug'.
 	 */
 	debug(input: unknown, ...optionalParams: unknown[]) {
-		const acceptedLogLevels = [LOG_LEVELS.DEBUG, LOG_LEVELS.TRACE];
-		if (!acceptedLogLevels.includes(this.logLevel as LOG_LEVELS)) {
+		const acceptedLogLevels: string[] = [LOG_LEVELS.DEBUG, LOG_LEVELS.TRACE];
+		if (!acceptedLogLevels.includes(this.logLevel)) {
 			return;
 		}
 
@@ -310,8 +310,8 @@ export class Logger {
 	 */
 
 	trace(input: unknown, ...optionalParams: unknown[]) {
-		const acceptedLogLevels = [LOG_LEVELS.TRACE];
-		if (!acceptedLogLevels.includes(this.logLevel as LOG_LEVELS)) {
+		const acceptedLogLevels: string[] = [LOG_LEVELS.TRACE];
+		if (!acceptedLogLevels.includes(this.logLevel)) {
 			return;
 		}
 
