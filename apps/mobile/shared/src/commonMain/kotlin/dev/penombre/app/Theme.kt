@@ -78,7 +78,8 @@ private fun brandFor(accent: String, dark: Boolean): Brand {
         deep = Color(colours.light),
         glow = Color(colours.glow),
         ember = Color(colours.ember),
-        sky = if (dark) 0.42f else 0.3f,
+        // A hint of colour, not a wash: the lists sit on it.
+        sky = if (dark) 0.24f else 0.1f,
         dark = dark,
     )
 }

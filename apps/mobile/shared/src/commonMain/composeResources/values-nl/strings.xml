@@ -78,11 +78,14 @@
     <string name="search_hint">Typ een naam, of een deel ervan, en zoek.</string>
     <string name="search_recent">Recente zoekopdrachten</string>
     <string name="search_forget">%1$s vergeten</string>
-    <string name="uploading_one">%1$s uploaden</string>
     <string name="uploading_many">Uploaden: %1$d van %2$d</string>
     <string name="upload_too_big">%1$s is groter dan de 200 MB die deze app kan versturen.</string>
-    <string name="upload_failed_one">%1$s kon niet worden geüpload: %2$s</string>
-    <string name="upload_failed_many">%1$d van %2$d bestanden konden niet worden geüpload. Laatste fout: %3$s</string>
+    <string name="uploads_done">Uploads voltooid</string>
+    <string name="uploads_some_failed">%1$d van %2$d mislukt</string>
+    <string name="upload_waiting">Wachten</string>
+    <string name="upload_retry">Opnieuw</string>
+    <string name="uploads_toggle">Uploads tonen of verbergen</string>
+    <string name="size_of">%1$s van %2$s</string>
     <string name="new_folder">Nieuwe map</string>
     <string name="create">Aanmaken</string>
     <string name="rename">Hernoemen</string>

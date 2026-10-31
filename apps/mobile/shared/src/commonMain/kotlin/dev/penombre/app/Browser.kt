@@ -44,6 +44,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
@@ -104,31 +106,12 @@ fun Browser(
     PlatformBack(enabled = nested && LocalShown.current, onBack = up)
 
     val pick = rememberFilePicker { files ->
-        if (files.isEmpty()) return@rememberFilePicker
-        val into = folder.path
-        scope.launch {
-            var failed = 0
-            var reason = ""
-            files.forEachIndexed { index, file ->
-                status = if (files.size == 1) {
-                    Words(Res.string.uploading_one, file.name).load()
-                } else {
-                    Words(Res.string.uploading_many, index + 1, files.size).load()
-                }
-                host.attempt({
-                    failed++
-                    reason = it
-                }) {
-                    if (file.size > MAX_UPLOAD_BYTES) throw Failure(Words(Res.string.upload_too_big, file.name))
-                    host.api.upload(place, into, file)
-                }
-            }
-            status = when {
-                failed == 0 -> null
-                files.size == 1 -> Words(Res.string.upload_failed_one, files.first().name, reason).load()
-                else -> Words(Res.string.upload_failed_many, failed, files.size, reason).load()
-            }
-            refresh++
+        if (files.isNotEmpty()) host.uploads.add(host, place, folder.path, files)
+    }
+    // A file landing in the folder on screen lists it again; one from before this screen does not.
+    LaunchedEffect(place, folder.path) {
+        snapshotFlow { host.uploads.landed }.drop(1).collect { landed ->
+            if (landed != null && landed.place == place && landed.folder == folder.path) refresh++
         }
     }
     if (choosing) {
@@ -147,7 +130,13 @@ fun Browser(
         }
     }
     renaming?.let { item ->
-        Prompt(stringResource(Res.string.rename), item.title, stringResource(Res.string.rename), onDismiss = { renaming = null }) { name ->
+        Prompt(
+            stringResource(Res.string.rename),
+            item.title,
+            stringResource(Res.string.rename),
+            onDismiss = { renaming = null },
+            selection = nameSelection(item),
+        ) { name ->
             renaming = null
             change { host.api.rename(place, item, childPath(folder.path, item.key), name) }
         }

@@ -496,9 +496,8 @@ fun SearchResultsView(host: Host, query: String) {
 
 /** Opens a search result among those from the same place. */
 private fun openFound(host: Host, item: Item, all: List<Item>) {
-    // A result carries its folder's id, not the path a listing needs.
     if (item.isFolder) {
-        host.push(WebScreen("${host.server}/go/folder/${item.metadata.id}"))
+        openFolder(host, item.place?.place ?: Place(), item)
     } else {
         host.open(item.place?.place ?: Place(), all.filter { it.place == item.place }, item)
     }
