@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
+import { FileCategoryEnum } from "#lib/file-helpers.js";
 import type { Database } from "#lib/server/db/index.js";
 import { files, folders, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
@@ -94,7 +95,7 @@ describe("listFilesPerCategory", () => {
 		await addFile("4", "c.mp3");
 
 		const ops = new ListingOperations(ctx());
-		const page1 = await ops.listFilesPerCategory("MUSIC", {
+		const page1 = await ops.listFilesPerCategory(FileCategoryEnum.MUSIC, {
 			limit: 2,
 			sortColumn: "name",
 			sortDirection: "asc",
@@ -103,7 +104,7 @@ describe("listFilesPerCategory", () => {
 		expect(page1.nextCursor).not.toBeNull();
 		expect(page1.total).toBe(4);
 
-		const page2 = await ops.listFilesPerCategory("MUSIC", {
+		const page2 = await ops.listFilesPerCategory(FileCategoryEnum.MUSIC, {
 			limit: 2,
 			sortColumn: "name",
 			sortDirection: "asc",
@@ -119,14 +120,14 @@ describe("listFilesPerCategory", () => {
 		await addFile("3", "c.mp3", { size: 30 });
 
 		const ops = new ListingOperations(ctx());
-		const page1 = await ops.listFilesPerCategory("MUSIC", {
+		const page1 = await ops.listFilesPerCategory(FileCategoryEnum.MUSIC, {
 			limit: 2,
 			sortColumn: "size",
 			sortDirection: "desc",
 		});
 		expect(page1.list.map((i) => i.metadata.id)).toEqual(["3", "2"]);
 
-		const page2 = await ops.listFilesPerCategory("MUSIC", {
+		const page2 = await ops.listFilesPerCategory(FileCategoryEnum.MUSIC, {
 			limit: 2,
 			sortColumn: "size",
 			sortDirection: "desc",
@@ -139,7 +140,9 @@ describe("listFilesPerCategory", () => {
 	test("nextCursor is null when everything fits in one page", async () => {
 		await addFile("1", "a.mp3");
 		const ops = new ListingOperations(ctx());
-		const page = await ops.listFilesPerCategory("MUSIC", { limit: 50 });
+		const page = await ops.listFilesPerCategory(FileCategoryEnum.MUSIC, {
+			limit: 50,
+		});
 		expect(page.list).toHaveLength(1);
 		expect(page.nextCursor).toBeNull();
 		expect(page.total).toBe(1);
@@ -149,7 +152,9 @@ describe("listFilesPerCategory", () => {
 		await addFile("1", "a.mp3", { isTrashed: true });
 		await addFile("2", "b.mp3");
 		const ops = new ListingOperations(ctx());
-		const page = await ops.listFilesPerCategory("MUSIC", { limit: 50 });
+		const page = await ops.listFilesPerCategory(FileCategoryEnum.MUSIC, {
+			limit: 50,
+		});
 		expect(page.list.map((i) => i.metadata.id)).toEqual(["2"]);
 		expect(page.total).toBe(1);
 	});
@@ -157,7 +162,7 @@ describe("listFilesPerCategory", () => {
 	test("an unparsable cursor degrades to the first page instead of throwing", async () => {
 		await addFile("1", "a.mp3");
 		const ops = new ListingOperations(ctx());
-		const page = await ops.listFilesPerCategory("MUSIC", {
+		const page = await ops.listFilesPerCategory(FileCategoryEnum.MUSIC, {
 			cursor: "garbage",
 		});
 		expect(page.list.map((i) => i.metadata.id)).toEqual(["1"]);
@@ -168,7 +173,7 @@ describe("listFilesPerCategory", () => {
 		await addFile("1", "mine.mp3");
 		await addFile("2", "theirs.mp3", { id: "2", ownerId: "u2" });
 		const page = await new ListingOperations(ctx("u1")).listFilesPerCategory(
-			"MUSIC",
+			FileCategoryEnum.MUSIC,
 		);
 		expect(page.list.map((i) => i.metadata.id)).toEqual(["1"]);
 	});

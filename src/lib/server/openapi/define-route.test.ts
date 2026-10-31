@@ -29,7 +29,7 @@ const handler = route.handler(({ service, user }) =>
 	),
 );
 
-function eventFor(locals: Partial<App.Locals>): RequestEvent {
+function eventFor(locals: Record<string, unknown>): RequestEvent {
 	return {
 		locals,
 		url: new URL("http://localhost/api/v1/test/storage-owner"),
@@ -71,7 +71,7 @@ describe("route service owner", () => {
 });
 
 function requestFor(
-	locals: Partial<App.Locals>,
+	locals: Record<string, unknown>,
 	options: {
 		params?: Record<string, string>;
 		search?: string;

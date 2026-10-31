@@ -136,7 +136,7 @@ test.describe("copy and move between drives", () => {
 		);
 
 		const dialog = page.getByRole("dialog");
-		await dialog.getByRole("button", { name: "Destination" }).click();
+		await dialog.getByRole("combobox", { name: "Destination" }).click();
 		await page.getByRole("option", { name: driveName }).click();
 		const copyHere = dialog.getByRole("button", { name: "Copy here" });
 		await expect(copyHere).toBeEnabled();
