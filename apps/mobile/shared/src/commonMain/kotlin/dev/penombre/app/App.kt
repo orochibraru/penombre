@@ -748,6 +748,15 @@ private fun Signed(
 
                     is DriveScreen -> DriveView(host, screen.drive)
 
+                    is FolderScreen -> Browser(
+                        host = host,
+                        place = screen.place,
+                        root = screen.title,
+                        rootPath = screen.path,
+                        onExit = host.back,
+                        bottomBar = host.bar,
+                    )
+
                     is SearchResultsScreen -> SearchResultsView(host, screen.query)
 
                     LinksScreen -> LinksView(host)

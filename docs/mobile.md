@@ -149,7 +149,8 @@ while you browse elsewhere, and folds away with a tap.
 
 **New folder** is in the same menu. **Search** looks by name everywhere you have
 access: your drive, every shared drive and every mounted volume. Each result
-names the place and folder it is in.
+names the place and folder it is in. A folder found there, or in **Recent** or
+**Starred**, opens in the app; text and code files open in the editor.
 
 The three dots on a row offer what the web interface's right-click does:
 **Download** (into Downloads on Android, through the share sheet on iOS),

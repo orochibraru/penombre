@@ -132,6 +132,14 @@ data class GrantScreen(val grant: Grant) : Screen
 
 data class DriveScreen(val drive: Drive) : Screen
 
+/** A folder reached from outside its drive's tree: a search hit, a starred or recent row. */
+data class FolderScreen(val place: Place, val path: String, val title: String) : Screen
+
+/** Opens a folder from a list that spans folders, in the app, not on the web. */
+fun openFolder(host: Host, place: Place, item: Item) {
+    host.push(FolderScreen(place, childPath(item.parentKey.orEmpty(), item.key), item.title))
+}
+
 data class SearchResultsScreen(val query: String) : Screen
 
 data object LinksScreen : Screen

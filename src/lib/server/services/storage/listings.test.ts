@@ -358,6 +358,22 @@ describe("listStarredFiles", () => {
 		expect(pages).toEqual([["d1", "f1"], ["f4"]]);
 		expect((await ops.listStarredFiles()).total).toBe(3);
 	});
+
+	test("says where each row lives, so a client can open it", async () => {
+		await addFolder("d1", "Music");
+		await addFolder("d2", "Live", {
+			path: "d1/d2",
+			parentId: "d1",
+			isStarred: true,
+		});
+		await addFile("f1", "a.mp3", { isStarred: true });
+
+		const { list } = await new ListingOperations(ctx()).listStarredFiles();
+		const byId = new Map(list.map((item) => [item.metadata.id, item]));
+		expect(byId.get("d2")?.parentKey).toBe("d1");
+		expect(byId.get("d2")?.parent).toBe("Music");
+		expect(byId.get("f1")?.parentKey).toBeUndefined();
+	});
 });
 
 describe("listTrashFiles", () => {
