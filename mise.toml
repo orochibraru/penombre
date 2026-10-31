@@ -1,19 +1,19 @@
 [tools]
 bun = "1.4.4"
-go = "1.27.2"
+go = "1.27.3"
 # The desktop app: apps/desktop/Cargo.toml's `rust-version`, and the rclone it drives.
 rust = { version = "1.98.1", components = "rustfmt,clippy" }
-rclone = "1.75.1"
+rclone = "1.75.2"
 # The mobile app: Gradle runs on this JDK (AGP 9 needs 17+; Android Studio
 # bundles 21), and xcodegen writes the iOS host project from its project.yml.
-java = "temurin-25.0.4+101.0.LTS"
+java = "temurin-25.0.5+8.0.LTS"
 xcodegen = "2.46.0"
 # Only sdkmanager/avdmanager: `mobile:setup` installs the SDK packages.
 android-sdk = "23.0"
 # Drives the app on the emulator and the simulator for `mobile:e2e`.
 maestro = "cli-2.10.0"
 # Rasterizes the logo for `mise run icons`.
-resvg = "0.48.1"
+resvg = "0.49.0"
 
 [env]
 # Not the plugin's own versioned folder, which a tools bump would empty.
