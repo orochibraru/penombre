@@ -78,11 +78,14 @@
     <string name="search_hint">Skriv ett namn, eller en del av det, och sök.</string>
     <string name="search_recent">Senaste sökningar</string>
     <string name="search_forget">Glöm %1$s</string>
-    <string name="uploading_one">Laddar upp %1$s</string>
     <string name="uploading_many">Laddar upp %1$d av %2$d</string>
     <string name="upload_too_big">%1$s är större än de 200 MB som appen kan skicka.</string>
-    <string name="upload_failed_one">%1$s kunde inte laddas upp: %2$s</string>
-    <string name="upload_failed_many">%1$d av %2$d filer kunde inte laddas upp. Senaste fel: %3$s</string>
+    <string name="uploads_done">Uppladdningar klara</string>
+    <string name="uploads_some_failed">%1$d av %2$d misslyckades</string>
+    <string name="upload_waiting">Väntar</string>
+    <string name="upload_retry">Försök igen</string>
+    <string name="uploads_toggle">Visa eller dölj uppladdningar</string>
+    <string name="size_of">%1$s av %2$s</string>
     <string name="new_folder">Ny mapp</string>
     <string name="create">Skapa</string>
     <string name="rename">Byt namn</string>

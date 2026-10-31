@@ -1,10 +1,18 @@
 import { and, inArray } from "drizzle-orm";
 
+import type {
+	File as DbFile,
+	Folder as DbFolder,
+} from "#lib/server/db/schema.js";
 import { folders } from "#lib/server/db/schema.js";
 import type { ObjectItem } from "#lib/server/schema.js";
 
 import type { StorageContext } from "./context";
-import { ancestorFolders } from "./mappers";
+import {
+	ancestorFolders,
+	fileDbToObjectItem,
+	folderDbToObjectItem,
+} from "./mappers";
 import { ownedFolders } from "./scope";
 
 /** A search hit's folder, by path; none at the root. */
@@ -14,6 +22,20 @@ export function withParentKey(item: ObjectItem, path: string): ObjectItem {
 		item.parentKey = path.slice(0, cut);
 	}
 	return item;
+}
+
+/** Rows from anywhere in the tree, each with the folder it sits in. */
+export async function locatedItems(
+	ctx: StorageContext,
+	pageFolders: DbFolder[],
+	pageFiles: DbFile[],
+): Promise<ObjectItem[]> {
+	const items = [
+		...pageFolders.map((f) => withParentKey(folderDbToObjectItem(f), f.path)),
+		...pageFiles.map((f) => withParentKey(fileDbToObjectItem(f), f.path)),
+	];
+	await nameParents(ctx, items);
+	return items;
 }
 
 /** Names each item's folder, for the eye: `parentKey` is what it opens by. */
