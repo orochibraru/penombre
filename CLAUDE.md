@@ -2281,10 +2281,11 @@ redemptions never both win.
   camera or scanner on a simulator. Scanning is VisionKit on iOS and Google Play
   services' document scanner on Android; the camera on Android writes into a
   `FileProvider` file declared in the app's manifest.
-- The bottom bar mirrors the web app's (Home, Recent, Starred, Menu). A folder
-  tapped in Recent or Starred opens `/go/folder/<id>` in the embedded web app:
-  those lists give its id, and the native listing needs its path. `Listing`
-  takes what it lists as `source` and keys all its state on it.
+- A folder from Search, Recent or Starred opens natively (`FolderScreen`,
+  `openFolder`): its path is `childPath(parentKey, key)`, so every list that
+  spans folders must send `parentKey` (search and starred do, through
+  `withParentKey`). `Listing` takes what it lists as `source` and keys all its
+  state on it.
 - Sign-in attempts are kept by `state`, not in one slot: a second tap on Sign in
   replaced the first attempt while its browser sheet was still the one on
   screen, and its answer was refused ("did not match the request"). A `state`
