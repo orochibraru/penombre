@@ -1,6 +1,6 @@
 module github.com/orochibraru/penombre
 
-go 1.27.1
+go 1.27.3
 
 require (
 	github.com/jackc/pgx/v5 v5.12.0

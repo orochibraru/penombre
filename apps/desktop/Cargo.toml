@@ -2,7 +2,7 @@
 name = "penombre-sync"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.98"
+rust-version = "1.99"
 license = "MIT"
 description = "Keeps a local folder in two-way sync with a Penombre drive"
 publish = false
