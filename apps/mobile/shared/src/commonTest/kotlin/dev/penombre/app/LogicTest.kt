@@ -123,8 +123,11 @@ class LogicTest {
     @Test
     fun anUploadCreatesTheEntryThenSendsTheBytes() = runTest {
         val requests = mutableListOf<HttpRequestData>()
+        var body = ""
         val engine = MockEngine { request ->
             requests += request
+            // Read during the call: the progress wrapper streams in its scope.
+            if (request.url.encodedPath.endsWith("/upload")) body = request.body.toByteArray().decodeToString()
             respond(
                 """{"data":{"id":"f9","finalName":"Take 1.wav","metadata":{"id":"f9","category":"MUSIC"}}}""",
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
@@ -145,7 +148,6 @@ class LogicTest {
         assertEquals("/api/v1/storage/file/f9/upload", send.url.encodedPath)
         assertEquals("Bearer tok", send.headers[HttpHeaders.Authorization])
         assertTrue(send.body.contentType.toString().startsWith("multipart/form-data"))
-        val body = send.body.toByteArray().decodeToString()
         // Quoted: the server does not read `name=file` as a field at all.
         assertTrue("name=\"file\"; filename=\"Take 1.wav\"" in body)
         assertTrue(body.endsWith("--\r\n"))
