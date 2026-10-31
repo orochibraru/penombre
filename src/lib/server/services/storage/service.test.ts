@@ -15,6 +15,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { FileCategoryEnum } from "#lib/file-helpers.js";
 import type {
 	File as DbFile,
 	Folder as DbFolder,
@@ -1441,7 +1442,9 @@ describe("StorageService over a real tree", () => {
 			]);
 			const everything = await service.abstractListFiles({ recursive: true });
 			expect(everything.list.length).toBeGreaterThanOrEqual(2);
-			const documents = await service.listFilesPerCategory("DOCUMENTS");
+			const documents = await service.listFilesPerCategory(
+				FileCategoryEnum.DOCUMENTS,
+			);
 			expect(documents.total).toBe(2);
 			expect((await service.listRecentFiles()).list).toHaveLength(2);
 			const starred = await service.listStarredFiles();
