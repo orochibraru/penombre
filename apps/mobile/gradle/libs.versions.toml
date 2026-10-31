@@ -1,11 +1,11 @@
 [versions]
-agp = "9.2.0"
-kotlin = "2.4.10"
-compose = "1.12.0"
+agp = "9.5.0"
+kotlin = "2.4.21"
+compose = "1.12.2"
 ktor = "3.6.0"
-serialization = "1.11.0"
+serialization = "1.12.0"
 activity = "1.13.0"
-browser = "1.9.0"
+browser = "1.10.0"
 
 [libraries]
 ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -21,7 +21,7 @@ coil-network = { module = "io.coil-kt.coil3:coil-network-ktor3", version = "3.6.
 serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
-androidx-core = { module = "androidx.core:core-ktx", version = "1.16.0" }
+androidx-core = { module = "androidx.core:core-ktx", version = "1.19.1" }
 androidx-work = { module = "androidx.work:work-runtime-ktx", version = "2.12.0" }
 mlkit-codes = { module = "com.google.android.gms:play-services-code-scanner", version = "16.1.0" }
 mlkit-scanner = { module = "com.google.android.gms:play-services-mlkit-document-scanner", version = "16.0.0" }
