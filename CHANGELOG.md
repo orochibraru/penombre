@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.8.68](https://github.com/orochibraru/penombre/compare/v1.8.67...v1.8.68) (2026-10-31)
+
+### Bug Fixes
+
+* **deps:** update minor and patch updates (#141) ([a46ff40](https://github.com/orochibraru/penombre/commit/a46ff408ea6e8d45a9f9e46e033c7095439f4eb9))
+* **deps:** update bun & javascript ecosystem to v4 (#152) ([5a98493](https://github.com/orochibraru/penombre/commit/5a984932755606bce13ba5da96290d95faeed550))
+* **deps:** update ktor monorepo to v3.6.1 (#151) ([a712206](https://github.com/orochibraru/penombre/commit/a712206fd7ca95963113ad30fadeef12dcfda1a5))
+* **deps:** update dependency nodemailer to v10.1.4 [security] (#150) ([51aa190](https://github.com/orochibraru/penombre/commit/51aa190364aafdb0319ae347d18fa9d1e1c695c3))
+* **deps:** update dependency zod to v4.6.6 [security] (#149) ([6aca100](https://github.com/orochibraru/penombre/commit/6aca100bf628ee0062d38107e7a8e9e0072520e0))
+
 ## [1.8.67](https://github.com/orochibraru/penombre/compare/v1.8.66...v1.8.67) (2026-10-31)
 
 ### Features
