@@ -13,6 +13,7 @@ import { sql } from "drizzle-orm";
 import { migrate as migratePg } from "drizzle-orm/bun-sql/migrator";
 import { migrate as migrateSqlite } from "drizzle-orm/bun-sqlite/migrator";
 
+import { APP_VIEW_COOKIE, appView, appViewQuery } from "#lib/app-view.js";
 import { Logger } from "#lib/logger.js";
 import { baseLocale, getLocale } from "#lib/paraglide/runtime.js";
 import type { AuthType } from "#lib/server/auth/index.js";
@@ -504,9 +505,22 @@ const themeHandler: Handle = async ({ event, resolve }) => {
 
 	// The mobile app's editor sits over its own ground, in its own light or
 	// dark: the first paint must already match it.
+	const asked = appViewQuery(event.url);
+	if (asked === "off") {
+		event.cookies.delete(APP_VIEW_COOKIE, { path: "/" });
+	} else if (asked) {
+		event.cookies.set(APP_VIEW_COOKIE, asked, {
+			path: "/",
+			httpOnly: true,
+			sameSite: "lax",
+		});
+	}
+	const app = appView(event.url, event.cookies);
 	const embed = event.url.searchParams.has("embed")
 		? ` data-embed${event.url.searchParams.get("theme") === "dark" ? ' class="dark"' : ""}`
-		: "";
+		: app
+			? ` data-app${app === "dark" ? ' class="dark"' : ""}`
+			: "";
 	const attributes =
 		` data-font="${theme.font}" data-corners="${theme.corners}"` +
 		` data-accent="${theme.accent}"${embed}`;

@@ -6,6 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.onUpload
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.delete
@@ -474,7 +475,7 @@ class Api(val session: Session, internal val client: HttpClient = httpClient()) 
     suspend fun setPreference(name: String, value: JsonPrimitive): Preferences = setPreferences(mapOf(name to value))
 
     /** The web uploader's two calls: the file's entry, then its bytes. */
-    suspend fun upload(place: Place, folder: String, file: PickedFile) {
+    suspend fun upload(place: Place, folder: String, file: PickedFile, onProgress: (sent: Long) -> Unit = {}) {
         call {
             val created = client.post("$base/storage/file") {
                 auth(place)
@@ -488,6 +489,8 @@ class Api(val session: Session, internal val client: HttpClient = httpClient()) 
                 val boundary = "penombre-$id"
                 client.post("$base/storage/file/$id/upload") {
                     auth(place)
+                    // The body is the file plus a few hundred bytes of multipart: scaled back to the file.
+                    onUpload { sent, total -> onProgress(if (total != null && total > 0) sent * file.size / total else sent) }
                     setBody(
                         ByteArrayContent(
                             multipart(boundary, file.name, bytes),
