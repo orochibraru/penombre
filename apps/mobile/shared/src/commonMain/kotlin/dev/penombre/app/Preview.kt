@@ -73,12 +73,15 @@ import org.jetbrains.compose.resources.stringResource
 /** What the web app opens in one of its editors (`documents.ts`, Office files). */
 internal val EDITABLE = setOf("docx", "xlsx", "pptx", "html", "htm", "csv", "md", "markdown")
 
+/** Plain text the web editor's textarea opens, rather than a raw page in a browser. */
+internal val TEXT = setOf("txt", "log", "json", "yaml", "yml", "toml", "ini", "conf", "cfg", "xml", "env", "srt", "vtt")
+
 /** A file opened from a list, and the list it came from. */
 data class Preview(val place: Place, val siblings: List<Item>, val item: Item) {
     val isVideo get() = item.metadata.category == "VIDEO"
     val isImage get() = item.metadata.category == "IMAGES"
     val isPdf get() = extension == "pdf"
-    val isEditable get() = extension in EDITABLE
+    val isEditable get() = extension in EDITABLE || extension in TEXT || item.metadata.category == "CODE"
     private val extension get() = item.title.substringAfterLast('.', "").lowercase()
 }
 
@@ -139,7 +142,7 @@ fun PreviewSheet(preview: Preview, host: Host, onDismiss: () -> Unit) {
                         // The web app edits these, in a screen of the app's own.
                         preview.isEditable -> EditorScreen(preview.place, item)
 
-                        else -> WebScreen(rawUrl(host.server, preview.place, item.metadata.id))
+                        else -> WebScreen(rawUrl(host.server, preview.place, item.metadata.id), page = false)
                     },
                 )
                 onDismiss()

@@ -2,6 +2,7 @@ import { resolve } from "$app/paths";
 import { redirect } from "@sveltejs/kit";
 
 import { api } from "#lib/api/index.js";
+import { appView } from "#lib/app-view.js";
 import { signInReturningTo } from "#lib/next.js";
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { getConfig, getVolumes, isSimpleMode } from "#lib/server/config.js";
@@ -25,7 +26,7 @@ const DRIVE_ONLY_PATHS = [
 const within = (path: string, prefix: string) =>
 	path === prefix || path.startsWith(`${prefix}/`);
 
-export const load = async ({ fetch, url, locals, depends }) => {
+export const load = async ({ fetch, url, locals, depends, cookies }) => {
 	depends("app:preferences");
 	// The sidebar's trash and starred badges come from this load, so any
 	// change to the drive has to re-run it or they keep the boot's numbers.
@@ -103,6 +104,8 @@ export const load = async ({ fetch, url, locals, depends }) => {
 
 	return {
 		user: locals.user,
+		/** Inside the mobile app's browser: its look, none of the web's chrome. */
+		appView: appView(url, cookies),
 		// No personal drive, shares or volumes: the layout hides them.
 		driveOnly,
 		config,

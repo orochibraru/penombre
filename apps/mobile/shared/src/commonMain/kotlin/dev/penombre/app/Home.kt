@@ -234,7 +234,7 @@ private fun TrashButton(host: Host, place: Place, title: String) {
     }
 }
 
-/** A list across folders: a folder in it opens where it lives, on the web. */
+/** A list across folders: a folder in it opens where it lives. */
 @Composable
 fun FlatList(host: Host, home: Home, onTitle: (() -> Unit)?, empty: String, load: suspend (String?) -> Page) {
     val personal = Place()
@@ -245,7 +245,7 @@ fun FlatList(host: Host, home: Home, onTitle: (() -> Unit)?, empty: String, load
     ) { padding ->
         Listing(home, empty, Modifier.padding(padding), host, load) { item, all ->
             ItemEntry(item, personal, host) {
-                if (item.isFolder) host.push(WebScreen("${host.server}/go/folder/${item.metadata.id}")) else host.open(personal, all, item)
+                if (item.isFolder) openFolder(host, personal, item) else host.open(personal, all, item)
             }
         }
     }

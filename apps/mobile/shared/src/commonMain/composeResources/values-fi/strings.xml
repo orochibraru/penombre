@@ -78,11 +78,14 @@
     <string name="search_hint">Kirjoita nimi tai sen osa ja hae.</string>
     <string name="search_recent">Viimeisimmät haut</string>
     <string name="search_forget">Unohda %1$s</string>
-    <string name="uploading_one">Lähetetään %1$s</string>
     <string name="uploading_many">Lähetetään %1$d/%2$d</string>
     <string name="upload_too_big">%1$s ylittää 200 Mt, jonka tämä sovellus voi lähettää.</string>
-    <string name="upload_failed_one">Tiedostoa %1$s ei voitu lähettää: %2$s</string>
-    <string name="upload_failed_many">Lähetys epäonnistui: %1$d/%2$d tiedostosta. Viimeisin virhe: %3$s</string>
+    <string name="uploads_done">Lähetykset valmiit</string>
+    <string name="uploads_some_failed">%1$d/%2$d epäonnistui</string>
+    <string name="upload_waiting">Odottaa</string>
+    <string name="upload_retry">Yritä uudelleen</string>
+    <string name="uploads_toggle">Näytä tai piilota lähetykset</string>
+    <string name="size_of">%1$s / %2$s</string>
     <string name="new_folder">Uusi kansio</string>
     <string name="create">Luo</string>
     <string name="rename">Nimeä uudelleen</string>

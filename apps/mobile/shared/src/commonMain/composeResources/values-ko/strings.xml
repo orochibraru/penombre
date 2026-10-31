@@ -78,11 +78,14 @@
     <string name="search_hint">이름이나 이름의 일부를 입력한 뒤 검색하세요.</string>
     <string name="search_recent">최근 검색</string>
     <string name="search_forget">%1$s 기록 삭제</string>
-    <string name="uploading_one">%1$s 업로드 중</string>
     <string name="uploading_many">%2$d개 중 %1$d개 업로드 중</string>
     <string name="upload_too_big">%1$s은(는) 이 앱이 보낼 수 있는 200MB를 초과합니다.</string>
-    <string name="upload_failed_one">%1$s을(를) 업로드할 수 없습니다: %2$s</string>
-    <string name="upload_failed_many">파일 %2$d개 중 %1$d개를 업로드할 수 없습니다. 마지막 오류: %3$s</string>
+    <string name="uploads_done">업로드 완료</string>
+    <string name="uploads_some_failed">%2$d개 중 %1$d개 실패</string>
+    <string name="upload_waiting">대기 중</string>
+    <string name="upload_retry">다시 시도</string>
+    <string name="uploads_toggle">업로드 표시 전환</string>
+    <string name="size_of">%1$s / %2$s</string>
     <string name="new_folder">새 폴더</string>
     <string name="create">만들기</string>
     <string name="rename">이름 변경</string>

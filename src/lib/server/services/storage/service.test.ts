@@ -49,6 +49,13 @@ const mockRegister = mock(async (_opts: unknown) => {});
 /** The `(volumePath, userFolder)` the last volume-bound service asked for. */
 const volumeDriverArgs: { path?: string; userFolder?: string } = {};
 
+// `mock.module` is permanent: the real driver goes back in `afterAll`, or the
+// signatures PDF store, which runs later, writes into this mock.
+const realDriver = { ...(await import("./driver")) };
+afterAll(() => {
+	void mock.module("./driver", () => realDriver);
+});
+
 mock.module("./driver", () => ({
 	createUserStorageDriver: () => mockDriver,
 	createVolumeStorageDriver: (path: string, userFolder: string) => {

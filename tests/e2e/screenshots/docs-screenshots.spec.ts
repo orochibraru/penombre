@@ -178,6 +178,9 @@ const opened: Record<"document" | "sheet" | "deck", string> = {
 };
 
 test("seeds the band's drive", async ({ page }) => {
+	// Real media, written and rendered: 13s on a laptop, past the default 30s
+	// on a slow runner, and its own last wait allows 60s.
+	test.setTimeout(90_000);
 	await setVersioning(page, true);
 	await goToBrowse(page);
 	await upload(page, FILES);

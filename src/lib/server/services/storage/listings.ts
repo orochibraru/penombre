@@ -44,7 +44,7 @@ import {
 	type ListingCursor,
 	paginateItems,
 } from "./mappers";
-import { nameParents, withParentKey } from "./parents";
+import { locatedItems, nameParents, withParentKey } from "./parents";
 import { ownedFiles, ownedFolders } from "./scope";
 import { latestSeqs } from "./versions";
 
@@ -586,6 +586,9 @@ export class ListingOperations {
 				),
 			},
 			options,
+			// Starred rows come from anywhere: each says where it lives.
+			(pageFolders, pageFiles) =>
+				locatedItems(this.ctx, pageFolders, pageFiles),
 		);
 	}
 

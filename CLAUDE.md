@@ -1295,7 +1295,16 @@ file leaks into every file that runs after it. Two consequences:
 - A suite that calls `mockReturnValue` (not `...Once`) on a shared mock must
   restore it in `afterAll`, or it reconfigures everything downstream.
 
-Prefer stubbing a method on the instance under test over mocking a module.
+Prefer stubbing a method on the instance under test over mocking a module. A
+file that must mock one keeps the real exports and puts them back in `afterAll`
+(`storage/service.test.ts` with `./driver`): its fake driver answered every
+`objectExists` with `false`, and the signatures PDF store read back `null` in
+any full run.
+
+A stub's rejection is made when the stub is called, never up front
+(`() => Promise.reject(…)`). An eager one is unhandled until the code reaches
+it, which with CI's real Redis is a network round trip later: Bun failed the
+test, and the request it left running called the next test's stub.
 
 Module-level state bites the same way without mocking. `jobs.ts` remembers, per
 process, that a worker was seen after boot, which ends the boot grace for every
@@ -1939,6 +1948,12 @@ Browsers are cached per Playwright version (`actions/cache` on
 `~/.cache/ms-playwright`), which is 30s a job over 8 jobs; a cache hit still
 runs `playwright install-deps`, since the system libraries are not in it.
 
+A test that seeds real media (`seeds the band's drive` in the screenshots spec)
+sets its own `test.setTimeout`: 13s on a laptop ran past the default 30s on a
+slow runner, and its retry then spent the rest of the shard's budget, so the job
+was cancelled rather than failed. A test whose own `expect` waits longer than
+30s needs the same.
+
 A broken build is the other way to blow it: every test times out three times,
 and 103 × 3 × 30s kept a job red for 2.5h. CI stops at `maxFailures: 10`.
 Playwright already runs on Bun (`[run] bun = true` in `bunfig.toml`); there is
@@ -2281,10 +2296,11 @@ redemptions never both win.
   camera or scanner on a simulator. Scanning is VisionKit on iOS and Google Play
   services' document scanner on Android; the camera on Android writes into a
   `FileProvider` file declared in the app's manifest.
-- The bottom bar mirrors the web app's (Home, Recent, Starred, Menu). A folder
-  tapped in Recent or Starred opens `/go/folder/<id>` in the embedded web app:
-  those lists give its id, and the native listing needs its path. `Listing`
-  takes what it lists as `source` and keys all its state on it.
+- A folder from Search, Recent or Starred opens natively (`FolderScreen`,
+  `openFolder`): its path is `childPath(parentKey, key)`, so every list that
+  spans folders must send `parentKey` (search and starred do, through
+  `withParentKey`). `Listing` takes what it lists as `source` and keys all its
+  state on it.
 - Sign-in attempts are kept by `state`, not in one slot: a second tap on Sign in
   replaced the first attempt while its browser sheet was still the one on
   screen, and its answer was refused ("did not match the request"). A `state`
@@ -2520,6 +2536,17 @@ intent filter host `pair`; iOS's `CFBundleURLTypes` plus `.onOpenURL`), and
 Maestro's `openLink`, which is how a simulator with no camera tests it. iOS asks
 "Open in Penombre?" the first time, and a run that stopped there leaves that
 alert over the next launch; `paired.yaml` dismisses it.
+
+### Pages the app opens wear its look: `?app=`
+
+`WebScreen` adds `?app=light|dark` (`appViewUrl`) to every page it opens, not to
+raw files (`page = false`). `#lib/app-view.ts` reads it; `themeHandler` stamps
+`data-app` (and `dark`) and keeps it in a session cookie (`penombre-app`),
+because a click inside the page loses the query. `?app=0` clears it. The `(app)`
+layout then drops the sidebar, bottom bar, banner and onboarding, the header
+drops its logo, bell and avatar, and `app.css` makes the ground transparent over
+the app's sky, like `data-embed`. The cookie lives in the web view's own cookie
+jar, not the phone's browser.
 
 ### The app's editor and PDF screens are native shells
 
