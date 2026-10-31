@@ -548,12 +548,33 @@ body::after {
 	}
 }
 
-/* Inside the mobile app's editor screen, whose own ground and aurora show
-   through a transparent web view: one sky, no seam under its header. */
-:root[data-embed] {
+/* Inside the mobile app (its editor, or any page opened with `?app=`), whose
+   own ground and aurora show through a transparent web view: one sky, no seam
+   under its header. */
+:root[data-embed],
+:root[data-app] {
 	background-color: transparent;
 }
 :root[data-embed] body::before,
-:root[data-embed] body::after {
+:root[data-embed] body::after,
+:root[data-app] body::before,
+:root[data-app] body::after {
 	display: none;
+}
+/* The app's lists sit straight on its sky: no panel, no frame, no header rule. */
+:root[data-app] [data-slot="sidebar-inset"] {
+	background: transparent;
+	box-shadow: none;
+	border: 0;
+	margin: 0;
+	border-radius: 0;
+}
+:root[data-app] [data-slot="sidebar-inset"]::before {
+	display: none;
+}
+:root[data-app] [data-slot="sidebar-wrapper"] {
+	background: transparent;
+}
+:root[data-app] [data-slot="sidebar-inset"] > header {
+	border-bottom-color: transparent;
 }

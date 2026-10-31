@@ -78,11 +78,14 @@
     <string name="search_hint">Escribe un nombre, o parte de él, y busca.</string>
     <string name="search_recent">Búsquedas recientes</string>
     <string name="search_forget">Olvidar %1$s</string>
-    <string name="uploading_one">Subiendo %1$s</string>
     <string name="uploading_many">Subiendo %1$d de %2$d</string>
     <string name="upload_too_big">%1$s supera los 200 MB que esta app puede enviar.</string>
-    <string name="upload_failed_one">No se pudo subir %1$s: %2$s</string>
-    <string name="upload_failed_many">No se pudieron subir %1$d de %2$d archivos. Último error: %3$s</string>
+    <string name="uploads_done">Subidas completadas</string>
+    <string name="uploads_some_failed">%1$d de %2$d fallaron</string>
+    <string name="upload_waiting">En espera</string>
+    <string name="upload_retry">Reintentar</string>
+    <string name="uploads_toggle">Mostrar u ocultar subidas</string>
+    <string name="size_of">%1$s de %2$s</string>
     <string name="new_folder">Nueva carpeta</string>
     <string name="create">Crear</string>
     <string name="rename">Renombrar</string>

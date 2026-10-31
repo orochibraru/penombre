@@ -78,11 +78,14 @@
     <string name="search_hint">输入名称或名称的一部分，然后搜索。</string>
     <string name="search_recent">最近搜索</string>
     <string name="search_forget">删除搜索记录 %1$s</string>
-    <string name="uploading_one">正在上传 %1$s</string>
     <string name="uploading_many">正在上传第 %1$d 个，共 %2$d 个</string>
     <string name="upload_too_big">%1$s 超过了此应用可发送的 200 MB 上限。</string>
-    <string name="upload_failed_one">无法上传 %1$s：%2$s</string>
-    <string name="upload_failed_many">%2$d 个文件中有 %1$d 个无法上传。最后一个错误：%3$s</string>
+    <string name="uploads_done">上传完成</string>
+    <string name="uploads_some_failed">%2$d 个中有 %1$d 个失败</string>
+    <string name="upload_waiting">等待中</string>
+    <string name="upload_retry">重试</string>
+    <string name="uploads_toggle">显示或隐藏上传</string>
+    <string name="size_of">%1$s / %2$s</string>
     <string name="new_folder">新建文件夹</string>
     <string name="create">创建</string>
     <string name="rename">重命名</string>

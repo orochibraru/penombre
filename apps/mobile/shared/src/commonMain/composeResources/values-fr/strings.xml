@@ -78,11 +78,14 @@
     <string name="search_hint">Saisissez un nom, ou une partie, puis lancez la recherche.</string>
     <string name="search_recent">Recherches récentes</string>
     <string name="search_forget">Oublier %1$s</string>
-    <string name="uploading_one">Téléversement de %1$s</string>
     <string name="uploading_many">Téléversement de %1$d sur %2$d</string>
     <string name="upload_too_big">%1$s dépasse les 200 Mo que cette application peut envoyer.</string>
-    <string name="upload_failed_one">Impossible de téléverser %1$s : %2$s</string>
-    <string name="upload_failed_many">%1$d fichiers sur %2$d n'ont pas pu être téléversés. Dernière erreur : %3$s</string>
+    <string name="uploads_done">Envois terminés</string>
+    <string name="uploads_some_failed">%1$d sur %2$d en échec</string>
+    <string name="upload_waiting">En attente</string>
+    <string name="upload_retry">Réessayer</string>
+    <string name="uploads_toggle">Afficher ou masquer les envois</string>
+    <string name="size_of">%1$s sur %2$s</string>
     <string name="new_folder">Nouveau dossier</string>
     <string name="create">Créer</string>
     <string name="rename">Renommer</string>

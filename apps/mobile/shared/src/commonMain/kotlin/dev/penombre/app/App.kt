@@ -494,6 +494,7 @@ private fun Signed(
     var asked by remember { mutableStateOf(false) }
 
     val screening = remember(session) { Screening(session) }
+    val uploads = remember(session) { Uploads(scope) }
     var preview by remember { mutableStateOf<Preview?>(null) }
 
     val leave: () -> Unit = {
@@ -510,9 +511,11 @@ private fun Signed(
         play = playback::start,
         preview = { place, siblings, item -> preview = Preview(place, siblings, item) },
         screening = screening,
+        uploads = uploads,
         signedOut = leave,
         bar = {
             Column {
+                UploadPanel(uploads, host)
                 MiniPlayer(playback, host)
                 // From inside a pushed screen too: a tab is always one tap away.
                 BottomBar(tab) {
@@ -700,11 +703,15 @@ private fun Signed(
         key(index, screen) {
             Layer(index == screens.lastIndex) {
                 when (screen) {
-                    is WebScreen -> Scaffold(
-                        // A solid bar: the page under it brings its own background.
-                        containerColor = brand.ground,
-                        topBar = { Header("Penombre", onBack = host.back, compact = true) },
-                    ) { WebPage(screen.url, session, Modifier.fillMaxSize().padding(it)) }
+                    is WebScreen -> {
+                        val dark = brand.dark
+                        // A page wears the app's look over the app's sky; a raw file brings its own ground.
+                        val url = remember(screen) { if (screen.page) appViewUrl(screen.url, dark) else screen.url }
+                        Scaffold(
+                            containerColor = if (screen.page) Color.Transparent else brand.ground,
+                            topBar = { Header("Penombre", onBack = host.back, compact = true) },
+                        ) { WebPage(url, session, Modifier.fillMaxSize().padding(it), transparent = screen.page) }
+                    }
 
                     is TrashScreen -> TrashView(host, screen.place)
 
@@ -740,6 +747,15 @@ private fun Signed(
                     is GrantScreen -> GrantView(host, screen.grant)
 
                     is DriveScreen -> DriveView(host, screen.drive)
+
+                    is FolderScreen -> Browser(
+                        host = host,
+                        place = screen.place,
+                        root = screen.title,
+                        rootPath = screen.path,
+                        onExit = host.back,
+                        bottomBar = host.bar,
+                    )
 
                     is SearchResultsScreen -> SearchResultsView(host, screen.query)
 
