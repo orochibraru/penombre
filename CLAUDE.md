@@ -1948,6 +1948,12 @@ Browsers are cached per Playwright version (`actions/cache` on
 `~/.cache/ms-playwright`), which is 30s a job over 8 jobs; a cache hit still
 runs `playwright install-deps`, since the system libraries are not in it.
 
+A test that seeds real media (`seeds the band's drive` in the screenshots spec)
+sets its own `test.setTimeout`: 13s on a laptop ran past the default 30s on a
+slow runner, and its retry then spent the rest of the shard's budget, so the job
+was cancelled rather than failed. A test whose own `expect` waits longer than
+30s needs the same.
+
 A broken build is the other way to blow it: every test times out three times,
 and 103 × 3 × 30s kept a job red for 2.5h. CI stops at `maxFailures: 10`.
 Playwright already runs on Bun (`[run] bun = true` in `bunfig.toml`); there is
