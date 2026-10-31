@@ -2,6 +2,7 @@ package dev.penombre.app
 
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -144,7 +145,7 @@ class LogicTest {
         assertEquals("/api/v1/storage/file/f9/upload", send.url.encodedPath)
         assertEquals("Bearer tok", send.headers[HttpHeaders.Authorization])
         assertTrue(send.body.contentType.toString().startsWith("multipart/form-data"))
-        val body = (send.body as OutgoingContent.ByteArrayContent).bytes().decodeToString()
+        val body = send.body.toByteArray().decodeToString()
         // Quoted: the server does not read `name=file` as a field at all.
         assertTrue("name=\"file\"; filename=\"Take 1.wav\"" in body)
         assertTrue(body.endsWith("--\r\n"))
