@@ -80,7 +80,7 @@
 		"@types/node": "26.6.6",
 		"@types/nodemailer": "8.0.2",
 		"@types/pdfmake": "0.3.3",
-		"@vite-pwa/sveltekit": "1.1.0",
+		"@vite-pwa/sveltekit": "2.0.0",
 		"agnix": "0.60.2",
 		"bits-ui": "2.20.2",
 		"clsx": "2.1.1",
