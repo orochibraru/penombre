@@ -7,6 +7,7 @@
 		FolderPlusIcon,
 		UploadIcon,
 	} from "@lucide/svelte";
+	import { untrack } from "svelte";
 
 	import type { ObjectItem } from "#lib/api/index.js";
 	import FilePrefix from "#lib/components/file/prefix.svelte";
@@ -31,6 +32,7 @@
 	import { versionOf, withVersions } from "#lib/versions.js";
 	import { createWindowVirtualizer } from "#lib/virtual-window.svelte.js";
 
+	import { highlightedItem } from "./highlight";
 	import { actionsFor } from "./version-actions.js";
 	import { itemDrop } from "./version-drop";
 
@@ -264,6 +266,16 @@
 			virtualizer.bind(listEl);
 		}
 	});
+
+	$effect(() => {
+		const id = $highlightedItem;
+		const index = id
+			? displayedItems.findIndex((item) => item.metadata.id === id)
+			: -1;
+		if (index >= 0) {
+			untrack(() => virtualizer.reveal(index));
+		}
+	});
 </script>
 
 <svelte:window
@@ -284,6 +296,7 @@
 			isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
 		)}
 		style="height: {(version ? VERSION_ROW_HEIGHT : ROW_HEIGHT) - ROW_GAP}px"
+		data-highlighted={$highlightedItem === item.metadata.id || undefined}
 		draggable={onDragStart !== undefined}
 		ondragstart={(e) => handleItemDragStart(e, item)}
 		ondragend={handleItemDragEnd}
