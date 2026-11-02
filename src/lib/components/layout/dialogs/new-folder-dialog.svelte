@@ -4,6 +4,7 @@
 	import { toast } from "svelte-sonner";
 
 	import { api } from "#lib/api/index.js";
+	import { highlightItem } from "#lib/components/file/highlight.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Input } from "#lib/components/ui/input/index.js";
 	import * as m from "#lib/paraglide/messages.js";
@@ -39,7 +40,7 @@
 					parent: page.params.path,
 				},
 			})
-			.then(async ({ error: fetchError }) => {
+			.then(async ({ data, error: fetchError }) => {
 				loading = false;
 				if (fetchError) {
 					throw new Error("Failed to create folder");
@@ -48,6 +49,9 @@
 				await invalidate("app:files");
 				open = false;
 				newFolderName = defaultFolderName;
+				if (data?.data?.id) {
+					highlightItem(data.data.id);
+				}
 			});
 
 		return toast.promise(promise, {

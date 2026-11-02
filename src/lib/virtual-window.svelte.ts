@@ -100,8 +100,29 @@ export function createWindowVirtualizer(options: {
 			: (count - last) * rowHeight,
 	);
 
+	/** Scrolls row `index` into view, unless it already is. */
+	function reveal(index: number) {
+		if (!containerEl || index < 0 || index >= count) {
+			return;
+		}
+		measure();
+		const start = offsets ? (offsets[index] ?? 0) : index * rowHeight;
+		const end = offsets ? (offsets[index + 1] ?? start) : start + rowHeight;
+		const top = containerTop + start;
+		const viewTop = window.scrollY;
+		const viewBottom = viewTop + window.innerHeight;
+		if (top >= viewTop && containerTop + end <= viewBottom) {
+			return;
+		}
+		window.scrollTo({
+			top: Math.max(0, top - window.innerHeight / 3),
+			behavior: "smooth",
+		});
+	}
+
 	return {
 		bind,
+		reveal,
 		onScroll,
 		onResize,
 		measure,

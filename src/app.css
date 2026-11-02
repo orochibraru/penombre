@@ -578,3 +578,111 @@ body::after {
 :root[data-app] [data-slot="sidebar-inset"] > header {
 	border-bottom-color: transparent;
 }
+
+/*
+ * Toasts: a floating surface like the menus, with the toast's kind on a
+ * stripe and its icon. Sonner's `richColors` pastels ignored the accent, so
+ * only the stripe and icon carry the kind here. Selectors outrank sonner's
+ * own `[data-sonner-toast][data-styled]` rules.
+ */
+[data-sonner-toaster] {
+	--toast-kind: var(--primary);
+	--border-radius: calc(var(--radius) + 4px);
+	font-family: var(--app-font);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+	--toast-kind: var(--primary);
+	padding: 12px 14px 12px 16px;
+	gap: 12px;
+	background-color: color-mix(in oklab, var(--surface-base) 96%, transparent);
+	background-image: linear-gradient(
+		100deg,
+		color-mix(in oklab, var(--toast-kind) 9%, transparent),
+		transparent 45%
+	);
+	border: 1px solid color-mix(in oklab, var(--border) 80%, var(--toast-kind));
+	color: var(--popover-foreground);
+	backdrop-filter: blur(20px) saturate(160%);
+	-webkit-backdrop-filter: blur(20px) saturate(160%);
+	box-shadow:
+		inset 3px 0 0 var(--toast-kind),
+		0 1px 2px oklch(0.2 0.04 var(--shadow-color) / 0.1),
+		0 12px 32px -12px oklch(0.3 0.12 var(--shadow-color) / 0.35);
+}
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+	--toast-kind: var(--destructive);
+}
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
+	--toast-kind: oklch(0.75 0.16 70);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-icon] {
+	width: 28px;
+	height: 28px;
+	margin: 0;
+	justify-content: center;
+	border-radius: 999px;
+	color: var(--toast-kind);
+	background-color: color-mix(in oklab, var(--toast-kind) 14%, transparent);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-icon] svg {
+	margin: 0;
+	width: 16px;
+	height: 16px;
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-title] {
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+[data-sonner-toaster]
+	[data-sonner-toast][data-styled="true"]
+	[data-description] {
+	font-size: 0.8125rem;
+	color: var(--muted-foreground);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button] {
+	height: 28px;
+	padding: 0 10px;
+	border-radius: var(--radius);
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-cancel] {
+	background: var(--muted);
+	color: var(--foreground);
+}
+[data-sonner-toaster]
+	[data-sonner-toast][data-styled="true"]
+	[data-close-button] {
+	color: var(--muted-foreground);
+	background: var(--surface-base);
+	border-color: var(--border);
+}
+[data-sonner-toaster]
+	[data-sonner-toast][data-styled="true"]
+	[data-close-button]:hover {
+	color: var(--foreground);
+	background: var(--muted);
+	border-color: var(--border);
+}
+
+/* A row just created (a new folder): one pulse of the accent, fading back
+   to the row's own look (no 100% keyframe). */
+@keyframes item-highlight {
+	0%,
+	60% {
+		background-color: color-mix(in oklab, var(--primary) 16%, transparent);
+		outline-color: var(--primary);
+	}
+}
+/* An outline, not a box-shadow: a table row draws only part of a shadow. */
+[data-highlighted] {
+	outline: 2px solid transparent;
+	outline-offset: -2px;
+	animation: item-highlight 2.4s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+	[data-highlighted] {
+		animation-duration: 0.01s;
+		outline-color: var(--primary);
+	}
+}

@@ -1074,6 +1074,18 @@ the portalled `Tooltip` — the bottom player wraps its content in
 because a track playing while you browse is exactly when you have something to
 say about it and the file listing may be three pages away.
 
+### Toasts and new-row highlights are styled in `app.css`
+
+Toasts are sonner's without `richColors` (its pastels ignored the accent): the
+unlayered `[data-sonner-toaster]` block gives them the floating-surface look and
+colours only a stripe and the icon by `data-type`. Its selectors carry the
+toaster attribute to outrank sonner's own `[data-sonner-toast][data-styled]`.
+
+A row to point at after it is created goes through `highlightItem(id)`
+(`components/file/highlight.ts`): list, grid and table each `reveal()` it
+through their virtualizer and set `data-highlighted`, pulsed by an outline (a
+`<tr>` draws only part of a box-shadow).
+
 ### A tooltip is a popover surface, not a primary one
 
 `app.css` forces `--popover` onto `[data-slot="tooltip-content"]` along with
