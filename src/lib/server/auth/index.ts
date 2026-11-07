@@ -302,13 +302,10 @@ function authPlugins(oauthProviders: OAuthProvider[]) {
 
 function buildAuth(oauthProviders: OAuthProvider[]) {
 	return betterAuth({
-		baseURL: config.origin
-			? config.origin
-			: dev
-				? "http://localhost:5173"
-				: (() => {
-						throw new Error("ORIGIN environment variable is not set");
-					})(),
+		// Passkeys accept only this exact origin: in dev, config's default
+		// (:3000) is not where Vite serves the app.
+		baseURL:
+			process.env.ORIGIN || (dev ? "http://localhost:5173" : config.origin),
 		trustedOrigins: dev
 			? ["http://localhost:*/**", "http://192.168.*.*:*/**"]
 			: [config.origin],

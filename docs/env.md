@@ -12,8 +12,9 @@ General application settings that control the runtime identity, environment
 mode, and logging behavior.
 
 `ORIGIN` must be set to the public URL where your instance is accessible. It is
-used to generate absolute URLs in OAuth callbacks and email links. In
-development this is typically `http://localhost:3000`.
+used to generate absolute URLs in OAuth callbacks and email links. Under the
+Vite dev server (`bun run dev`) set it to `http://localhost:5173`: passkeys only
+work when it matches the address in the browser exactly.
 
 Behind a reverse proxy, also set `ADDRESS_HEADER` (and `XFF_DEPTH` for
 `X-Forwarded-For`) so Penombre reads the real client address instead of the

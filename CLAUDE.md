@@ -1229,6 +1229,11 @@ configured) and the challenge is bound to the user who requested it. What it
 drops is better-auth's `freshSessionMiddleware`, which 403s a session older than
 24h — on a drive people stay signed into for weeks that rejected everyone.
 
+The passkey plugin verifies against `baseURL`'s origin exactly; a wildcard in
+`trustedOrigins` does not count. `config.origin` always resolves (default
+`:3000`), so in dev `baseURL` is `ORIGIN` or `http://localhost:5173`, never the
+config default, or no ceremony on the Vite server can succeed.
+
 ### better-auth's `listSessions` wants a fresh session
 
 `auth.api.listSessions` runs `freshSessionMiddleware`, the same one passkey

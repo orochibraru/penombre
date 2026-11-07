@@ -89,6 +89,7 @@ LOG_LEVEL=${defaultConfigValues.logLevel}
 LOG_FORMAT=${defaultConfigValues.logFormat}
 
 # Public origin URL (used for OAuth callbacks, etc.)
+# Under the Vite dev server (bun run dev), set http://localhost:5173.
 ORIGIN=${defaultConfigValues.origin}
 
 # ===========================================
