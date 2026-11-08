@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.8.68](https://github.com/orochibraru/penombre/compare/v1.8.67...v1.8.68) (2026-11-08)
+
+### Features
+
+* **shares:** let folder links accept anonymous uploads (#164) ([f1c72a0](https://github.com/orochibraru/penombre/commit/f1c72a033244291eed9d92fde163a1066b885713))
+* **ui:** style toasts and highlight a newly created folder (#159) ([8bc4290](https://github.com/orochibraru/penombre/commit/8bc429084f711bec6e20273d78055d81fd8070f8))
+
+### Bug Fixes
+
+* **deps:** update bun & javascript ecosystem (#156) ([5ac4162](https://github.com/orochibraru/penombre/commit/5ac41625e0718b3eb3a60c8e8998d0d959a49ba4))
+* **deps:** update bun & JS ecosystem, with the dev passkey origin fix (#163) ([3ca7bdb](https://github.com/orochibraru/penombre/commit/3ca7bdbed7c602c98d16dc48163ce086c41043f4))
+* **deps:** update bun & javascript ecosystem (#138) ([16a4e8a](https://github.com/orochibraru/penombre/commit/16a4e8afff7d023cdbd6b1f9570b36f0ac1ae2b0))
+* **deps:** update minor and patch updates (#141) ([a46ff40](https://github.com/orochibraru/penombre/commit/a46ff408ea6e8d45a9f9e46e033c7095439f4eb9))
+* **deps:** update bun & javascript ecosystem to v4 (#152) ([5a98493](https://github.com/orochibraru/penombre/commit/5a984932755606bce13ba5da96290d95faeed550))
+* **deps:** update ktor monorepo to v3.6.1 (#151) ([a712206](https://github.com/orochibraru/penombre/commit/a712206fd7ca95963113ad30fadeef12dcfda1a5))
+* **deps:** update dependency nodemailer to v10.1.4 [security] (#150) ([51aa190](https://github.com/orochibraru/penombre/commit/51aa190364aafdb0319ae347d18fa9d1e1c695c3))
+* **deps:** update dependency zod to v4.6.6 [security] (#149) ([6aca100](https://github.com/orochibraru/penombre/commit/6aca100bf628ee0062d38107e7a8e9e0072520e0))
+
 ## [1.8.68](https://github.com/orochibraru/penombre/compare/v1.8.67...v1.8.68) (2026-10-31)
 
 ### Bug Fixes
