@@ -13,6 +13,7 @@ export function toShareDto(share: Share) {
 		resourceName: share.resourceName,
 		hasPassword: share.passwordHash !== null,
 		requiresAuth: share.requiresAuth,
+		allowUploads: share.allowUploads,
 		expiresAt: share.expiresAt?.toISOString() ?? null,
 		downloadCount: share.downloadCount,
 		createdAt: share.createdAt.toISOString(),

@@ -157,6 +157,7 @@ export const load = async ({ params, locals, cookies }) => {
 		resourceType: "folder" as const,
 		name: share.resourceName,
 		expiresAt: share.expiresAt?.toISOString() ?? null,
+		allowUploads: share.allowUploads,
 		files: listing.list
 			.filter((item) => !item.metadata.isTrashed)
 			.map(toPublicDto),

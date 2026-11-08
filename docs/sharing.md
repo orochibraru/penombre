@@ -19,13 +19,14 @@ Right-click a file or folder (or use the row's ⋯ menu) and choose **Share**.
 
 ## Links
 
-The **Link** tab offers three limits, all optional:
+The **Link** tab offers these options, all optional:
 
-| Option        | Default | What it does                                    |
-| ------------- | ------- | ----------------------------------------------- |
-| Password      | none    | Visitors must type it before they see anything  |
-| Expires       | never   | The link stops working after 1, 7 or 30 days    |
-| Requires auth | off     | Only signed-in Penombre users may open the link |
+| Option        | Default | What it does                                     |
+| ------------- | ------- | ------------------------------------------------ |
+| Password      | none    | Visitors must type it before they see anything   |
+| Expires       | never   | The link stops working after 1, 7 or 30 days     |
+| Requires auth | off     | Only signed-in Penombre users may open the link  |
+| Allow uploads | off     | Folders only: visitors may add files to the link |
 
 The link is created immediately and shown ready to copy. Nothing about the
 shared item changes — a share link is an extra door, not a move.
@@ -105,6 +106,11 @@ A share URL looks like `https://your-instance/s/<token>`.
   PDF** sits beside **Download**, except for a Markdown deck. A file over 20 MB
   is downloaded rather than shown. Links in a document open in a new tab, and
   only web and mail links open at all.
+- **A folder link that allows uploads** adds an **Upload files** button, and
+  files dropped on the list upload too. No account is needed, only the link and
+  whatever password or sign-in it asks for. Uploads land at the top of the
+  shared folder and never replace anything: a name already taken gets a `(1)`
+  suffix. They show up in your drive like any other file.
 - **A password-protected link** asks for the password first. A correct answer
   sets a cookie scoped to that one link, valid for 12 hours, so the visitor is
   not asked again on every download.
@@ -138,6 +144,10 @@ is a way to hand somebody a file, not a way into a conversation about it.
 - The download endpoint re-checks access on every request rather than trusting
   the page that linked to it.
 - Expired links stop working immediately; the rows are cleaned up separately.
+- Uploads through a link are limited to 200 files per address every 10 minutes,
+  and 1 GiB per file: the server holds an upload in memory while it writes it.
+  An upload link is a way for strangers to fill your disk: give it an expiry,
+  and revoke it once you have what you asked for.
 - Previewing serves the bytes through the same access-checked endpoint as a
   download, with `?inline`. Playing a preview does **not** count against the
   link's download tally — a video that seeks would otherwise record dozens.
@@ -167,8 +177,11 @@ Every storage endpoint also takes `?share=<id>` (or an `x-share` header), where
 owner's files, narrowed to what was shared.
 
 Creating one takes `resourceType` (`file` or `folder`), `resourceId`, and
-optionally `password`, `expiresInDays` and `requiresAuth`. The response includes
-the `token` — build the URL as `<origin>/s/<token>`.
+optionally `password`, `expiresInDays`, `requiresAuth` and `allowUploads`
+(folders only, ignored for a file). The response includes the `token` — build
+the URL as `<origin>/s/<token>`.
 
 Both endpoints require authentication. The public `/s/<token>` page and its
-`/s/<token>/download` endpoint do not — that is the point of a share link.
+`/s/<token>/download` endpoint do not — that is the point of a share link. Nor
+does `POST /s/<token>/upload`, which takes one multipart `file` per request on a
+folder link with `allowUploads`.

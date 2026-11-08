@@ -6,6 +6,7 @@
 		Link2Icon,
 		Link2OffIcon,
 		LockIcon,
+		UploadIcon,
 		UserCheckIcon,
 	} from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
@@ -165,6 +166,12 @@
 										<Badge variant="secondary">
 											<LockIcon />
 											{m.share_badge_password()}
+										</Badge>
+									{/if}
+									{#if share.allowUploads}
+										<Badge variant="secondary">
+											<UploadIcon />
+											{m.share_badge_uploads()}
 										</Badge>
 									{/if}
 									{#if share.requiresAuth}

@@ -46,6 +46,7 @@
 	let password = $state("");
 	let expiresInDays = $state("0");
 	let requiresAuth = $state(false);
+	let allowUploads = $state(false);
 	let loading = $state(false);
 	let createdUrl = $state("");
 	let copied = $state(false);
@@ -106,6 +107,7 @@
 		password = "";
 		expiresInDays = "0";
 		requiresAuth = false;
+		allowUploads = false;
 		createdUrl = "";
 		copied = false;
 		query = "";
@@ -208,6 +210,7 @@
 					...(password ? { password } : {}),
 					expiresInDays: Number(expiresInDays),
 					requiresAuth,
+					...(target.resourceType === "folder" ? { allowUploads } : {}),
 				},
 			});
 
@@ -331,6 +334,20 @@
 						{m.share_requires_auth()}
 					</span>
 				</Label>
+
+				{#if target?.resourceType === "folder"}
+					<Label
+						class="hover:bg-muted/50 has-data-[state=checked]:border-ring has-data-[state=checked]:bg-muted/50 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
+					>
+						<Checkbox bind:checked={allowUploads} class="mt-0.5" />
+						<span class="flex flex-col gap-0.5">
+							<span class="text-sm font-normal">{m.share_allow_uploads()}</span>
+							<span class="text-muted-foreground text-xs font-normal">
+								{m.share_allow_uploads_hint()}
+							</span>
+						</span>
+					</Label>
+				{/if}
 			{/if}
 		</Tabs.Content>
 
