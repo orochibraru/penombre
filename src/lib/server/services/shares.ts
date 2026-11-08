@@ -40,6 +40,8 @@ export interface CreateShareInput {
 	/** Days until the link stops working; omit or 0 for "never expires". */
 	expiresInDays?: number;
 	requiresAuth?: boolean;
+	/** Folder links only; ignored for a file. */
+	allowUploads?: boolean;
 }
 
 /** The row a link resolves to: its tree is the row owner's, on its volume. */
@@ -94,6 +96,8 @@ export class ShareService {
 					? await Bun.password.hash(input.password)
 					: null,
 				requiresAuth: input.requiresAuth ?? false,
+				allowUploads:
+					input.resourceType === "folder" && (input.allowUploads ?? false),
 				expiresAt,
 			})
 			.returning();

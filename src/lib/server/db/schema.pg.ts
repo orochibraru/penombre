@@ -250,6 +250,8 @@ export const shares = pgTable(
 		passwordHash: text("password_hash"),
 		/** When true, only signed-in users may open the link. */
 		requiresAuth: boolean("requires_auth").default(false).notNull(),
+		/** Folder links only: visitors may upload into the folder. */
+		allowUploads: boolean("allow_uploads").default(false).notNull(),
 		/** Null means the link never expires. */
 		expiresAt: timestamp("expires_at"),
 		downloadCount: integer("download_count").default(0).notNull(),

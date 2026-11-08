@@ -6,6 +6,7 @@ import {
 	driveMembers,
 	drives,
 	files,
+	folders,
 	shares,
 	user,
 } from "#lib/server/db/schema.js";
@@ -37,6 +38,7 @@ function share(overrides: Record<string, unknown> = {}) {
 		resourceName: "notes.txt",
 		passwordHash: null,
 		requiresAuth: false,
+		allowUploads: false,
 		expiresAt: null,
 		downloadCount: 0,
 		createdAt: new Date(),
@@ -329,6 +331,23 @@ describe("link lifecycle", () => {
 		expect(remaining).toBeLessThanOrEqual(2 * 86_400_000);
 		expect(created.requiresAuth).toBe(true);
 		expect(created.passwordHash).toBeNull();
+	});
+
+	test("create keeps allowUploads for a folder only", async () => {
+		const links = await linkable();
+		await (links as any).db
+			.insert(folders)
+			.values({ id: "d1", name: "Inbox", ownerId: "alice", path: "d1" });
+		const file = await links.create(input({ allowUploads: true }));
+		const folder = await links.create(
+			input({ resourceType: "folder", resourceId: "d1", allowUploads: true }),
+		);
+		if (typeof file === "string" || typeof folder === "string") {
+			throw new Error("refused");
+		}
+
+		expect(file.allowUploads).toBe(false);
+		expect(folder.allowUploads).toBe(true);
 	});
 
 	test("create refuses a missing resource and someone else's", async () => {

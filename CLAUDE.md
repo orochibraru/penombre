@@ -3049,6 +3049,14 @@ owner, or a manager of the drive the row sits on. Requiring
 `files.owner_id = shares.owner_id` refused every drive manager, since a drive's
 rows all belong to its creator.
 
+### An upload link writes as the folder's owner
+
+A folder link with `allowUploads` takes anonymous `POST /s/<token>/upload` (one
+multipart `file`): `createFile` then `uploadFileBody` on the service
+`shareLinkStorage` builds, so activity and rows are the owner's, never replaces
+(a clash gets a suffix), and a failed body deletes its row. The only throttle is
+per IP (200 per 10 minutes): there is no quota to lean on.
+
 ### A valid API key can still fail verification
 
 better-auth's API-key plugin limits each key to 100 verifications a minute and

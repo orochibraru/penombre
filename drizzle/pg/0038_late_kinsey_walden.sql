@@ -1,0 +1,1 @@
+ALTER TABLE "shares" ADD COLUMN "allow_uploads" boolean DEFAULT false NOT NULL;

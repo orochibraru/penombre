@@ -1,0 +1,1 @@
+ALTER TABLE `shares` ADD `allow_uploads` integer DEFAULT false NOT NULL;

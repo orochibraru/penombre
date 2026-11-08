@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from "$app/env";
+	import { invalidateAll } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import {
 		ClockAlertIcon,
@@ -9,7 +10,9 @@
 		LockIcon,
 		LogInIcon,
 		PlayIcon,
+		UploadIcon,
 	} from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
 
 	import DeckEditor from "#lib/components/editor/deck-editor.svelte";
 	import DocumentEditor from "#lib/components/editor/document-editor.svelte";
@@ -62,6 +65,47 @@
 	/** An office file with no rendition here: say so, rather than show nothing. */
 	const unshown = $derived(pdf && !rendition);
 	const ignore = () => undefined;
+
+	const allowUploads = $derived(
+		data.state === "ok" &&
+			data.resourceType === "folder" &&
+			!!data.allowUploads,
+	);
+	let picker = $state<HTMLInputElement | null>(null);
+	let uploading = $state<{ done: number; total: number } | null>(null);
+	let dragging = $state(false);
+
+	/** One request per file, in turn: a visitor's batch must not flood the server. */
+	async function upload(list: FileList | File[] | null | undefined) {
+		const picked = Array.from(list ?? []);
+		if (!picked.length || uploading || data.state !== "ok") {
+			return;
+		}
+		const url = resolve("/s/[token]/upload", { token: data.token });
+		let failed = 0;
+		uploading = { done: 0, total: picked.length };
+		for (const file of picked) {
+			const body = new FormData();
+			body.append("file", file);
+			const response = await fetch(url, { method: "POST", body }).catch(
+				() => null,
+			);
+			if (!response?.ok) {
+				failed += 1;
+			}
+			uploading = { done: uploading.done + 1, total: picked.length };
+		}
+		uploading = null;
+		if (picker) {
+			picker.value = "";
+		}
+		if (failed) {
+			toast.error(m.share_upload_failed({ count: String(failed) }));
+		} else {
+			toast.success(m.share_upload_done({ count: String(picked.length) }));
+		}
+		await invalidateAll();
+	}
 </script>
 
 <!--
@@ -194,6 +238,28 @@
 					</div>
 
 					<div class="flex shrink-0 flex-wrap gap-2">
+						{#if allowUploads}
+							<input
+								bind:this={picker}
+								type="file"
+								multiple
+								class="hidden"
+								onchange={(e) => upload(e.currentTarget.files)}
+							/>
+							<Button
+								variant="outline"
+								disabled={!!uploading}
+								onclick={() => picker?.click()}
+							>
+								<UploadIcon />
+								{uploading
+									? m.share_uploading({
+											done: String(uploading.done),
+											total: String(uploading.total),
+										})
+									: m.share_upload()}
+							</Button>
+						{/if}
 						{#if pdf}
 							<a
 								class={buttonVariants({ variant: "outline" })}
@@ -271,7 +337,29 @@
 				{/if}
 
 				{#if data.resourceType === "folder"}
-					<Card.Content class="px-0">
+					<Card.Content
+						class={cn(
+							"px-0 transition-colors",
+							dragging &&
+								"bg-primary/5 outline-primary outline-2 -outline-offset-2",
+						)}
+						ondragover={(e: DragEvent) => {
+							if (!allowUploads) {
+								return;
+							}
+							e.preventDefault();
+							dragging = true;
+						}}
+						ondragleave={() => (dragging = false)}
+						ondrop={(e: DragEvent) => {
+							if (!allowUploads) {
+								return;
+							}
+							e.preventDefault();
+							dragging = false;
+							void upload(e.dataTransfer?.files);
+						}}
+					>
 						<ul class="divide-border divide-y border-t">
 							{#each files as file (file.key)}
 								<li
@@ -343,7 +431,7 @@
 								{/if}
 							{:else}
 								<li class="text-muted-foreground px-6 py-8 text-center text-sm">
-									{m.folder_empty()}
+									{allowUploads ? m.share_upload_drop() : m.folder_empty()}
 								</li>
 							{/each}
 						</ul>

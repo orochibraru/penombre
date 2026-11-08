@@ -13,6 +13,7 @@ const share = {
 	resourceName: "a.wav",
 	passwordHash: "hash",
 	requiresAuth: false,
+	allowUploads: false,
 	expiresAt: new Date("2026-01-02T00:00:00Z"),
 	downloadCount: 3,
 	createdAt: new Date("2026-01-01T00:00:00Z"),

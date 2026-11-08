@@ -233,6 +233,10 @@ export const shares = sqliteTable(
 		requiresAuth: integer("requires_auth", { mode: "boolean" })
 			.default(false)
 			.notNull(),
+		/** Folder links only: visitors may upload into the folder. */
+		allowUploads: integer("allow_uploads", { mode: "boolean" })
+			.default(false)
+			.notNull(),
 		/** Null means the link never expires. */
 		expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
 		downloadCount: integer("download_count").default(0).notNull(),

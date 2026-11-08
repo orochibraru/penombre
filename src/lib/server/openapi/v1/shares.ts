@@ -16,6 +16,7 @@ export const shareSchema = z.object({
 	/** The hash itself is never returned — only whether one is set. */
 	hasPassword: z.boolean(),
 	requiresAuth: z.boolean(),
+	allowUploads: z.boolean(),
 	expiresAt: z.iso.datetime().nullable(),
 	downloadCount: z.number(),
 	createdAt: z.iso.datetime(),
@@ -28,6 +29,8 @@ const createShareBody = z.object({
 	/** 0 or omitted means the link never expires. */
 	expiresInDays: z.number().int().min(0).max(3650).optional(),
 	requiresAuth: z.boolean().optional(),
+	/** Folder links only: anyone with the link may upload into the folder. */
+	allowUploads: z.boolean().optional(),
 });
 
 export const listShares = defineRoute({

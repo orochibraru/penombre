@@ -8905,6 +8905,7 @@ export interface paths {
 					content: {
 						"application/json": {
 							data?: {
+								allowUploads: boolean;
 								/** Format: date-time */
 								createdAt: string;
 								downloadCount: number;
@@ -8956,6 +8957,7 @@ export interface paths {
 			requestBody: {
 				content: {
 					"application/json": {
+						allowUploads?: boolean;
 						expiresInDays?: number;
 						password?: string;
 						requiresAuth?: boolean;
@@ -8974,6 +8976,7 @@ export interface paths {
 					content: {
 						"application/json": {
 							data?: {
+								allowUploads: boolean;
 								/** Format: date-time */
 								createdAt: string;
 								downloadCount: number;
