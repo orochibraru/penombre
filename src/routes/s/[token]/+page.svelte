@@ -99,7 +99,7 @@
 		}
 		const url = resolve("/s/[token]/upload", { token: data.token });
 		let failed = 0;
-		let throttled = false;
+		let blocked = 0;
 		uploading = { done: 0, total: picked.length };
 		for (const [index, file] of picked.entries()) {
 			const body = new FormData();
@@ -109,8 +109,7 @@
 			);
 			if (response?.status === 429) {
 				// Every later request would be refused too.
-				throttled = true;
-				failed += picked.length - index;
+				blocked = picked.length - index;
 				break;
 			}
 			if (!response?.ok) {
@@ -122,11 +121,13 @@
 		if (picker) {
 			picker.value = "";
 		}
-		if (throttled) {
-			toast.error(m.share_upload_throttled({ count: String(failed) }));
-		} else if (failed) {
+		if (blocked) {
+			toast.error(m.share_upload_throttled({ count: String(blocked) }));
+		}
+		if (failed) {
 			toast.error(m.share_upload_failed({ count: String(failed) }));
-		} else {
+		}
+		if (!failed && !blocked) {
 			toast.success(m.share_upload_done({ count: String(picked.length) }));
 		}
 		await invalidateAll();
