@@ -434,6 +434,7 @@
 	"share_upload_done": "Lähetetyt tiedostot: {count}",
 	"share_upload_failed": "Epäonnistuneet lähetykset: {count}",
 	"share_upload_throttled": "Liian monta lähetystä osoitteestasi. {count} tiedostoa jäi lähettämättä; yritä uudelleen muutaman minuutin kuluttua.",
+	"share_upload_too_large": "Ohitetut tiedostot, yli {size}: {count}",
 	"share_upload_drop": "Pudota tiedostot tähän lähettääksesi ne",
 	"share_link": "Jakolinkki",
 	"share_link_hint": "Kuka tahansa tämän linkin haltija voi avata sen yllä olevien asetusten mukaisesti.",

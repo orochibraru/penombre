@@ -488,6 +488,7 @@
 	"share_upload_done": "Archivos subidos: {count}",
 	"share_upload_failed": "Subidas fallidas: {count}",
 	"share_upload_throttled": "Demasiadas subidas desde tu dirección. {count} archivos no se enviaron; inténtalo de nuevo en unos minutos.",
+	"share_upload_too_large": "Archivos omitidos, de más de {size}: {count}",
 	"share_upload_drop": "Suelta archivos aquí para subirlos",
 	"share_link": "Enlace para compartir",
 	"share_link_hint": "Cualquiera con este enlace puede abrirlo, sujeto a las opciones anteriores.",

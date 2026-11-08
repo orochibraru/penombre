@@ -3055,7 +3055,10 @@ A folder link with `allowUploads` takes anonymous `POST /s/<token>/upload` (one
 multipart `file`): `createFile` then `uploadFileBody` on the service
 `shareLinkStorage` builds, so activity and rows are the owner's, never replaces
 (a clash gets a suffix), and a failed body deletes its row. The only throttle is
-per IP (200 per 10 minutes): there is no quota to lean on.
+per IP (200 per 10 minutes): there is no quota to lean on. Each file is capped
+at `SHARE_UPLOAD_MAX_BYTES` (1 GiB, `#lib/share-upload.ts`) from
+`Content-Length` before `formData()` runs: the image sets
+`BODY_SIZE_LIMIT=Infinity`, and the body sits in memory twice while written.
 
 ### A valid API key can still fail verification
 

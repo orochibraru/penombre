@@ -144,7 +144,8 @@ is a way to hand somebody a file, not a way into a conversation about it.
 - The download endpoint re-checks access on every request rather than trusting
   the page that linked to it.
 - Expired links stop working immediately; the rows are cleaned up separately.
-- Uploads through a link are limited to 200 files per address every 10 minutes.
+- Uploads through a link are limited to 200 files per address every 10 minutes,
+  and 1 GiB per file: the server holds an upload in memory while it writes it.
   An upload link is a way for strangers to fill your disk: give it an expiry,
   and revoke it once you have what you asked for.
 - Previewing serves the bytes through the same access-checked endpoint as a

@@ -488,6 +488,7 @@
 	"share_upload_done": "Fichiers envoyés : {count}",
 	"share_upload_failed": "Envois échoués : {count}",
 	"share_upload_throttled": "Trop d'envois depuis votre adresse. {count} fichiers n'ont pas été envoyés ; réessayez dans quelques minutes.",
+	"share_upload_too_large": "Fichiers ignorés, plus de {size} : {count}",
 	"share_upload_drop": "Déposez des fichiers ici pour les envoyer",
 	"share_link": "Lien de partage",
 	"share_link_hint": "Toute personne disposant de ce lien peut l'ouvrir, sous réserve des options ci-dessus.",

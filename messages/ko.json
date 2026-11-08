@@ -331,6 +331,7 @@
 	"share_upload_done": "업로드된 파일: {count}",
 	"share_upload_failed": "실패한 업로드: {count}",
 	"share_upload_throttled": "이 주소에서 업로드가 너무 많습니다. {count}개 파일이 전송되지 않았습니다. 몇 분 후에 다시 시도하세요.",
+	"share_upload_too_large": "{size}를 초과해 건너뛴 파일: {count}",
 	"share_upload_drop": "여기에 파일을 놓아 업로드하세요",
 	"share_link": "공유 링크",
 	"share_link_hint": "위 옵션에 따라 이 링크를 가진 누구나 열 수 있습니다.",

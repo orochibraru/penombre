@@ -25,6 +25,7 @@
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { enhance } from "#lib/forms.js";
 	import { m } from "#lib/paraglide/messages.js";
+	import { SHARE_UPLOAD_MAX_BYTES } from "#lib/share-upload.js";
 	import { title } from "#lib/store/title.js";
 	import { cn, readableFileSize } from "#lib/utils.js";
 
@@ -77,8 +78,23 @@
 
 	/** One request per file, in turn: a visitor's batch must not flood the server. */
 	async function upload(list: FileList | File[] | null | undefined) {
-		const picked = Array.from(list ?? []);
-		if (!picked.length || uploading || data.state !== "ok") {
+		const chosen = Array.from(list ?? []);
+		if (!chosen.length || uploading || data.state !== "ok") {
+			return;
+		}
+		const picked = chosen.filter((f) => f.size <= SHARE_UPLOAD_MAX_BYTES);
+		if (picked.length < chosen.length) {
+			toast.error(
+				m.share_upload_too_large({
+					count: String(chosen.length - picked.length),
+					size: readableFileSize(SHARE_UPLOAD_MAX_BYTES),
+				}),
+			);
+		}
+		if (!picked.length) {
+			if (picker) {
+				picker.value = "";
+			}
 			return;
 		}
 		const url = resolve("/s/[token]/upload", { token: data.token });

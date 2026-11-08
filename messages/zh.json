@@ -331,6 +331,7 @@
 	"share_upload_done": "已上传文件：{count}",
 	"share_upload_failed": "上传失败：{count}",
 	"share_upload_throttled": "来自您地址的上传过多。{count} 个文件未发送，请几分钟后重试。",
+	"share_upload_too_large": "超过 {size} 而跳过的文件：{count}",
 	"share_upload_drop": "将文件拖放到此处上传",
 	"share_link": "共享链接",
 	"share_link_hint": "任何持有此链接的人都可以打开它，具体取决于上方的选项。",

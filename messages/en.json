@@ -586,6 +586,7 @@
 	"share_upload_done": "Files uploaded: {count}",
 	"share_upload_failed": "Uploads failed: {count}",
 	"share_upload_throttled": "Too many uploads from your address. {count} files were not sent; try again in a few minutes.",
+	"share_upload_too_large": "Files skipped, over {size}: {count}",
 	"share_upload_drop": "Drop files here to upload them",
 	"share_link": "Share link",
 	"share_link_hint": "Anyone with this link can open it, subject to the options above.",

@@ -448,6 +448,7 @@
 	"share_upload_done": "File caricati: {count}",
 	"share_upload_failed": "Caricamenti non riusciti: {count}",
 	"share_upload_throttled": "Troppi caricamenti dal tuo indirizzo. {count} file non sono stati inviati; riprova tra qualche minuto.",
+	"share_upload_too_large": "File saltati, oltre {size}: {count}",
 	"share_upload_drop": "Trascina qui i file per caricarli",
 	"share_link": "Link di condivisione",
 	"share_link_hint": "Chiunque abbia questo link può aprirlo, in base alle opzioni indicate sopra.",

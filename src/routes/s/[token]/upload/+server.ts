@@ -1,10 +1,11 @@
-import { error, json } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 
 import { Logger } from "#lib/logger.js";
 import { ReadOnlyVolumeError } from "#lib/server/errors.js";
 import { isRateLimited } from "#lib/server/rate-limit.js";
 import { ShareService, unlockCookieName } from "#lib/server/services/shares.js";
 import { shareLinkStorage } from "#lib/server/services/storage-for.js";
+import { SHARE_UPLOAD_MAX_BYTES } from "#lib/share-upload.js";
 
 const shares = new ShareService();
 const logger = new Logger("Share upload");
@@ -60,6 +61,16 @@ export const POST = async ({
 		return error(404, "The shared folder is no longer available.");
 	}
 
+	// Checked before parsing: formData() holds the whole body in memory.
+	const length = Number(request.headers.get("content-length"));
+	if (!length) {
+		return error(411, "Content-Length is required.");
+	}
+	// The multipart envelope adds a little to the file's own size.
+	if (length > SHARE_UPLOAD_MAX_BYTES + 64 * 1024) {
+		return error(413, "This file is too large.");
+	}
+
 	let file: File | null;
 	try {
 		const value = (await request.formData()).get("file");
@@ -71,7 +82,7 @@ export const POST = async ({
 		return error(400, "No file provided.");
 	}
 
-	let created: { id?: string; finalName: string };
+	let created: { id?: string };
 	try {
 		created = await service.createFile(
 			{ name: file.name, size: file.size },
@@ -103,5 +114,5 @@ export const POST = async ({
 		return error(500, "Upload failed.");
 	}
 
-	return json({ name: created.finalName });
+	return new Response(null, { status: 201 });
 };
