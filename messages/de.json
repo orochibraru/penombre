@@ -478,6 +478,7 @@
 	"share_uploading": "Lade hoch {done}/{total}…",
 	"share_upload_done": "Hochgeladene Dateien: {count}",
 	"share_upload_failed": "Fehlgeschlagene Uploads: {count}",
+	"share_upload_throttled": "Zu viele Uploads von Ihrer Adresse. {count} Dateien wurden nicht gesendet; versuchen Sie es in ein paar Minuten erneut.",
 	"share_upload_drop": "Dateien hier ablegen, um sie hochzuladen",
 	"share_link": "Freigabelink",
 	"share_link_hint": "Jeder mit diesem Link kann ihn öffnen, vorbehaltlich der obigen Optionen.",

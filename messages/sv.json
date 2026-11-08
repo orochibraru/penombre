@@ -379,6 +379,7 @@
 	"share_uploading": "Laddar upp {done}/{total}…",
 	"share_upload_done": "Uppladdade filer: {count}",
 	"share_upload_failed": "Misslyckade uppladdningar: {count}",
+	"share_upload_throttled": "För många uppladdningar från din adress. {count} filer skickades inte; försök igen om några minuter.",
 	"share_upload_drop": "Släpp filer här för att ladda upp dem",
 	"share_link": "Delningslänk",
 	"share_link_hint": "Alla med den här länken kan öppna den, enligt villkoren ovan.",

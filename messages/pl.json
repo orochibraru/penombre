@@ -444,6 +444,7 @@
 	"share_uploading": "Przesyłanie {done}/{total}…",
 	"share_upload_done": "Przesłane pliki: {count}",
 	"share_upload_failed": "Nieudane przesłania: {count}",
+	"share_upload_throttled": "Zbyt wiele przesłań z Twojego adresu. Nie wysłano plików: {count}; spróbuj ponownie za kilka minut.",
 	"share_upload_drop": "Upuść tutaj pliki, aby je przesłać",
 	"share_link": "Link udostępniania",
 	"share_link_hint": "Każdy, kto ma ten link, może go otworzyć, zgodnie z powyższymi opcjami.",
