@@ -3071,7 +3071,9 @@ stores its number in `notifications.count`, never in `actorName`.
 
 A share's folder `resourceId` is the folder's **id**. The share dialog used to
 send the row's key, the last path segment, which is the id only on a personal
-drive: sharing a folder on a drive or volume pointed at nothing.
+drive: sharing a folder on a drive or volume pointed at nothing. The link's own
+routes (`/s/[token]` page, upload, zip) resolve it with `getFolderById`;
+`getFolder` takes a **path**, and passing it the id 404'd every nested folder.
 
 ### A valid API key can still fail verification
 
