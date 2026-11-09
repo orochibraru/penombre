@@ -53,7 +53,7 @@ export const POST = async ({
 		return error(404, "The shared folder is no longer available.");
 	}
 	const folderPath = await service
-		.getFolder(share.resourceId)
+		.getFolderById(share.resourceId)
 		.catch(() => null);
 	const folderMeta = folderPath
 		? await service.getFolderMeta(folderPath)

@@ -148,7 +148,7 @@ export const load = async ({ params, locals, cookies }) => {
 		};
 	}
 
-	const folderPath = await service.getFolder(share.resourceId);
+	const folderPath = await service.getFolderById(share.resourceId);
 	const listing = await service.listFiles(folderPath);
 	return {
 		appName,

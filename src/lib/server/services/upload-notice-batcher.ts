@@ -1,12 +1,4 @@
-/**
- * Tells a link's creator that files arrived through its upload form, once per
- * burst: a drop of forty photos is one notification, not forty.
- *
- * Trailing debounce per link: the notice goes out after `QUIET_MS` without a
- * new upload, or `MAX_WAIT_MS` after the first one of a burst that never
- * pauses. Held in memory, so a restart mid-burst loses that notice; the files
- * themselves are already stored.
- */
+/** One upload notice per link per burst. Held in memory: lost on restart. */
 
 import { Logger } from "#lib/logger.js";
 

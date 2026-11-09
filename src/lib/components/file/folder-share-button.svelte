@@ -23,11 +23,12 @@
 
 	async function share() {
 		loading = true;
-		const { data, error } = await api.GET(
-			"/api/v1/storage/folder/{path}/meta",
-			{ params: { path: { path: currentFolder } } },
-		);
-		loading = false;
+		const { data, error } = await api
+			.GET("/api/v1/storage/folder/{path}/meta", {
+				params: { path: { path: currentFolder } },
+			})
+			.catch((cause: unknown) => ({ data: undefined, error: cause }))
+			.finally(() => (loading = false));
 		// The meta route's schema is untyped.
 		const meta = data?.data as ObjectItem["metadata"] | undefined;
 		if (error || !meta?.id) {

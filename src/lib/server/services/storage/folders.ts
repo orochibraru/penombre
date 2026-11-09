@@ -55,6 +55,18 @@ export class FolderOperations {
 		return `${normalizedId}/`;
 	}
 
+	/** A share link names its folder by id, which is not its path. */
+	async getFolderById(id: string): Promise<string> {
+		const [folder] = await this.ctx.db
+			.select({ path: folders.path })
+			.from(folders)
+			.where(and(eq(folders.id, id), ownedFolders(this.ctx)));
+		if (!folder) {
+			throw new FileOrFolderNotFoundError(`Folder not found: ${id}`);
+		}
+		return `${folder.path}/`;
+	}
+
 	/** The scan drops any folder row whose directory is missing. */
 	private async ensureDir(path: string): Promise<void> {
 		const dir = join(this.ctx.storagePath, path);

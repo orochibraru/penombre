@@ -64,7 +64,7 @@ const emailSubject: Record<NotificationType, string> = {
 
 const emailLine: Record<
 	NotificationType,
-	(who: string, what: string) => string
+	(who: string, what: string, count: number) => string
 > = {
 	note: (who, what) => `${who} left a note on ${what}.`,
 	share: (who, what) => `${who} shared ${what} with you.`,
@@ -72,7 +72,10 @@ const emailLine: Record<
 		`Everyone signed ${what}. The signed PDF is ready.`,
 	signature_declined: (who, what) => `${who} declined to sign ${what}.`,
 	signature_requested: (who, what) => `${who} asks you to sign ${what}.`,
-	share_upload: (_who, what) => `New files were uploaded to ${what}.`,
+	share_upload: (_who, what, count) =>
+		count === 1
+			? `1 file was uploaded to ${what}.`
+			: `${count} files were uploaded to ${what}.`,
 };
 
 function emailContent(input: NotificationInput, origin: string): EmailContent {
@@ -81,7 +84,7 @@ function emailContent(input: NotificationInput, origin: string): EmailContent {
 	return {
 		subject: emailSubject[input.type],
 		heading: emailSubject[input.type],
-		lines: [emailLine[input.type](who, what)],
+		lines: [emailLine[input.type](who, what, input.count ?? 1)],
 		...(input.link
 			? { action: { label: "Open it", url: `${origin}${input.link}` } }
 			: {}),
