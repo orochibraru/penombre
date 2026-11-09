@@ -7,6 +7,7 @@
 		PenLineIcon,
 		Share2Icon,
 		SignatureIcon,
+		UploadIcon,
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 
@@ -31,10 +32,12 @@
 			| "share"
 			| "signature_completed"
 			| "signature_declined"
-			| "signature_requested";
+			| "signature_requested"
+			| "share_upload";
 		actorName: string | null;
 		resourceName: string | null;
 		link: string | null;
+		count: number | null;
 		read: boolean;
 		createdAt: string;
 	}
@@ -51,6 +54,7 @@
 		signature_completed: SignatureIcon,
 		signature_declined: CircleXIcon,
 		signature_requested: PenLineIcon,
+		share_upload: UploadIcon,
 	};
 
 	/**
@@ -72,6 +76,12 @@
 		if (item.type === "signature_declined") {
 			return m.sign_notification_declined({
 				actor: item.actorName ?? "",
+				item: other,
+			});
+		}
+		if (item.type === "share_upload") {
+			return m.notification_share_upload({
+				count: String(item.count ?? 1),
 				item: other,
 			});
 		}

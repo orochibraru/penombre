@@ -37,6 +37,8 @@ export interface NotificationInput {
 	actorName?: string | null;
 	resourceName?: string | null;
 	link?: string | null;
+	/** How many items a batched notification covers (uploads). */
+	count?: number | null;
 }
 
 export interface NotificationRow {
@@ -45,6 +47,7 @@ export interface NotificationRow {
 	actorName: string | null;
 	resourceName: string | null;
 	link: string | null;
+	count: number | null;
 	read: boolean;
 	createdAt: string;
 }
@@ -56,6 +59,7 @@ const emailSubject: Record<NotificationType, string> = {
 	signature_completed: "A document is signed",
 	signature_declined: "A signature was declined",
 	signature_requested: "You are asked to sign a document",
+	share_upload: "Files were uploaded through your link",
 };
 
 const emailLine: Record<
@@ -68,6 +72,7 @@ const emailLine: Record<
 		`Everyone signed ${what}. The signed PDF is ready.`,
 	signature_declined: (who, what) => `${who} declined to sign ${what}.`,
 	signature_requested: (who, what) => `${who} asks you to sign ${what}.`,
+	share_upload: (_who, what) => `New files were uploaded to ${what}.`,
 };
 
 function emailContent(input: NotificationInput, origin: string): EmailContent {
@@ -91,6 +96,7 @@ function toRow(row: {
 	actorName: string | null;
 	resourceName: string | null;
 	link: string | null;
+	count: number | null;
 	readAt: Date | null;
 	createdAt: Date;
 }): NotificationRow {
@@ -100,6 +106,7 @@ function toRow(row: {
 		actorName: row.actorName,
 		resourceName: row.resourceName,
 		link: row.link,
+		count: row.count,
 		read: row.readAt !== null,
 		createdAt: row.createdAt.toISOString(),
 	};
@@ -111,6 +118,7 @@ const selection = {
 	actorName: notifications.actorName,
 	resourceName: notifications.resourceName,
 	link: notifications.link,
+	count: notifications.count,
 	readAt: notifications.readAt,
 	createdAt: notifications.createdAt,
 };
@@ -160,6 +168,7 @@ export class NotificationService {
 				actorName: input.actorName ?? null,
 				resourceName: input.resourceName ?? null,
 				link: input.link ?? null,
+				count: input.count ?? null,
 			});
 		} catch (error) {
 			logger.error("Could not record notification", error);

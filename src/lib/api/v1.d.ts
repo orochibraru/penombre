@@ -8203,6 +8203,7 @@ export interface paths {
 							data?: {
 								notifications: {
 									actorName: string | null;
+									count: number | null;
 									/** Format: date-time */
 									createdAt: string;
 									id: string;
@@ -8215,7 +8216,8 @@ export interface paths {
 										| "share"
 										| "signature_completed"
 										| "signature_declined"
-										| "signature_requested";
+										| "signature_requested"
+										| "share_upload";
 								}[];
 								unread: number;
 							};

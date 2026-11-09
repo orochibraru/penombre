@@ -993,6 +993,16 @@
 	"notification_share": "{actor} deelde {item} met jou",
 	"notification_note_generic": "Er is een nieuwe notitie achtergelaten bij {item}",
 	"notification_share_generic": "{item} is met jou gedeeld",
+	"notification_share_upload": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} bestand is via je link geüpload naar {item}",
+				"countPlural=other": "{count} bestanden zijn via je link geüpload naar {item}"
+			}
+		}
+	],
 	"settings_email_notifications_no_smtp": "Hiervoor moet een beheerder uitgaande e-mail configureren.",
 	"admin_oauth": "OAuth-providers",
 	"admin_oauth_description": "Inloggen via een externe identiteitsprovider.",
@@ -1577,6 +1587,8 @@
 	"notif_type_signature_completed": "Volledig ondertekende documenten",
 	"notif_type_signature_declined": "Geweigerde handtekeningen",
 	"notif_type_signature_requested": "Handtekeningverzoeken",
+	"notif_type_share_upload": "Uploads via je links",
+	"share_this_folder": "Deze map delen",
 	"notif_phone_hint": "Meldingen op je telefoon komen van de Penombre-app, als de telefoon die op de achtergrond laat controleren.",
 	"email_change_title": "Je e-mailadres wijzigen",
 	"email_verify_title": "Je e-mailadres verifiëren",

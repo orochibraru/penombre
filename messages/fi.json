@@ -930,6 +930,16 @@
 	"notification_share": "{actor} jakoi kohteen {item} kanssasi",
 	"notification_note_generic": "Kohteeseen {item} jätettiin uusi muistiinpano",
 	"notification_share_generic": "{item} jaettiin kanssasi",
+	"notification_share_upload": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} tiedosto ladattiin kansioon {item} linkkisi kautta",
+				"countPlural=other": "{count} tiedostoa ladattiin kansioon {item} linkkisi kautta"
+			}
+		}
+	],
 	"settings_email_notifications_no_smtp": "Vaatii, että ylläpitäjä määrittää lähtevän sähköpostin.",
 	"admin_oauth": "OAuth-palveluntarjoajat",
 	"admin_oauth_description": "Kirjaudu sisään ulkoisen identiteetintarjoajan kautta.",
@@ -1514,6 +1524,8 @@
 	"notif_type_signature_completed": "Kokonaan allekirjoitetut asiakirjat",
 	"notif_type_signature_declined": "Hylätyt allekirjoitukset",
 	"notif_type_signature_requested": "Allekirjoituspyynnöt",
+	"notif_type_share_upload": "Lataukset linkkiesi kautta",
+	"share_this_folder": "Jaa tämä kansio",
 	"notif_phone_hint": "Puhelimen ilmoitukset tulevat Penombre-sovelluksesta, kun puhelin sallii sen tarkistaa taustalla.",
 	"email_change_title": "Vaihda sähköpostiosoitteesi",
 	"email_verify_title": "Vahvista sähköpostiosoitteesi",

@@ -959,6 +959,18 @@
 	"notification_share": "{actor} поделился(-ась) с вами: {item}",
 	"notification_note_generic": "На {item} оставлена новая заметка",
 	"notification_share_generic": "С вами поделились: {item}",
+	"notification_share_upload": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Через вашу ссылку в {item} загружен {count} файл",
+				"countPlural=few": "Через вашу ссылку в {item} загружено {count} файла",
+				"countPlural=many": "Через вашу ссылку в {item} загружено {count} файлов",
+				"countPlural=other": "Через вашу ссылку в {item} загружено {count} файла"
+			}
+		}
+	],
 	"settings_email_notifications_no_smtp": "Требует, чтобы администратор настроил исходящую почту.",
 	"admin_oauth": "Провайдеры OAuth",
 	"admin_oauth_description": "Вход через внешнего провайдера удостоверений.",
@@ -1559,6 +1571,8 @@
 	"notif_type_signature_completed": "Полностью подписанные документы",
 	"notif_type_signature_declined": "Отклонённые подписи",
 	"notif_type_signature_requested": "Запросы подписи",
+	"notif_type_share_upload": "Загрузки по вашим ссылкам",
+	"share_this_folder": "Поделиться этой папкой",
 	"notif_phone_hint": "Уведомления на телефоне приходят из приложения Penombre, если телефон разрешает ему проверять в фоне.",
 	"email_change_title": "Изменить адрес почты",
 	"email_verify_title": "Подтвердить адрес почты",

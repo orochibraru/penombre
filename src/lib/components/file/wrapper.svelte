@@ -16,6 +16,7 @@
 	import { MediaQuery } from "svelte/reactivity";
 
 	import { api, type ObjectItem, type ObjectList } from "#lib/api/index.js";
+	import FolderShareButton from "#lib/components/file/folder-share-button.svelte";
 	import FileGrid from "#lib/components/file/grid.svelte";
 	import FileList from "#lib/components/file/list.svelte";
 	import PreviewDialog from "#lib/components/file/preview-dialog.svelte";
@@ -894,6 +895,7 @@
 			{isTrash}
 			onopen={handleOpenItemWrapper}
 		/>
+		<FolderShareButton {currentFolder} {isTrash} />
 		{#if isTrash}
 			<Button
 				type="button"

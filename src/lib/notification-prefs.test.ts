@@ -40,6 +40,7 @@ describe("resolveChannels", () => {
 			"signature_completed",
 			"signature_declined",
 			"signature_requested",
+			"share_upload",
 		]);
 	});
 });

@@ -948,6 +948,18 @@
 	"notification_share": "{actor} udostępnił(a) Ci {item}",
 	"notification_note_generic": "Dodano nową notatkę na {item}",
 	"notification_share_generic": "Udostępniono Ci {item}",
+	"notification_share_upload": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Przez Twój link przesłano {count} plik do {item}",
+				"countPlural=few": "Przez Twój link przesłano {count} pliki do {item}",
+				"countPlural=many": "Przez Twój link przesłano {count} plików do {item}",
+				"countPlural=other": "Przez Twój link przesłano {count} pliku do {item}"
+			}
+		}
+	],
 	"settings_email_notifications_no_smtp": "Wymaga skonfigurowania poczty wychodzącej przez administratora.",
 	"admin_oauth": "Dostawcy OAuth",
 	"admin_oauth_description": "Logowanie przez zewnętrznego dostawcę tożsamości.",
@@ -1548,6 +1560,8 @@
 	"notif_type_signature_completed": "W pełni podpisane dokumenty",
 	"notif_type_signature_declined": "Odrzucone podpisy",
 	"notif_type_signature_requested": "Prośby o podpis",
+	"notif_type_share_upload": "Przesyłanie przez Twoje linki",
+	"share_this_folder": "Udostępnij ten folder",
 	"notif_phone_hint": "Powiadomienia na telefonie wysyła aplikacja Penombre, gdy telefon pozwala jej sprawdzać w tle.",
 	"email_change_title": "Zmień adres e-mail",
 	"email_verify_title": "Zweryfikuj adres e-mail",

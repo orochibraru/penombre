@@ -1002,6 +1002,16 @@
 	"notification_share": "{actor} a partagé {item} avec vous",
 	"notification_note_generic": "Une nouvelle note a été laissée sur {item}",
 	"notification_share_generic": "{item} a été partagé avec vous",
+	"notification_share_upload": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} fichier a été déposé dans {item} via votre lien",
+				"countPlural=other": "{count} fichiers ont été déposés dans {item} via votre lien"
+			}
+		}
+	],
 	"settings_email_notifications_no_smtp": "Nécessite qu’un administrateur configure l’envoi d’e-mails.",
 	"admin_oauth": "Fournisseurs OAuth",
 	"admin_oauth_description": "Se connecter via un fournisseur d'identité externe.",
@@ -1586,6 +1596,8 @@
 	"notif_type_signature_completed": "Documents entièrement signés",
 	"notif_type_signature_declined": "Signatures refusées",
 	"notif_type_signature_requested": "Demandes de signature",
+	"notif_type_share_upload": "Dépôts via vos liens",
+	"share_this_folder": "Partager ce dossier",
 	"notif_phone_hint": "Les notifications sur le téléphone viennent de l'application Penombre, quand le téléphone l'autorise à vérifier en arrière-plan.",
 	"email_change_title": "Changer votre adresse e-mail",
 	"email_verify_title": "Vérifier votre adresse e-mail",

@@ -19,6 +19,7 @@
     <string name="notice_comment_generic">%1$s 上有一条新评论</string>
     <string name="notice_share">%1$s 与您共享了 %2$s</string>
     <string name="notice_share_generic">有人与您共享了 %1$s</string>
+    <string name="notice_share_upload">通过您的链接上传到 %1$s 的新文件（%2$s 个）</string>
     <string name="notice_signed">所有人都已签署 %1$s</string>
     <string name="notice_declined">%1$s 拒绝签署 %2$s</string>
     <string name="notice_declined_generic">有签署人拒绝签署 %1$s</string>
@@ -451,6 +452,7 @@
     <string name="sign_request_honest">简易电子签名：你的姓名、地址、时间、IP 地址和设备会记录在已签署的 PDF 中。</string>
     <string name="notice_sign_requested">%1$s 请你签署 %2$s</string>
     <string name="notif_type_signature_requested">签名请求</string>
+    <string name="notif_type_share_upload">通过您的链接上传</string>
     <string name="editor_unsaved_title">尚未保存</string>
     <string name="editor_unsaved_text">最后的更改未能保存。仍要离开吗？</string>
     <string name="editor_leave">离开</string>

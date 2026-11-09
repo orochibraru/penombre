@@ -218,6 +218,13 @@
       "when": 1794138608482,
       "tag": "0030_share_uploads",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1794224591155,
+      "tag": "0031_rich_mastermind",
+      "breakpoints": true
     }
   ]
 }

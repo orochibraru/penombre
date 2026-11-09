@@ -16,6 +16,8 @@ For files that belong to a group rather than to one person, a
 the drive instead of in someone's own.
 
 Right-click a file or folder (or use the row's ⋯ menu) and choose **Share**.
+Inside a folder, the share button beside the layout toggle shares the folder you
+are in, without going back up to its row.
 
 ## Links
 
@@ -110,7 +112,9 @@ A share URL looks like `https://your-instance/s/<token>`.
   files dropped on the list upload too. No account is needed, only the link and
   whatever password or sign-in it asks for. Uploads land at the top of the
   shared folder and never replace anything: a name already taken gets a `(1)`
-  suffix. They show up in your drive like any other file.
+  suffix. They show up in your drive like any other file, and the link's creator
+  gets one [notification](notifications.md) per burst of uploads, not one per
+  file.
 - **A password-protected link** asks for the password first. A correct answer
   sets a cookie scoped to that one link, valid for 12 hours, so the visitor is
   not asked again on every download.

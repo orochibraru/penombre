@@ -1100,6 +1100,16 @@
 	"notification_share": "{actor} shared {item} with you",
 	"notification_note_generic": "A new note was left on {item}",
 	"notification_share_generic": "{item} was shared with you",
+	"notification_share_upload": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} file was uploaded to {item} through your link",
+				"countPlural=other": "{count} files were uploaded to {item} through your link"
+			}
+		}
+	],
 	"settings_email_notifications_no_smtp": "Requires an administrator to configure outgoing mail.",
 	"admin_oauth": "OAuth providers",
 	"admin_oauth_description": "Sign in through an external identity provider.",
@@ -1876,6 +1886,8 @@
 	"notif_type_signature_completed": "Documents fully signed",
 	"notif_type_signature_declined": "Signatures declined",
 	"notif_type_signature_requested": "Signature requests",
+	"notif_type_share_upload": "Uploads through your links",
+	"share_this_folder": "Share this folder",
 	"notif_phone_hint": "Phone notifications come from the Penombre app, when the phone lets it check in the background.",
 	"email_change_title": "Change your email address",
 	"email_verify_title": "Verify your email address",

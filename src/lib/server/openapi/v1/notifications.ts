@@ -15,12 +15,15 @@ export const notificationSchema = z.object({
 		"signature_completed",
 		"signature_declined",
 		"signature_requested",
+		"share_upload",
 	]),
 	/** Who did it, as their name read when it happened. */
 	actorName: z.string().nullable(),
 	/** The file or folder involved. */
 	resourceName: z.string().nullable(),
 	link: z.string().nullable(),
+	/** How many items a batched notification covers (uploads), else null. */
+	count: z.number().nullable(),
 	read: z.boolean(),
 	createdAt: z.iso.datetime(),
 });

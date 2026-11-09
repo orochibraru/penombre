@@ -19,6 +19,7 @@
     <string name="notice_comment_generic">Un nouveau commentaire a été laissé sur %1$s</string>
     <string name="notice_share">%1$s a partagé %2$s avec vous</string>
     <string name="notice_share_generic">%1$s a été partagé avec vous</string>
+    <string name="notice_share_upload">Nouveaux dépôts dans %1$s via votre lien (%2$s)</string>
     <string name="notice_signed">Tout le monde a signé %1$s</string>
     <string name="notice_declined">%1$s a refusé de signer %2$s</string>
     <string name="notice_declined_generic">Un signataire a refusé de signer %1$s</string>
@@ -462,6 +463,7 @@
     <string name="sign_request_honest">Une signature électronique simple : votre nom, votre adresse, l'heure, votre adresse IP et votre appareil sont consignés dans le PDF signé.</string>
     <string name="notice_sign_requested">%1$s vous demande de signer %2$s</string>
     <string name="notif_type_signature_requested">Demandes de signature</string>
+    <string name="notif_type_share_upload">Dépôts via vos liens</string>
     <string name="editor_unsaved_title">Pas encore enregistré</string>
     <string name="editor_unsaved_text">Les dernières modifications n'ont pas pu être enregistrées. Quitter quand même ?</string>
     <string name="editor_leave">Quitter</string>

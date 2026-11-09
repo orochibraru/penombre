@@ -669,11 +669,13 @@ export const notifications = sqliteTable(
 				"signature_completed",
 				"signature_declined",
 				"signature_requested",
+				"share_upload",
 			],
 		}).notNull(),
 		actorName: text("actor_name"),
 		resourceName: text("resource_name"),
 		link: text("link"),
+		count: integer("count"),
 		readAt: integer("read_at", { mode: "timestamp_ms" }),
 		createdAt: integer("created_at", { mode: "timestamp_ms" })
 			.$defaultFn(() => new Date())

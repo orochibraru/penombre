@@ -14,15 +14,24 @@ own uploads, renames and deletions never ring it. Those are in
 | **Everyone signed a document**   | Whoever asked for the signatures           |
 | **Someone declined to sign**     | Whoever asked for the signatures           |
 | **You are asked to sign**        | A signer whose account was asked           |
+| **Files arrive through a link**  | Whoever made the upload link               |
 
-The last three come from [signature requests](signatures.md). Two rules apply to
-all of them:
+The signature rows come from [signature requests](signatures.md). Two rules
+apply to all of them:
 
 - **You are never told about your own action.** Leaving a note on your own file
   rings nobody's bell, including yours.
 - **Nobody is told twice about one event.** An owner who has also written in a
   note thread hears about a new note once, and re-sharing something with
   somebody who already has it is silent.
+
+An upload link is batched rather than rung per file: uploads through one link
+are counted, and a single notification goes out once nobody has uploaded through
+it for two minutes, or ten minutes after the first file of a drop that never
+pauses. It names the folder and how many files arrived. A batch is held in
+memory, so restarting the server mid-drop loses that one notification; the files
+themselves are already saved. The link's creator uploading through their own
+link, signed in, rings nothing.
 
 ## Reading them
 
@@ -51,12 +60,12 @@ The same grid is in the mobile app, under **Settings → General**, and a change
 in one shows in the other.
 
 Out of the box every kind rings the bell and reaches your phone. Something
-shared with you, and the outcome of a signature request you made, are emailed
-too, since they are addressed to you by name; comments and notes are not emailed
-unless you turn that on, and neither is a request to sign, whose link already
-comes by email. Turning **In the app** off for a kind also stops it reaching
-your phone: the app finds new notifications by asking the server for the ones
-the bell keeps.
+shared with you, files uploaded through your links, and the outcome of a
+signature request you made, are emailed too, since they are addressed to you by
+name; comments and notes are not emailed unless you turn that on, and neither is
+a request to sign, whose link already comes by email. Turning **In the app** off
+for a kind also stops it reaching your phone: the app finds new notifications by
+asking the server for the ones the bell keeps.
 
 **By email** is disabled, with a note saying so, unless an administrator has
 configured outgoing mail — see the SMTP section of [Environment](env.md). If

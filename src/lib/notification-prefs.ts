@@ -10,6 +10,7 @@ export const NOTIFICATION_TYPES = [
 	"signature_completed",
 	"signature_declined",
 	"signature_requested",
+	"share_upload",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -30,6 +31,7 @@ const MAILED_BY_DEFAULT = new Set<NotificationType>([
 	"share",
 	"signature_completed",
 	"signature_declined",
+	"share_upload",
 ]);
 
 /**
