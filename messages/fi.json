@@ -935,8 +935,8 @@
 			"declarations": ["input count", "local countPlural = count: plural"],
 			"selectors": ["countPlural"],
 			"match": {
-				"countPlural=one": "{count} tiedosto ladattiin kansioon {item} linkkisi kautta",
-				"countPlural=other": "{count} tiedostoa ladattiin kansioon {item} linkkisi kautta"
+				"countPlural=one": "{count} tiedosto lähetettiin kansioon {item} linkkisi kautta",
+				"countPlural=other": "{count} tiedostoa lähetettiin kansioon {item} linkkisi kautta"
 			}
 		}
 	],
@@ -1524,7 +1524,7 @@
 	"notif_type_signature_completed": "Kokonaan allekirjoitetut asiakirjat",
 	"notif_type_signature_declined": "Hylätyt allekirjoitukset",
 	"notif_type_signature_requested": "Allekirjoituspyynnöt",
-	"notif_type_share_upload": "Lataukset linkkiesi kautta",
+	"notif_type_share_upload": "Lähetykset linkkiesi kautta",
 	"share_this_folder": "Jaa tämä kansio",
 	"notif_phone_hint": "Puhelimen ilmoitukset tulevat Penombre-sovelluksesta, kun puhelin sallii sen tarkistaa taustalla.",
 	"email_change_title": "Vaihda sähköpostiosoitteesi",
