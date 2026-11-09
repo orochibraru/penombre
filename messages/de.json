@@ -957,6 +957,16 @@
 	"notification_share": "{actor} hat {item} mit dir geteilt",
 	"notification_note_generic": "Zu {item} wurde eine neue Notiz hinterlassen",
 	"notification_share_generic": "{item} wurde mit dir geteilt",
+	"notification_share_upload": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Datei wurde über deinen Link in {item} hochgeladen",
+				"countPlural=other": "{count} Dateien wurden über deinen Link in {item} hochgeladen"
+			}
+		}
+	],
 	"settings_email_notifications_no_smtp": "Erfordert, dass ein Administrator den E-Mail-Versand einrichtet.",
 	"admin_oauth": "OAuth-Anbieter",
 	"admin_oauth_description": "Anmeldung über einen externen Identitätsanbieter.",
@@ -1532,6 +1542,8 @@
 	"notif_type_signature_completed": "Vollständig unterschriebene Dokumente",
 	"notif_type_signature_declined": "Abgelehnte Unterschriften",
 	"notif_type_signature_requested": "Signaturanfragen",
+	"notif_type_share_upload": "Uploads über deine Links",
+	"share_this_folder": "Diesen Ordner teilen",
 	"notif_phone_hint": "Benachrichtigungen auf dem Handy kommen von der Penombre-App, wenn das Handy ihr erlaubt, im Hintergrund nachzusehen.",
 	"email_change_title": "E-Mail-Adresse ändern",
 	"email_verify_title": "E-Mail-Adresse bestätigen",

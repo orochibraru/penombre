@@ -487,6 +487,10 @@ export class StorageService {
 		return this.folderOperations.getFolder(folderId);
 	}
 
+	getFolderById(id: string): Promise<string> {
+		return this.folderOperations.getFolderById(id);
+	}
+
 	moveFolder(folderKey: string, destinationFolder: string): Promise<void> {
 		this.assertWritable();
 		this.assertInScope(folderKey, true);

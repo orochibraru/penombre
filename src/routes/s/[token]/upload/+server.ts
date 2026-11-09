@@ -3,6 +3,7 @@ import { error } from "@sveltejs/kit";
 import { Logger } from "#lib/logger.js";
 import { ReadOnlyVolumeError } from "#lib/server/errors.js";
 import { isRateLimited } from "#lib/server/rate-limit.js";
+import { noteLinkUpload } from "#lib/server/services/share-upload-notices.js";
 import { ShareService, unlockCookieName } from "#lib/server/services/shares.js";
 import { shareLinkStorage } from "#lib/server/services/storage-for.js";
 import { SHARE_UPLOAD_MAX_BYTES } from "#lib/share-upload.js";
@@ -52,7 +53,7 @@ export const POST = async ({
 		return error(404, "The shared folder is no longer available.");
 	}
 	const folderPath = await service
-		.getFolder(share.resourceId)
+		.getFolderById(share.resourceId)
 		.catch(() => null);
 	const folderMeta = folderPath
 		? await service.getFolderMeta(folderPath)
@@ -113,6 +114,8 @@ export const POST = async ({
 		}
 		return error(500, "Upload failed.");
 	}
+
+	noteLinkUpload(share, folderMeta.name, locals);
 
 	return new Response(null, { status: 201 });
 };

@@ -65,11 +65,11 @@
 		}
 		const isFolder = isFolderItem(item);
 		return {
-			// Folder keys carry a trailing slash; file rows key by id.
 			resourceType: (isFolder ? "folder" : "file") as "folder" | "file",
-			resourceId: isFolder
-				? item.key.slice(0, -1)
-				: (item.metadata.id ?? item.key),
+			// A folder key is its last path segment, which is the id only on a
+			// personal drive; drives and volumes key by name.
+			resourceId:
+				item.metadata.id ?? (isFolder ? item.key.slice(0, -1) : item.key),
 		};
 	});
 

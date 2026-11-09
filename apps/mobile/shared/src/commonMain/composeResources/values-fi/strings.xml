@@ -19,6 +19,7 @@
     <string name="notice_comment_generic">Kohteeseen %1$s jätettiin uusi kommentti</string>
     <string name="notice_share">%1$s jakoi kohteen %2$s kanssasi</string>
     <string name="notice_share_generic">%1$s jaettiin kanssasi</string>
+    <string name="notice_share_upload">Uusia lähetyksiä kansioon %1$s linkkisi kautta (%2$s)</string>
     <string name="notice_signed">Kaikki allekirjoittivat kohteen %1$s</string>
     <string name="notice_declined">%1$s kieltäytyi allekirjoittamasta kohdetta %2$s</string>
     <string name="notice_declined_generic">Allekirjoittaja kieltäytyi allekirjoittamasta kohdetta %1$s</string>
@@ -462,6 +463,7 @@
     <string name="sign_request_honest">Yksinkertainen sähköinen allekirjoitus: nimesi, osoitteesi, aika, IP-osoitteesi ja laitteesi kirjataan allekirjoitettuun PDF:ään.</string>
     <string name="notice_sign_requested">%1$s pyytää sinua allekirjoittamaan kohteen %2$s</string>
     <string name="notif_type_signature_requested">Allekirjoituspyynnöt</string>
+    <string name="notif_type_share_upload">Lähetykset linkkiesi kautta</string>
     <string name="editor_unsaved_title">Ei vielä tallennettu</string>
     <string name="editor_unsaved_text">Viimeisimpiä muutoksia ei voitu tallentaa. Poistutaanko silti?</string>
     <string name="editor_leave">Poistu</string>

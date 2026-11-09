@@ -15,7 +15,7 @@ const shares = new ShareService();
 
 /** A zip of the whole shared folder. */
 async function folderZip(service: StorageService, share: Share) {
-	const folderPath = await service.getFolder(share.resourceId);
+	const folderPath = await service.getFolderById(share.resourceId);
 	const stream = await service.createZipFromFolder(folderPath);
 	return new Response(stream, {
 		headers: {

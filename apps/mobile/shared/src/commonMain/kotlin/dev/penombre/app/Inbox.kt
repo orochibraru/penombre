@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -93,6 +94,7 @@ fun NotificationsView(host: Host, onUnread: (Int) -> Unit) {
                                 "signature_completed" -> Icons.Outlined.Draw
                                 "signature_declined" -> Icons.Outlined.Cancel
                                 "signature_requested" -> Icons.Outlined.Draw
+                                "share_upload" -> Icons.Outlined.Upload
                                 else -> Icons.Outlined.ChatBubbleOutline
                             },
                             notice.words.text(),

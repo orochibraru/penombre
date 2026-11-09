@@ -19,6 +19,7 @@
     <string name="notice_comment_generic">Dodano nowy komentarz na %1$s</string>
     <string name="notice_share">%1$s udostępnił(a) Ci %2$s</string>
     <string name="notice_share_generic">Udostępniono Ci %1$s</string>
+    <string name="notice_share_upload">Nowe pliki w %1$s przez Twój link (%2$s)</string>
     <string name="notice_signed">Wszyscy podpisali %1$s</string>
     <string name="notice_declined">%1$s odmówił(a) podpisania %2$s</string>
     <string name="notice_declined_generic">Jeden z podpisujących odmówił podpisania %1$s</string>
@@ -484,6 +485,7 @@
     <string name="sign_request_honest">Prosty podpis elektroniczny: imię i nazwisko, adres, godzina, adres IP i urządzenie zostają zapisane w podpisanym pliku PDF.</string>
     <string name="notice_sign_requested">%1$s prosi o podpisanie %2$s</string>
     <string name="notif_type_signature_requested">Prośby o podpis</string>
+    <string name="notif_type_share_upload">Przesyłanie przez Twoje linki</string>
     <string name="editor_unsaved_title">Jeszcze nie zapisano</string>
     <string name="editor_unsaved_text">Ostatnich zmian nie udało się zapisać. Wyjść mimo to?</string>
     <string name="editor_leave">Wyjdź</string>

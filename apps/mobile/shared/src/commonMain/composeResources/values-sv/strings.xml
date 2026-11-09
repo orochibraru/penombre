@@ -19,6 +19,7 @@
     <string name="notice_comment_generic">En ny kommentar lämnades på %1$s</string>
     <string name="notice_share">%1$s delade %2$s med dig</string>
     <string name="notice_share_generic">%1$s delades med dig</string>
+    <string name="notice_share_upload">Nya uppladdningar i %1$s via din länk (%2$s)</string>
     <string name="notice_signed">Alla har skrivit under %1$s</string>
     <string name="notice_declined">%1$s avböjde att skriva under %2$s</string>
     <string name="notice_declined_generic">En undertecknare avböjde att skriva under %1$s</string>
@@ -462,6 +463,7 @@
     <string name="sign_request_honest">En enkel elektronisk underskrift: ditt namn, din adress, tidpunkten, din IP-adress och din enhet registreras i den underskrivna PDF:en.</string>
     <string name="notice_sign_requested">%1$s ber dig skriva under %2$s</string>
     <string name="notif_type_signature_requested">Underskriftsbegäranden</string>
+    <string name="notif_type_share_upload">Uppladdningar via dina länkar</string>
     <string name="editor_unsaved_title">Inte sparat än</string>
     <string name="editor_unsaved_text">De senaste ändringarna kunde inte sparas. Lämna ändå?</string>
     <string name="editor_leave">Lämna</string>

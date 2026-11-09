@@ -122,6 +122,25 @@ describe("getFolder", () => {
 	});
 });
 
+describe("getFolderById", () => {
+	test("answers a nested folder's path, not its id", async () => {
+		await addFolder("band");
+		await addFolder("band/takes");
+
+		expect(await operations().getFolderById("id-band/takes")).toBe(
+			"band/takes/",
+		);
+	});
+
+	test("a folder on another volume is not found", async () => {
+		await addFolder("band", { volumeId: "drive:x" });
+
+		await expect(operations().getFolderById("id-band")).rejects.toThrow(
+			FileOrFolderNotFoundError,
+		);
+	});
+});
+
 describe("createFolder", () => {
 	test("files the folder under its parent and makes its directory", async () => {
 		await addFolder("band");

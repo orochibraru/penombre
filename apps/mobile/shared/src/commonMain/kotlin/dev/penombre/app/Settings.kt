@@ -152,6 +152,7 @@ private val NOTIFICATION_NAMES = listOf(
     Res.string.notif_type_signature_completed,
     Res.string.notif_type_signature_declined,
     Res.string.notif_type_signature_requested,
+    Res.string.notif_type_share_upload,
 )
 
 private val CHANNEL_NAMES = listOf(

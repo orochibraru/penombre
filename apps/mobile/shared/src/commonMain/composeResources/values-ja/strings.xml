@@ -19,6 +19,7 @@
     <string name="notice_comment_generic">%1$sに新しいコメントが付きました</string>
     <string name="notice_share">%1$sが%2$sをあなたと共有しました</string>
     <string name="notice_share_generic">%1$sがあなたと共有されました</string>
+    <string name="notice_share_upload">リンク経由で%1$sに新しいアップロード（%2$s件）</string>
     <string name="notice_signed">全員が%1$sに署名しました</string>
     <string name="notice_declined">%1$sが%2$sへの署名を辞退しました</string>
     <string name="notice_declined_generic">署名者が%1$sへの署名を辞退しました</string>
@@ -451,6 +452,7 @@
     <string name="sign_request_honest">簡易電子署名：氏名、メールアドレス、日時、IPアドレス、端末が署名済みPDFに記録されます。</string>
     <string name="notice_sign_requested">%1$sが%2$sへの署名を求めています</string>
     <string name="notif_type_signature_requested">署名の依頼</string>
+    <string name="notif_type_share_upload">リンク経由のアップロード</string>
     <string name="editor_unsaved_title">まだ保存されていません</string>
     <string name="editor_unsaved_text">最後の変更を保存できませんでした。それでも閉じますか？</string>
     <string name="editor_leave">閉じる</string>

@@ -3060,6 +3060,21 @@ at `SHARE_UPLOAD_MAX_BYTES` (1 GiB, `#lib/share-upload.ts`) from
 `Content-Length` before `formData()` runs: the image sets
 `BODY_SIZE_LIMIT=Infinity`, and the body sits in memory twice while written.
 
+### Upload-link notices are batched in memory
+
+Each anonymous upload through a link calls `noteLinkUpload`
+(`services/share-upload-notices.ts`), which feeds `UploadNoticeBatcher`
+(`upload-notice-batcher.ts`): one `share_upload` notification per link after 2
+minutes of quiet, or 10 after the burst's first file, carrying `count`. It is
+per process and lost on restart, by choice. A notification type that batches
+stores its number in `notifications.count`, never in `actorName`.
+
+A share's folder `resourceId` is the folder's **id**. The share dialog used to
+send the row's key, the last path segment, which is the id only on a personal
+drive: sharing a folder on a drive or volume pointed at nothing. The link's own
+routes (`/s/[token]` page, upload, zip) resolve it with `getFolderById`;
+`getFolder` takes a **path**, and passing it the id 404'd every nested folder.
+
 ### A valid API key can still fail verification
 
 better-auth's API-key plugin limits each key to 100 verifications a minute and

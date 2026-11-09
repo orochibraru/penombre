@@ -89,11 +89,13 @@ data class Places(
 @Serializable
 data class Notice(
     val id: String,
-    /** `note`, `share`, `signature_completed`, `signature_declined` or `signature_requested`. */
+    /** `note`, `share`, `signature_completed`, `signature_declined`, `signature_requested` or `share_upload`. */
     val type: String,
     val actorName: String? = null,
     val resourceName: String? = null,
     val link: String? = null,
+    /** How many items a batched notice covers (uploads). */
+    val count: Int? = null,
     val read: Boolean = false,
     val createdAt: String,
 ) {
@@ -106,6 +108,7 @@ data class Notice(
         val actor = actorName
         return when {
             type == "signature_completed" -> Words(Res.string.notice_signed, item)
+            type == "share_upload" -> Words(Res.string.notice_share_upload, item, (count ?: 1).toString())
             type == "signature_requested" -> Words(Res.string.notice_sign_requested, actor.orEmpty(), item)
             type == "signature_declined" -> actor?.let { Words(Res.string.notice_declined, it, item) } ?: Words(Res.string.notice_declined_generic, item)
             isComment -> actor?.let { Words(Res.string.notice_comment, it, item) } ?: Words(Res.string.notice_comment_generic, item)
@@ -406,10 +409,10 @@ val METHOD_NAMES = linkedMapOf(
 )
 
 /** The kinds of notification, in the web's order (`#lib/notification-prefs.ts`). */
-val NOTIFICATION_TYPES = listOf("note", "share", "signature_completed", "signature_declined", "signature_requested")
+val NOTIFICATION_TYPES = listOf("note", "share", "signature_completed", "signature_declined", "signature_requested", "share_upload")
 
 /** Addressed by someone to someone, or the outcome of their own request. */
-private val MAILED_BY_DEFAULT = setOf("share", "signature_completed", "signature_declined")
+private val MAILED_BY_DEFAULT = setOf("share", "signature_completed", "signature_declined", "share_upload")
 
 /** Where one kind of notification goes: the bell, the mailbox, the phone. */
 data class Channels(val inApp: Boolean, val email: Boolean, val phone: Boolean)

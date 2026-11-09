@@ -19,6 +19,7 @@
     <string name="notice_comment_generic">%1$s에 새 댓글이 남겨졌습니다</string>
     <string name="notice_share">%1$s님이 %2$s을(를) 공유했습니다</string>
     <string name="notice_share_generic">%1$s이(가) 공유되었습니다</string>
+    <string name="notice_share_upload">링크를 통해 %1$s에 새 업로드 (%2$s개)</string>
     <string name="notice_signed">모두가 %1$s에 서명했습니다</string>
     <string name="notice_declined">%1$s님이 %2$s 서명을 거절했습니다</string>
     <string name="notice_declined_generic">서명자가 %1$s 서명을 거절했습니다</string>
@@ -451,6 +452,7 @@
     <string name="sign_request_honest">간단한 전자 서명: 이름, 주소, 시간, IP 주소, 기기가 서명된 PDF에 기록됩니다.</string>
     <string name="notice_sign_requested">%1$s님이 %2$s 서명을 요청했습니다</string>
     <string name="notif_type_signature_requested">서명 요청</string>
+    <string name="notif_type_share_upload">링크를 통한 업로드</string>
     <string name="editor_unsaved_title">아직 저장되지 않음</string>
     <string name="editor_unsaved_text">마지막 변경 사항을 저장하지 못했습니다. 그래도 나갈까요?</string>
     <string name="editor_leave">나가기</string>

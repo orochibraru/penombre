@@ -957,6 +957,7 @@ export const notifications = pgTable(
 				"signature_completed",
 				"signature_declined",
 				"signature_requested",
+				"share_upload",
 			],
 		}).notNull(),
 		/** Who did it, snapshotted: the row survives the actor being deleted. */
@@ -964,6 +965,8 @@ export const notifications = pgTable(
 		/** The file or folder it happened to. */
 		resourceName: text("resource_name"),
 		link: text("link"),
+		/** How many items it covers, when it is a batch (uploads). */
+		count: integer("count"),
 		readAt: timestamp("read_at"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},

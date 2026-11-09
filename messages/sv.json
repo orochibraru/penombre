@@ -867,6 +867,16 @@
 	"notification_share": "{actor} delade {item} med dig",
 	"notification_note_generic": "En ny anteckning lämnades på {item}",
 	"notification_share_generic": "{item} delades med dig",
+	"notification_share_upload": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} fil laddades upp till {item} via din länk",
+				"countPlural=other": "{count} filer laddades upp till {item} via din länk"
+			}
+		}
+	],
 	"settings_email_notifications_no_smtp": "Kräver att en admin konfigurerar utgående e-post.",
 	"admin_oauth": "OAuth-leverantörer",
 	"admin_oauth_description": "Logga in via en extern identitetsleverantör.",
@@ -1415,6 +1425,8 @@
 	"notif_type_signature_completed": "Färdigsignerade dokument",
 	"notif_type_signature_declined": "Avböjda signaturer",
 	"notif_type_signature_requested": "Underskriftsbegäranden",
+	"notif_type_share_upload": "Uppladdningar via dina länkar",
+	"share_this_folder": "Dela den här mappen",
 	"notif_phone_hint": "Aviseringar på telefonen kommer från Penombre-appen, när telefonen låter den kontrollera i bakgrunden.",
 	"email_change_title": "Ändra din e-postadress",
 	"email_verify_title": "Verifiera din e-postadress",
