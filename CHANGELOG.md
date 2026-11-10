@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.69](https://github.com/orochibraru/penombre/compare/v1.8.68...v1.8.69) (2026-11-09)
+
+### Features
+
+* share the open folder from the toolbar; notify on link uploads (#167) ([15d7e77](https://github.com/orochibraru/penombre/commit/15d7e77c811bfd568b73f5d6f7183acf1ea707d6))
+
 ## [1.8.68](https://github.com/orochibraru/penombre/compare/v1.8.67...v1.8.68) (2026-11-08)
 
 ### Features
