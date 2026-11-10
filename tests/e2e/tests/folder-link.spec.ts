@@ -73,4 +73,27 @@ test.describe("folder links", () => {
 		);
 		expect(response.status()).toBe(404);
 	});
+
+	test("a file link opens the file where the viewer can reach it", async ({
+		page,
+	}) => {
+		const created = await page.request.post("/api/v1/documents", {
+			data: { kind: "document", name: `e2e-go-file-${Date.now()}` },
+		});
+		expect(created.ok()).toBeTruthy();
+		const id = (await created.json()).data.id as string;
+
+		const response = await page.request.get(`/go/file/${id}`, {
+			maxRedirects: 0,
+		});
+		expect(response.status()).toBe(303);
+		expect(response.headers().location).toBe(`/edit/${id}`);
+	});
+
+	test("an unknown file is a 404, not a hint", async ({ page }) => {
+		const response = await page.request.get(`/go/file/${crypto.randomUUID()}`, {
+			maxRedirects: 0,
+		});
+		expect(response.status()).toBe(404);
+	});
 });
