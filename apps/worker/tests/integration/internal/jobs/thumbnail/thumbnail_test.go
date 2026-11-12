@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/orochibraru/penombre/internal/envelope"
-	"github.com/orochibraru/penombre/internal/jobs"
-	"github.com/orochibraru/penombre/internal/jobs/thumbnail"
+	"github.com/zedensix/penombre/internal/envelope"
+	"github.com/zedensix/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/jobs/thumbnail"
 )
 
 func needFFmpeg(t *testing.T) {

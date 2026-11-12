@@ -369,8 +369,8 @@ Messages live in `messages/*.json`, compiled by `gen:paraglide` into
 **Every user-facing feature or env var ships with its docs in the same change.**
 The guides live in `docs/*.md` at the repo root. The docs site is built from
 those exact files by a separate repository
-([@orochibraru/docs](https://github.com/zedensix/docs)), so there is nowhere
-else to write them and nothing in this repo renders them.
+([@zedensix/docs](https://github.com/zedensix/docs)), so there is nowhere else
+to write them and nothing in this repo renders them.
 
 - New/changed env var → add it to the relevant table in `docs/env.md` **and**
   the guide that explains the feature (`authentication.md`, `storage.md`,
@@ -378,7 +378,7 @@ else to write them and nothing in this repo renders them.
 - New behaviour with no env var → the guide it belongs to, or a new
   `docs/<slug>.md` **plus an entry in `docs/config.json`**, which sets the docs
   site's categories, order, titles and icons (schema:
-  `https://orochibraru.com/docs-config.schema.json`).
+  `https://zedensix.com/docs-config.schema.json`).
 - Also regenerate `.example.env` (`bun run gen:env`) when you touch
   `config.defaults.ts`.
 - `markdownlint` and `vale` must pass
@@ -2143,7 +2143,7 @@ is a **formula**, not a cask: a cask cannot declare `service`, and
 launchd finds Homebrew's rclone. `keep_alive crashed: true`, because quitting
 from the tray exits 0 and must stay quit.
 
-`fastframe-tray` comes from our fork (`orochibraru/fastframe`, pinned by rev in
+`fastframe-tray` comes from our fork (`zedensix/fastframe`, pinned by rev in
 `apps/desktop/Cargo.toml`'s `[patch]`) for `Tray::set_status`, the menu-bar
 percentage. Drop the patch once `crmne/fastframe` releases it; until then a
 fastframe bump must move the fork too.
@@ -2465,8 +2465,8 @@ attach to the draft before `publish-release`. A pull request touching
 `apps/mobile/` calls the same workflow without `upload`, as a build check: a
 Kotlin/Native link error only shows when the iOS framework is linked.
 
-- **The Play identity is `com.orochibraru.penombre`** (`applicationId`, and the
-  iOS bundle id, since the Maestro flows share one `appId`), while the Kotlin
+- **The Play identity is `com.zedensix.penombre`** (`applicationId`, and the iOS
+  bundle id, since the Maestro flows share one `appId`), while the Kotlin
   `namespace` stays `dev.penombre.app`. A component name's `.MainActivity`
   shorthand resolves against the applicationId, so `am start` spells the class
   out.

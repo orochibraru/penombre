@@ -7,4 +7,4 @@ adb wait-for-device
 # The device's localhost reaches `bun run dev` on this machine.
 adb reverse tcp:5173 tcp:5173
 adb install -r androidApp/build/outputs/apk/debug/androidApp-debug.apk
-adb shell am start -n com.orochibraru.penombre/dev.penombre.app.MainActivity
+adb shell am start -n com.zedensix.penombre/dev.penombre.app.MainActivity

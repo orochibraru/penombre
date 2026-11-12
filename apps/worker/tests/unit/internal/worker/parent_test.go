@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/orochibraru/penombre/internal/worker"
+	"github.com/zedensix/penombre/internal/worker"
 )
 
 func TestWatchParentCancelsOnceTheParentIsGone(t *testing.T) {

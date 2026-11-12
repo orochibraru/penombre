@@ -1,4 +1,4 @@
-module github.com/orochibraru/penombre
+module github.com/zedensix/penombre
 
 go 1.27.3
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/orochibraru/penombre/internal/envelope"
+	"github.com/zedensix/penombre/internal/envelope"
 )
 
 type Config struct {

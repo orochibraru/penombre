@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/orochibraru/penombre/internal/envelope"
-	"github.com/orochibraru/penombre/internal/jobs"
-	"github.com/orochibraru/penombre/internal/jobs/mediaprobe"
+	"github.com/zedensix/penombre/internal/envelope"
+	"github.com/zedensix/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/jobs/mediaprobe"
 )
 
 func requireFFmpeg(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/orochibraru/penombre/internal/jobs/thumbnail"
+	"github.com/zedensix/penombre/internal/jobs/thumbnail"
 )
 
 func samplesOf(values []int16, per int) []byte {

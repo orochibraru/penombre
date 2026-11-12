@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/orochibraru/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/jobs"
 )
 
 type Spec struct {

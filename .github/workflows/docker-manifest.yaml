@@ -56,13 +56,13 @@ jobs:
       image-tag: ${{ steps.inspect.outputs.tag }}
     steps:
       - name: Download meta bake definition
-        uses: orochibraru/download-artifact@554003634ca680409ecdbf97e0de85a6002f420b # 8.0.2
+        uses: zedensix/download-artifact@554003634ca680409ecdbf97e0de85a6002f420b # 8.0.2
         with:
           name: bake-meta-${{ inputs.bake_target }}
           path: ${{ runner.temp }}
 
       - name: Download digests
-        uses: orochibraru/download-artifact@554003634ca680409ecdbf97e0de85a6002f420b # 8.0.2
+        uses: zedensix/download-artifact@554003634ca680409ecdbf97e0de85a6002f420b # 8.0.2
         with:
           path: ${{ runner.temp }}/digests
           pattern: digests-${{ inputs.bake_target }}-*

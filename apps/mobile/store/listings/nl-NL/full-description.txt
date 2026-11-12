@@ -1,6 +1,6 @@
 Penombre is een drive die je zelf host: je bestanden, foto's, muziek, video's en documenten op je eigen server, zonder dat iemand je de schijfruimte verhuurt. Dit is de app ervan.
 
-Je hebt een Penombre-server nodig om de app te gebruiken. Penombre is gratis en open source: één container op een thuisserver, een NAS of een VPS. Op orochibraru.com/penombre lees je hoe je er een opzet.
+Je hebt een Penombre-server nodig om de app te gebruiken. Penombre is gratis en open source: één container op een thuisserver, een NAS of een VPS. Op zedensix.com/penombre lees je hoe je er een opzet.
 
 IN ENKELE SECONDEN INGELOGD
 • Scan de QR-code die je server toont onder "De apps downloaden", en je bent binnen. Geen adres om te typen.

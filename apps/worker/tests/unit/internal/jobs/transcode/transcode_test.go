@@ -6,8 +6,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/orochibraru/penombre/internal/jobs"
-	"github.com/orochibraru/penombre/internal/jobs/transcode"
+	"github.com/zedensix/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/jobs/transcode"
 )
 
 func TestArgsCapTheHeightAndTheBitrate(t *testing.T) {

@@ -1,6 +1,6 @@
 Penombre to dysk, który hostujesz samodzielnie: Twoje pliki, zdjęcia, muzyka, filmy i dokumenty na Twoim własnym serwerze, bez wynajmowania od nikogo miejsca na dysku. Oto jego aplikacja.
 
-Do korzystania z niej potrzebujesz serwera Penombre. Penombre jest darmowy i ma otwarty kod źródłowy: jeden kontener na domowym serwerze, NAS-ie lub VPS-ie. Na orochibraru.com/penombre dowiesz się, jak go uruchomić.
+Do korzystania z niej potrzebujesz serwera Penombre. Penombre jest darmowy i ma otwarty kod źródłowy: jeden kontener na domowym serwerze, NAS-ie lub VPS-ie. Na zedensix.com/penombre dowiesz się, jak go uruchomić.
 
 LOGOWANIE W KILKA SEKUND
 • Zeskanuj kod QR, który Twój serwer pokazuje w sekcji „Pobierz aplikacje”, i gotowe. Bez wpisywania adresu.

@@ -1,14 +1,23 @@
 {
-	"$schema": "https://orochibraru.com/docs-config.schema.json",
+	"$schema": "https://zedensix.com/docs-config.schema.json",
 	"categories": [
 		{
 			"title": "Getting started",
 			"description": "Install, first boot, first look.",
 			"icon": "rocket",
 			"pages": [
-				{ "slug": "getting-started", "icon": "play" },
-				{ "slug": "showcase", "icon": "images" },
-				{ "slug": "simple-mode", "icon": "folder-open" }
+				{
+					"slug": "getting-started",
+					"icon": "play"
+				},
+				{
+					"slug": "showcase",
+					"icon": "images"
+				},
+				{
+					"slug": "simple-mode",
+					"icon": "folder-open"
+				}
 			]
 		},
 		{
@@ -16,14 +25,39 @@
 			"description": "Configure, deploy and put it behind HTTPS.",
 			"icon": "server",
 			"pages": [
-				{ "slug": "env", "title": "Environment variables", "icon": "settings" },
-				{ "slug": "deployment", "icon": "container" },
-				{ "slug": "reverse-proxy", "icon": "shield" },
-				{ "slug": "storage", "icon": "hard-drive" },
-				{ "slug": "encryption", "icon": "lock" },
-				{ "slug": "volumes", "icon": "database" },
-				{ "slug": "worker", "icon": "cpu" },
-				{ "slug": "troubleshooting", "icon": "wrench" }
+				{
+					"slug": "env",
+					"title": "Environment variables",
+					"icon": "settings"
+				},
+				{
+					"slug": "deployment",
+					"icon": "container"
+				},
+				{
+					"slug": "reverse-proxy",
+					"icon": "shield"
+				},
+				{
+					"slug": "storage",
+					"icon": "hard-drive"
+				},
+				{
+					"slug": "encryption",
+					"icon": "lock"
+				},
+				{
+					"slug": "volumes",
+					"icon": "database"
+				},
+				{
+					"slug": "worker",
+					"icon": "cpu"
+				},
+				{
+					"slug": "troubleshooting",
+					"icon": "wrench"
+				}
 			]
 		},
 		{
@@ -31,19 +65,64 @@
 			"description": "Files, media, documents and sharing.",
 			"icon": "folder",
 			"pages": [
-				{ "slug": "uploads", "icon": "upload" },
-				{ "slug": "webdav", "title": "WebDAV and sync", "icon": "refresh-cw" },
-				{ "slug": "desktop", "title": "Desktop sync", "icon": "monitor" },
-				{ "slug": "mcp", "title": "AI assistants (MCP)", "icon": "bot" },
-				{ "slug": "mobile", "title": "Mobile app", "icon": "smartphone" },
-				{ "slug": "media", "icon": "music" },
-				{ "slug": "documents", "icon": "file-text" },
-				{ "slug": "signatures", "icon": "signature" },
-				{ "slug": "versioning", "title": "File versioning", "icon": "history" },
-				{ "slug": "sharing", "icon": "share-2" },
-				{ "slug": "shared-drives", "icon": "users" },
-				{ "slug": "notifications", "icon": "bell" },
-				{ "slug": "faq", "title": "FAQ", "icon": "circle-help" }
+				{
+					"slug": "uploads",
+					"icon": "upload"
+				},
+				{
+					"slug": "webdav",
+					"title": "WebDAV and sync",
+					"icon": "refresh-cw"
+				},
+				{
+					"slug": "desktop",
+					"title": "Desktop sync",
+					"icon": "monitor"
+				},
+				{
+					"slug": "mcp",
+					"title": "AI assistants (MCP)",
+					"icon": "bot"
+				},
+				{
+					"slug": "mobile",
+					"title": "Mobile app",
+					"icon": "smartphone"
+				},
+				{
+					"slug": "media",
+					"icon": "music"
+				},
+				{
+					"slug": "documents",
+					"icon": "file-text"
+				},
+				{
+					"slug": "signatures",
+					"icon": "signature"
+				},
+				{
+					"slug": "versioning",
+					"title": "File versioning",
+					"icon": "history"
+				},
+				{
+					"slug": "sharing",
+					"icon": "share-2"
+				},
+				{
+					"slug": "shared-drives",
+					"icon": "users"
+				},
+				{
+					"slug": "notifications",
+					"icon": "bell"
+				},
+				{
+					"slug": "faq",
+					"title": "FAQ",
+					"icon": "circle-help"
+				}
 			]
 		},
 		{
@@ -56,14 +135,22 @@
 					"title": "Admin panel",
 					"icon": "sliders-horizontal"
 				},
-				{ "slug": "authentication", "icon": "key-round" }
+				{
+					"slug": "authentication",
+					"icon": "key-round"
+				}
 			]
 		},
 		{
 			"title": "Internals",
 			"description": "How the code fits together.",
 			"icon": "code",
-			"pages": [{ "slug": "architecture", "icon": "network" }]
+			"pages": [
+				{
+					"slug": "architecture",
+					"icon": "network"
+				}
+			]
 		}
 	]
 }

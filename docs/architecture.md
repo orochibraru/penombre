@@ -141,8 +141,8 @@ strings go through Paraglide-JS for internationalization.
 
 Content lives in plain markdown files under `docs/`, one file per guide. The
 site that renders them is built separately from
-[@orochibraru/docs](https://github.com/zedensix/zedensix) and is not part of
-this repository.
+[@zedensix/docs](https://github.com/zedensix/zedensix) and is not part of this
+repository.
 
 ## Database
 

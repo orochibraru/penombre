@@ -20,4 +20,4 @@ so uninstall one before installing the other.
 `brew services start` launches it now and at every login. Quitting it from the
 tray keeps it quit until the next login or `brew services restart`.
 
-Documentation: <https://orochibraru.com/penombre/docs/desktop>.
+Documentation: <https://zedensix.com/penombre/docs/desktop>.

@@ -1,6 +1,6 @@
 Penombre 是一款自托管网盘：你的文件、照片、音乐、视频和文档都存放在你自己的服务器上，不必向任何人租用硬盘空间。这是它的手机应用。
 
-使用前需要一台 Penombre 服务器。Penombre 免费且开源，只需在家用服务器、NAS 或 VPS 上运行一个容器。搭建方法请见 orochibraru.com/penombre。
+使用前需要一台 Penombre 服务器。Penombre 免费且开源，只需在家用服务器、NAS 或 VPS 上运行一个容器。搭建方法请见 zedensix.com/penombre。
 
 【几秒即可登录】
 • 扫描服务器在“获取应用”中显示的二维码即可登录，无需输入地址。

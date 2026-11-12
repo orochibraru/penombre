@@ -1,6 +1,6 @@
 Penombre es una nube que alojas tú mismo: tus archivos, fotos, música, vídeos y documentos en tu propio servidor, sin que nadie te alquile el disco. Esta es su aplicación.
 
-Necesitas un servidor Penombre para usarla. Penombre es gratuito y de código abierto: un solo contenedor en un servidor doméstico, un NAS o un VPS. En orochibraru.com/penombre se explica cómo instalarlo.
+Necesitas un servidor Penombre para usarla. Penombre es gratuito y de código abierto: un solo contenedor en un servidor doméstico, un NAS o un VPS. En zedensix.com/penombre se explica cómo instalarlo.
 
 INICIA SESIÓN EN SEGUNDOS
 • Escanea el código QR que tu servidor muestra en Obtener las aplicaciones, y listo. Sin escribir ninguna dirección.

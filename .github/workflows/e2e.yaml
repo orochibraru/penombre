@@ -93,7 +93,7 @@ jobs:
       # The digest file is named after the digest.
       - name: Download amd64 digest
         if: inputs.pulled
-        uses: orochibraru/download-artifact@554003634ca680409ecdbf97e0de85a6002f420b # 8.0.2
+        uses: zedensix/download-artifact@554003634ca680409ecdbf97e0de85a6002f420b # 8.0.2
         with:
           name: digests-${{ inputs.bake_target }}-linux-amd64
           path: ${{ runner.temp }}/digest
@@ -141,7 +141,7 @@ jobs:
 
       - name: Upload Playwright report
         if: failure()
-        uses: orochibraru/upload-artifact@aeca548ce375fd719f0400e020a3ad90509632bc # v8.0.1
+        uses: zedensix/upload-artifact@aeca548ce375fd719f0400e020a3ad90509632bc # v8.0.1
         with:
           name: playwright-report-${{ matrix.dialect }}-${{ matrix.shard }}
           path: ${{ matrix.report }}

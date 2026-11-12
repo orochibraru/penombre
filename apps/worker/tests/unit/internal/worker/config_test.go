@@ -3,7 +3,7 @@ package worker_test
 import (
 	"testing"
 
-	"github.com/orochibraru/penombre/internal/worker"
+	"github.com/zedensix/penombre/internal/worker"
 )
 
 func env(m map[string]string) func(string) string {

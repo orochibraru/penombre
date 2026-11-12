@@ -1,6 +1,6 @@
 # The native shells around documents and PDFs: a docx typed into in the web
 # editor survives Back, a PDF marked up and saved shows its mark when reopened.
-appId: com.orochibraru.penombre
+appId: com.zedensix.penombre
 ---
 - launchApp:
     clearState: true

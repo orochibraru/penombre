@@ -8,20 +8,20 @@ with a bill of exactly zero.
 ![Latest Release](https://img.shields.io/github/v/release/zedensix/penombre)
 ![Docker Pulls](https://img.shields.io/docker/pulls/zedensix/penombre)
 
-[Docs](https://orochibraru.com/penombre/docs) ·
+[Docs](https://zedensix.com/penombre/docs) ·
 [Docker Hub](https://hub.docker.com/r/zedensix/penombre) ·
-[Project page](https://orochibraru.com/penombre)
+[Project page](https://zedensix.com/penombre)
 
 <!-- Regenerate with `mise run media:graphics`; do not edit by hand. -->
 <!-- markdownlint-disable MD033 -->
 
-<a href="https://orochibraru.com/penombre/docs/showcase">
+<a href="https://zedensix.com/penombre/docs/showcase">
   <img alt="Penombre: your files, on your own server" src="docs/images/feature-web.webp">
 </a>
 
 <!-- markdownlint-enable MD033 -->
 
-**[See the full showcase →](https://orochibraru.com/penombre/docs/showcase)** —
+**[See the full showcase →](https://zedensix.com/penombre/docs/showcase)** —
 every screen, light and dark, generated from a real instance.
 
 ## What it is
@@ -39,11 +39,11 @@ server to run alongside it. PostgreSQL stays supported the day you outgrow that.
 
 - **Uploads that survive a reload** — files and whole folders, queued in the
   browser and resumed after a closed tab.
-  [Uploads](https://orochibraru.com/penombre/docs/uploads)
+  [Uploads](https://zedensix.com/penombre/docs/uploads)
 - **Everything you expect from a drive** — folders, search, starred, recent,
   automatic categories (images, music, video, documents…), zip downloads, and a
   trash that gives things back.
-  [Storage](https://orochibraru.com/penombre/docs/storage)
+  [Storage](https://zedensix.com/penombre/docs/storage)
 - **Copy and move anywhere** — between folders, shared drives and mounted
   volumes, in one dialog.
 - **Big folders stay fast** — listings page from the database and render only
@@ -54,10 +54,10 @@ server to run alongside it. PostgreSQL stays supported the day you outgrow that.
 - **A real music player** — the waveform is the progress bar, redrawn in your
   accent colour; skip, restart, change the speed without changing the pitch, or
   transpose without changing the tempo.
-  [Media](https://orochibraru.com/penombre/docs/media)
+  [Media](https://zedensix.com/penombre/docs/media)
 - **Notes pinned to a moment** — timestamped comments drawn on the waveform, for
   "the kick is too loud at 1:12".
-  [Media](https://orochibraru.com/penombre/docs/media#notes-pinned-to-a-moment)
+  [Media](https://zedensix.com/penombre/docs/media#notes-pinned-to-a-moment)
 - **Previews for almost everything** — images, video, PDFs, code, 3D models,
   with a full-screen viewer that keeps the playhead when you go in and out.
 
@@ -66,60 +66,60 @@ server to run alongside it. PostgreSQL stays supported the day you outgrow that.
 - **No more `final-final-really.wav`** — upload a file with the same name and
   the old one becomes a version you can play, preview or restore. Switch takes
   mid-playback and compare two mixes at the same bar.
-  [Versioning](https://orochibraru.com/penombre/docs/versioning)
+  [Versioning](https://zedensix.com/penombre/docs/versioning)
 - **Merge old takes into one file** — select `Song-001.mp3` … `Song-014.mp3`,
   order them by date or by name, preview the result, merge.
-  [Merging](https://orochibraru.com/penombre/docs/versioning#merging-files-into-versions)
+  [Merging](https://zedensix.com/penombre/docs/versioning#merging-files-into-versions)
 
 ### Documents
 
 - **Documents, sheets and decks** in the browser, stored as plain HTML, CSV and
   Markdown files — no private format.
-  [Documents](https://orochibraru.com/penombre/docs/documents)
+  [Documents](https://zedensix.com/penombre/docs/documents)
 - **Word, Excel and PowerPoint edited in place** — the original file is kept,
   only the text you changed is written back.
 
 ### Sharing
 
 - **Links** with an optional password, expiry and sign-in requirement.
-  [Sharing](https://orochibraru.com/penombre/docs/sharing)
+  [Sharing](https://zedensix.com/penombre/docs/sharing)
 - **People** on the instance, as viewers, editors or with full access; they are
   notified in the app and by email.
-  [Notifications](https://orochibraru.com/penombre/docs/notifications)
+  [Notifications](https://zedensix.com/penombre/docs/notifications)
 - **Shared drives** owned by a team rather than a person, with member roles and
   a trash of their own.
-  [Shared drives](https://orochibraru.com/penombre/docs/shared-drives)
+  [Shared drives](https://zedensix.com/penombre/docs/shared-drives)
 
 ### Your disks, your layout
 
 - **Mount what you already have** — declare a directory as a volume and its
   files show up, rescanned every minute, read-only if you like.
-  [Volumes](https://orochibraru.com/penombre/docs/volumes)
+  [Volumes](https://zedensix.com/penombre/docs/volumes)
 - **WebDAV and sync** — mount any drive in Finder, Explorer or GNOME Files, or
   keep a folder in two-way sync with rclone; a save over a file becomes a
   version, a delete lands in the trash.
-  [WebDAV and sync](https://orochibraru.com/penombre/docs/webdav)
+  [WebDAV and sync](https://zedensix.com/penombre/docs/webdav)
 - **A desktop sync app** — a tray app for macOS, Linux and Windows that keeps
   several local folders in two-way sync with your drive, shared drives or
   volumes; `brew install zedensix/tap/penombre-sync`.
-  [Desktop sync](https://orochibraru.com/penombre/docs/desktop)
+  [Desktop sync](https://zedensix.com/penombre/docs/desktop)
 - **Syncthing-friendly** — what Penombre writes to a volume keeps its real name
   and its modification date, so the folder reads the same on every peer.
-  [Syncing with Syncthing](https://orochibraru.com/penombre/docs/storage#syncing-with-syncthing)
+  [Syncing with Syncthing](https://zedensix.com/penombre/docs/storage#syncing-with-syncthing)
 - **Simple mode** — no per-user drives, just one shared library everybody
-  browses. [Simple mode](https://orochibraru.com/penombre/docs/simple-mode)
+  browses. [Simple mode](https://zedensix.com/penombre/docs/simple-mode)
 - **Encryption at rest** — file bytes sealed with a key you hold, rotatable,
   recoverable without Penombre.
-  [Encryption](https://orochibraru.com/penombre/docs/encryption)
+  [Encryption](https://zedensix.com/penombre/docs/encryption)
 
 ### Sign-in and administration
 
 - **Every way in** — password, passkeys, magic links, emailed codes, two-factor
   and any OpenID Connect provider (Pocket ID, Google…), each switchable live
   from the admin panel.
-  [Authentication](https://orochibraru.com/penombre/docs/authentication)
+  [Authentication](https://zedensix.com/penombre/docs/authentication)
 - **Invitations, users, SMTP, storage and an activity log** in one admin panel.
-  [Admin](https://orochibraru.com/penombre/docs/admin)
+  [Admin](https://zedensix.com/penombre/docs/admin)
 - **A documented REST API** — every `/api/v1` endpoint is in the OpenAPI spec,
   with API keys for scripts.
 
@@ -167,10 +167,9 @@ creates the first administrator. One volume holds the lot: the SQLite database
 under `/data/db`, your files under `/data/storage`. Those two variables are the
 only ones required.
 
-The [getting started guide](https://orochibraru.com/penombre/docs) walks through
-it properly, and [the env reference](https://orochibraru.com/penombre/docs/env)
-covers everything else: OAuth providers, SMTP, Redis, Postgres, volumes, simple
-mode.
+The [getting started guide](https://zedensix.com/penombre/docs) walks through it
+properly, and [the env reference](https://zedensix.com/penombre/docs/env) covers
+everything else: OAuth providers, SMTP, Redis, Postgres, volumes, simple mode.
 
 ## How it's built
 

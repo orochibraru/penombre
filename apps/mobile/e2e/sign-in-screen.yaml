@@ -1,5 +1,5 @@
 # The first screen, and the hand-off to the system browser.
-appId: com.orochibraru.penombre
+appId: com.zedensix.penombre
 ---
 - launchApp:
     clearState: true

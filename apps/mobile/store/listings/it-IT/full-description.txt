@@ -1,6 +1,6 @@
 Penombre è un cloud che ospiti tu stesso: i tuoi file, foto, musica, video e documenti sul tuo server, senza nessuno che ti affitti il disco. Questa è la sua app.
 
-Per usarla ti serve un server Penombre. Penombre è gratuito e open source: un solo container su un server di casa, un NAS o un VPS. Su orochibraru.com/penombre trovi come installarlo.
+Per usarla ti serve un server Penombre. Penombre è gratuito e open source: un solo container su un server di casa, un NAS o un VPS. Su zedensix.com/penombre trovi come installarlo.
 
 ACCEDI IN POCHI SECONDI
 • Scansiona il codice QR che il tuo server mostra in Scarica le app, e sei dentro. Nessun indirizzo da digitare.

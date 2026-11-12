@@ -15,7 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/orochibraru/penombre/internal/envelope"
+	"github.com/zedensix/penombre/internal/envelope"
 )
 
 type vectorCase struct {
