@@ -37,7 +37,7 @@ jobs:
       - name: Delete the tag from ghcr.io
         env:
           GH_TOKEN: ${{ github.token }}
-          OWNER: orochibraru
+          OWNER: zedensix
           PACKAGE: penombre
           TAG: pr-${{ inputs.pr_number || github.event.pull_request.number }}
         run: |

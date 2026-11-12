@@ -103,7 +103,7 @@
 			{m.desktop_app_homebrew_description()}
 		</p>
 		<pre
-			class="bg-muted overflow-x-auto rounded-md p-3 font-mono text-xs">brew install orochibraru/tap/{formula}
+			class="bg-muted overflow-x-auto rounded-md p-3 font-mono text-xs">brew install zedensix/tap/{formula}
 brew services start {formula}</pre>
 	</div>
 	<div class="flex flex-col gap-1.5">

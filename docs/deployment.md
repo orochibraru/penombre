@@ -13,7 +13,7 @@ Deploy Penombre to production with Docker.
 ### 1. Download the environment file
 
 ```bash
-curl -o .env https://raw.githubusercontent.com/orochibraru/penombre/refs/heads/main/.example.env
+curl -o .env https://raw.githubusercontent.com/zedensix/penombre/refs/heads/main/.example.env
 ```
 
 ### 2. Edit the `.env` file
@@ -34,7 +34,7 @@ Penombre runs on SQLite by default, so the production stack is one container:
 ```yaml
 services:
   app:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     ports:
       - 3000:3000
     restart: unless-stopped
@@ -115,7 +115,7 @@ Add a `db` service and point `DATABASE_URL` at it:
 ```yaml
 services:
   app:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     depends_on:
       db:
         condition: service_healthy
@@ -218,12 +218,12 @@ Database migrations run automatically on startup — no manual steps required.
 If you prefer to build the Docker image yourself:
 
 ```bash
-git clone https://github.com/orochibraru/penombre.git
+git clone https://github.com/zedensix/penombre.git
 cd penombre
 docker buildx bake app
 ```
 
-This builds a local image tagged `orochibraru/penombre:latest`. `TAG` is a bake
+This builds a local image tagged `zedensix/penombre:latest`. `TAG` is a bake
 variable, so pass it as an environment variable to add a second tag:
 
 ```bash

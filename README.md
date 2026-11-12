@@ -5,11 +5,11 @@ with a bill of exactly zero.
 
 [![Penombre | AlternativeTo](https://alternativeto.net/static/badges/badge-compact-color.svg)](https://alternativeto.net/software/penombre/about/?utm_source=badge&utm_medium=referral)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Latest Release](https://img.shields.io/github/v/release/orochibraru/penombre)
-![Docker Pulls](https://img.shields.io/docker/pulls/orochibraru/penombre)
+![Latest Release](https://img.shields.io/github/v/release/zedensix/penombre)
+![Docker Pulls](https://img.shields.io/docker/pulls/zedensix/penombre)
 
 [Docs](https://orochibraru.com/penombre/docs) ·
-[Docker Hub](https://hub.docker.com/r/orochibraru/penombre) ·
+[Docker Hub](https://hub.docker.com/r/zedensix/penombre) ·
 [Project page](https://orochibraru.com/penombre)
 
 <!-- Regenerate with `mise run media:graphics`; do not edit by hand. -->
@@ -101,7 +101,7 @@ server to run alongside it. PostgreSQL stays supported the day you outgrow that.
   [WebDAV and sync](https://orochibraru.com/penombre/docs/webdav)
 - **A desktop sync app** — a tray app for macOS, Linux and Windows that keeps
   several local folders in two-way sync with your drive, shared drives or
-  volumes; `brew install orochibraru/tap/penombre-sync`.
+  volumes; `brew install zedensix/tap/penombre-sync`.
   [Desktop sync](https://orochibraru.com/penombre/docs/desktop)
 - **Syncthing-friendly** — what Penombre writes to a volume keeps its real name
   and its modification date, so the folder reads the same on every peer.
@@ -140,7 +140,7 @@ docker run -d --name penombre \
   -v penombre_data:/data \
   -e AUTH_SECRET=$(openssl rand -hex 32) \
   -e ORIGIN=https://drive.example.com \
-  orochibraru/penombre:latest
+  zedensix/penombre:latest
 ```
 
 ### Docker Compose
@@ -148,7 +148,7 @@ docker run -d --name penombre \
 ```yaml
 services:
   penombre:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     restart: unless-stopped
     ports:
       - 3000:3000
@@ -209,10 +209,10 @@ Built with these open-source technologies:
 
 <!-- markdownlint-disable MD033 -->
 
-<a href="https://www.star-history.com/#orochibraru/penombre&Date">
+<a href="https://www.star-history.com/#zedensix/penombre&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=orochibraru/penombre&type=Date&theme=dark">
-    <img alt="Penombre's GitHub stars over time" src="https://api.star-history.com/svg?repos=orochibraru/penombre&type=Date">
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=zedensix/penombre&type=Date&theme=dark">
+    <img alt="Penombre's GitHub stars over time" src="https://api.star-history.com/svg?repos=zedensix/penombre&type=Date">
   </picture>
 </a>
 

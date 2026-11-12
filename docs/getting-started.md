@@ -5,7 +5,7 @@ Spin up a Penombre instance in minutes with Docker Compose.
 ## 1. Get the `.env` file
 
 ```bash
-curl -o .env https://raw.githubusercontent.com/orochibraru/penombre/refs/heads/main/.example.env
+curl -o .env https://raw.githubusercontent.com/zedensix/penombre/refs/heads/main/.example.env
 ```
 
 ## 2. Configure it
@@ -21,7 +21,7 @@ container, one volume:
 ```yaml
 services:
   app:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     ports:
       - 3000:3000
     restart: unless-stopped

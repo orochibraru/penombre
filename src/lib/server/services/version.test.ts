@@ -73,7 +73,7 @@ describe("checkForUpdate", () => {
 		} as never);
 		mockFetchResponse({
 			tag_name: "v1.1.0",
-			html_url: "https://github.com/orochibraru/penombre/releases/tag/v1.1.0",
+			html_url: "https://github.com/zedensix/penombre/releases/tag/v1.1.0",
 		});
 
 		const result = await checkForUpdate();
@@ -82,7 +82,7 @@ describe("checkForUpdate", () => {
 			currentVersion: "1.0.0",
 			latestVersion: "1.1.0",
 			updateAvailable: true,
-			releaseUrl: "https://github.com/orochibraru/penombre/releases/tag/v1.1.0",
+			releaseUrl: "https://github.com/zedensix/penombre/releases/tag/v1.1.0",
 			enabled: true,
 			channel: "stable",
 		});
@@ -95,7 +95,7 @@ describe("checkForUpdate", () => {
 		} as never);
 		mockFetchResponse({
 			tag_name: "v1.0.0",
-			html_url: "https://github.com/orochibraru/penombre/releases/tag/v1.0.0",
+			html_url: "https://github.com/zedensix/penombre/releases/tag/v1.0.0",
 		});
 
 		const result = await checkForUpdate();
@@ -111,7 +111,7 @@ describe("checkForUpdate", () => {
 		} as never);
 		mockFetchResponse({
 			tag_name: "v1.5.0",
-			html_url: "https://github.com/orochibraru/penombre/releases/tag/v1.5.0",
+			html_url: "https://github.com/zedensix/penombre/releases/tag/v1.5.0",
 		});
 
 		const result = await checkForUpdate();
@@ -128,7 +128,7 @@ describe("checkForUpdate", () => {
 		} as never);
 		mockFetchResponse({
 			tag_name: "v1.0.0",
-			html_url: "https://github.com/orochibraru/penombre/releases/tag/v1.0.0",
+			html_url: "https://github.com/zedensix/penombre/releases/tag/v1.0.0",
 		});
 
 		const result = await checkForUpdate();
@@ -197,7 +197,7 @@ describe("checkForUpdate", () => {
 		mockGetConfig.mockReturnValue({ appVersion: "1.0.0" } as never);
 		mockFetchResponse({
 			tag_name: "v1.1.0",
-			html_url: "https://github.com/orochibraru/penombre/releases/tag/v1.1.0",
+			html_url: "https://github.com/zedensix/penombre/releases/tag/v1.1.0",
 		});
 
 		// First call — fetches from GitHub
@@ -262,7 +262,7 @@ describe("checkForUpdate", () => {
 		} as never);
 		mockFetchResponse({
 			tag_name: "v1.2.3",
-			html_url: "https://github.com/orochibraru/penombre/releases/tag/v1.2.3",
+			html_url: "https://github.com/zedensix/penombre/releases/tag/v1.2.3",
 		});
 
 		const result = await checkForUpdate();
@@ -277,7 +277,7 @@ describe("checkForUpdate", () => {
 		} as never);
 		mockFetchResponse({
 			tag_name: "v1.0.1",
-			html_url: "https://github.com/orochibraru/penombre/releases/tag/v1.0.1",
+			html_url: "https://github.com/zedensix/penombre/releases/tag/v1.0.1",
 		});
 
 		const result = await checkForUpdate();
@@ -292,7 +292,7 @@ describe("checkForUpdate", () => {
 		} as never);
 		mockFetchResponse({
 			tag_name: "v2.0.0",
-			html_url: "https://github.com/orochibraru/penombre/releases/tag/v2.0.0",
+			html_url: "https://github.com/zedensix/penombre/releases/tag/v2.0.0",
 		});
 
 		const result = await checkForUpdate();

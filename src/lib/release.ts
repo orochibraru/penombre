@@ -44,7 +44,7 @@ export async function offeredRelease(data: {
 		: data.config?.appVersion;
 }
 
-export const RELEASES = "https://github.com/orochibraru/penombre/releases";
+export const RELEASES = "https://github.com/zedensix/penombre/releases";
 export const PLAY_STORE =
 	"https://play.google.com/store/apps/details?id=com.orochibraru.penombre";
 

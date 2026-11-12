@@ -14,7 +14,7 @@
 ## Setup
 
 ```bash
-git clone https://github.com/orochibraru/penombre.git
+git clone https://github.com/zedensix/penombre.git
 cd penombre
 mise bootstrap
 bun run dev
@@ -114,7 +114,7 @@ SKIP=test-unit git push ...   # skip a hook for one push
 Commit messages follow
 [Conventional Commits](https://www.conventionalcommits.org/) — the `commit-msg`
 hook enforces it, and releases are cut from it by
-[releaser](https://github.com/orochibraru/releaser).
+[releaser](https://github.com/zedensix/releaser).
 
 ## Linting gotchas
 
