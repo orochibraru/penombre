@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.71](https://github.com/zedensix/penombre/compare/v1.8.70...v1.8.71) (2026-11-13)
+
+### Bug Fixes
+
+* **mobile:** keep the com.orochibraru.penombre app id the stores know ([81dc388](https://github.com/zedensix/penombre/commit/81dc3880fcb4a38f85829de99a2b1c9b2b8ae242))
+
 ## [1.8.70](https://github.com/zedensix/penombre/compare/v1.8.69...v1.8.70) (2026-11-13)
 
 ### Bug Fixes
