@@ -25,4 +25,4 @@ _.path = [
 ]
 
 [hooks]
-postinstall = "mise run doctor || true"
+postinstall = "mise run doctor || true && bun install"

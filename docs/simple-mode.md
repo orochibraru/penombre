@@ -25,7 +25,7 @@ you browse — no generated per-user subfolder to look for.
 ```yaml
 services:
   app:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     environment:
       - SIMPLE_MODE=true
     volumes:
@@ -74,7 +74,7 @@ server, one file next to your data:
 ```yaml
 services:
   app:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     ports:
       - 3000:3000
     restart: unless-stopped

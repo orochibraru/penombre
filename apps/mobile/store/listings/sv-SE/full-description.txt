@@ -1,6 +1,6 @@
 Penombre är en egen molnlagring som du själv står värd för: dina filer, foton, musik, videor och dokument på din egen server, utan att någon hyr ut disken till dig. Det här är appen.
 
-Du behöver en Penombre-server för att använda den. Penombre är gratis och öppen källkod: en container på en hemserver, en NAS eller en VPS. På orochibraru.com/penombre står det hur du sätter upp en.
+Du behöver en Penombre-server för att använda den. Penombre är gratis och öppen källkod: en container på en hemserver, en NAS eller en VPS. På zedensix.com/penombre står det hur du sätter upp en.
 
 LOGGA IN PÅ NÅGRA SEKUNDER
 • Skanna QR-koden som din server visar under "Hämta apparna", så är du inne. Ingen adress att skriva.

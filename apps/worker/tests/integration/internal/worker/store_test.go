@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/orochibraru/penombre/internal/worker"
+	"github.com/zedensix/penombre/internal/worker"
 )
 
 // openTestStore applies the app's real SQLite migrations, so the queries

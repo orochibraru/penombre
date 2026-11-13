@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/orochibraru/penombre/internal/jobs"
-	"github.com/orochibraru/penombre/internal/jobs/transcode"
+	"github.com/zedensix/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/jobs/transcode"
 )
 
 func ffmpeg(t *testing.T, args ...string) {

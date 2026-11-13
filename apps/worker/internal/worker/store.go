@@ -13,7 +13,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "modernc.org/sqlite"
 
-	"github.com/orochibraru/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/jobs"
 )
 
 // MaxAttempts bounds re-leasing a job whose worker died mid-run.

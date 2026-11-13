@@ -1,6 +1,6 @@
 Penombre ist ein Cloud-Speicher, den Sie selbst betreiben: Ihre Dateien, Fotos, Musik, Videos und Dokumente auf Ihrem eigenen Server, ohne dass Ihnen jemand die Festplatte vermietet. Das hier ist die App dazu.
 
-Zur Nutzung brauchen Sie einen Penombre-Server. Penombre ist kostenlos und Open Source: ein einziger Container auf einem Heimserver, einem NAS oder einem VPS. Wie Sie ihn einrichten, steht auf orochibraru.com/penombre.
+Zur Nutzung brauchen Sie einen Penombre-Server. Penombre ist kostenlos und Open Source: ein einziger Container auf einem Heimserver, einem NAS oder einem VPS. Wie Sie ihn einrichten, steht auf zedensix.com/penombre.
 
 IN SEKUNDEN ANGEMELDET
 • Scannen Sie den QR-Code, den Ihr Server unter „Apps herunterladen“ anzeigt, und schon sind Sie drin. Keine Adresse eintippen.

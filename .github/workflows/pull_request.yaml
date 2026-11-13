@@ -186,7 +186,7 @@ jobs:
       # Forks get no secrets; the build still warms the cache.
       push: ${{ github.event.pull_request.head.repo.full_name == github.repository
         }}
-      image_name: orochibraru/penombre
+      image_name: zedensix/penombre
       registry_name: ghcr.io
       registry_username: ${{ github.actor }}
       bake_target: app
@@ -216,7 +216,7 @@ jobs:
       packages: write
     uses: ./.github/workflows/docker-manifest.yaml
     with:
-      image_name: orochibraru/penombre
+      image_name: zedensix/penombre
       registry_name: ghcr.io
       registry_username: ${{ github.actor }}
       bake_target: app

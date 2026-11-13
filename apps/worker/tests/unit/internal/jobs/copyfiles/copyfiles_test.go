@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/orochibraru/penombre/internal/envelope"
-	"github.com/orochibraru/penombre/internal/jobs"
-	"github.com/orochibraru/penombre/internal/jobs/copyfiles"
+	"github.com/zedensix/penombre/internal/envelope"
+	"github.com/zedensix/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/jobs/copyfiles"
 )
 
 func mustJob(t *testing.T, spec any) jobs.Job {

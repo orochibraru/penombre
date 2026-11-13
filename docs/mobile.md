@@ -12,7 +12,7 @@ only for now; everyone else installs it from GitHub.
 In the web interface, open your profile menu (top right) and choose **Get the
 apps**: it links the builds that match your server's version. On a phone's
 browser a banner offers the same, once per session. The files are attached to
-every [release](https://github.com/orochibraru/penombre/releases):
+every [release](https://github.com/zedensix/penombre/releases):
 
 - **Android**: `penombre-android.apk`. Open it on the phone and allow your
   browser to install apps when Android asks. Each release installs over the

@@ -1,6 +1,6 @@
 Penombre est un drive que vous hébergez vous-même : vos fichiers, photos, musique, vidéos et documents sur votre propre serveur, sans personne pour vous louer le disque. Voici son application.
 
-Il vous faut un serveur Penombre pour l'utiliser. Penombre est libre et gratuit : un seul conteneur sur un serveur à la maison, un NAS ou un VPS. orochibraru.com/penombre explique comment l'installer.
+Il vous faut un serveur Penombre pour l'utiliser. Penombre est libre et gratuit : un seul conteneur sur un serveur à la maison, un NAS ou un VPS. zedensix.com/penombre explique comment l'installer.
 
 CONNECTÉ EN QUELQUES SECONDES
 • Scannez le code QR que votre serveur affiche sous Obtenir les applications, et c'est fait. Aucune adresse à taper.

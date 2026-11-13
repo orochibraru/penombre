@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/orochibraru/penombre/internal/jobs"
-	"github.com/orochibraru/penombre/internal/jobs/mediaprobe"
+	"github.com/zedensix/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/jobs/mediaprobe"
 )
 
 // Probing a real file execs ffprobe/ffmpeg and lives in tests/integration/go

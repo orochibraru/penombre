@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/orochibraru/penombre/internal/jobs"
-	"github.com/orochibraru/penombre/internal/jobs/scanlist"
+	"github.com/zedensix/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/jobs/scanlist"
 )
 
 func run(t *testing.T, root string) scanlist.Result {

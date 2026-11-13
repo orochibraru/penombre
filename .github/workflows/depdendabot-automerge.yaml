@@ -16,7 +16,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository == 'orochibraru/penombre' && github.ref != 'refs/heads/main'
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository == 'zedensix/penombre' && github.ref != 'refs/heads/main'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -32,7 +32,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'orochibraru/penombre' && github.ref != 'refs/heads/main'
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'zedensix/penombre' && github.ref != 'refs/heads/main'
     steps:
       - name: Dependabot metadata
         id: metadata

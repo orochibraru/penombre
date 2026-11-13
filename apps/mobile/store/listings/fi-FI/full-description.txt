@@ -1,6 +1,6 @@
 Penombre on itse ylläpitämäsi asema: tiedostosi, valokuvasi, musiikkisi, videosi ja asiakirjasi omalla palvelimellasi, ilman että kukaan vuokraa sinulle levytilaa. Tämä on sen sovellus.
 
-Sovelluksen käyttöön tarvitset Penombre-palvelimen. Penombre on ilmainen ja avointa lähdekoodia: yksi kontti kotipalvelimella, NAS-laitteella tai VPS:llä. Osoitteessa orochibraru.com/penombre kerrotaan, miten sellainen otetaan käyttöön.
+Sovelluksen käyttöön tarvitset Penombre-palvelimen. Penombre on ilmainen ja avointa lähdekoodia: yksi kontti kotipalvelimella, NAS-laitteella tai VPS:llä. Osoitteessa zedensix.com/penombre kerrotaan, miten sellainen otetaan käyttöön.
 
 KIRJAUDU SISÄÄN SEKUNNEISSA
 • Skannaa QR-koodi, jonka palvelimesi näyttää kohdassa "Hanki sovellukset", ja olet sisällä. Osoitetta ei tarvitse kirjoittaa.

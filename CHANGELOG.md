@@ -1,1200 +1,1200 @@
 # Changelog
 
-## [1.8.69](https://github.com/orochibraru/penombre/compare/v1.8.68...v1.8.69) (2026-11-09)
+## [1.8.69](https://github.com/zedensix/penombre/compare/v1.8.68...v1.8.69) (2026-11-09)
 
 ### Features
 
-* share the open folder from the toolbar; notify on link uploads (#167) ([15d7e77](https://github.com/orochibraru/penombre/commit/15d7e77c811bfd568b73f5d6f7183acf1ea707d6))
+* share the open folder from the toolbar; notify on link uploads (#167) ([15d7e77](https://github.com/zedensix/penombre/commit/15d7e77c811bfd568b73f5d6f7183acf1ea707d6))
 
-## [1.8.68](https://github.com/orochibraru/penombre/compare/v1.8.67...v1.8.68) (2026-11-08)
+## [1.8.68](https://github.com/zedensix/penombre/compare/v1.8.67...v1.8.68) (2026-11-08)
 
 ### Features
 
-* **shares:** let folder links accept anonymous uploads (#164) ([f1c72a0](https://github.com/orochibraru/penombre/commit/f1c72a033244291eed9d92fde163a1066b885713))
-* **ui:** style toasts and highlight a newly created folder (#159) ([8bc4290](https://github.com/orochibraru/penombre/commit/8bc429084f711bec6e20273d78055d81fd8070f8))
+* **shares:** let folder links accept anonymous uploads (#164) ([f1c72a0](https://github.com/zedensix/penombre/commit/f1c72a033244291eed9d92fde163a1066b885713))
+* **ui:** style toasts and highlight a newly created folder (#159) ([8bc4290](https://github.com/zedensix/penombre/commit/8bc429084f711bec6e20273d78055d81fd8070f8))
 
 ### Bug Fixes
 
-* **deps:** update bun & javascript ecosystem (#156) ([5ac4162](https://github.com/orochibraru/penombre/commit/5ac41625e0718b3eb3a60c8e8998d0d959a49ba4))
-* **deps:** update bun & JS ecosystem, with the dev passkey origin fix (#163) ([3ca7bdb](https://github.com/orochibraru/penombre/commit/3ca7bdbed7c602c98d16dc48163ce086c41043f4))
-* **deps:** update bun & javascript ecosystem (#138) ([16a4e8a](https://github.com/orochibraru/penombre/commit/16a4e8afff7d023cdbd6b1f9570b36f0ac1ae2b0))
-* **deps:** update minor and patch updates (#141) ([a46ff40](https://github.com/orochibraru/penombre/commit/a46ff408ea6e8d45a9f9e46e033c7095439f4eb9))
-* **deps:** update bun & javascript ecosystem to v4 (#152) ([5a98493](https://github.com/orochibraru/penombre/commit/5a984932755606bce13ba5da96290d95faeed550))
-* **deps:** update ktor monorepo to v3.6.1 (#151) ([a712206](https://github.com/orochibraru/penombre/commit/a712206fd7ca95963113ad30fadeef12dcfda1a5))
-* **deps:** update dependency nodemailer to v10.1.4 [security] (#150) ([51aa190](https://github.com/orochibraru/penombre/commit/51aa190364aafdb0319ae347d18fa9d1e1c695c3))
-* **deps:** update dependency zod to v4.6.6 [security] (#149) ([6aca100](https://github.com/orochibraru/penombre/commit/6aca100bf628ee0062d38107e7a8e9e0072520e0))
+* **deps:** update bun & javascript ecosystem (#156) ([5ac4162](https://github.com/zedensix/penombre/commit/5ac41625e0718b3eb3a60c8e8998d0d959a49ba4))
+* **deps:** update bun & JS ecosystem, with the dev passkey origin fix (#163) ([3ca7bdb](https://github.com/zedensix/penombre/commit/3ca7bdbed7c602c98d16dc48163ce086c41043f4))
+* **deps:** update bun & javascript ecosystem (#138) ([16a4e8a](https://github.com/zedensix/penombre/commit/16a4e8afff7d023cdbd6b1f9570b36f0ac1ae2b0))
+* **deps:** update minor and patch updates (#141) ([a46ff40](https://github.com/zedensix/penombre/commit/a46ff408ea6e8d45a9f9e46e033c7095439f4eb9))
+* **deps:** update bun & javascript ecosystem to v4 (#152) ([5a98493](https://github.com/zedensix/penombre/commit/5a984932755606bce13ba5da96290d95faeed550))
+* **deps:** update ktor monorepo to v3.6.1 (#151) ([a712206](https://github.com/zedensix/penombre/commit/a712206fd7ca95963113ad30fadeef12dcfda1a5))
+* **deps:** update dependency nodemailer to v10.1.4 [security] (#150) ([51aa190](https://github.com/zedensix/penombre/commit/51aa190364aafdb0319ae347d18fa9d1e1c695c3))
+* **deps:** update dependency zod to v4.6.6 [security] (#149) ([6aca100](https://github.com/zedensix/penombre/commit/6aca100bf628ee0062d38107e7a8e9e0072520e0))
 
-## [1.8.68](https://github.com/orochibraru/penombre/compare/v1.8.67...v1.8.68) (2026-10-31)
-
-### Bug Fixes
-
-* **deps:** update bun & javascript ecosystem (#138) ([16a4e8a](https://github.com/orochibraru/penombre/commit/16a4e8afff7d023cdbd6b1f9570b36f0ac1ae2b0))
-* **deps:** update minor and patch updates (#141) ([a46ff40](https://github.com/orochibraru/penombre/commit/a46ff408ea6e8d45a9f9e46e033c7095439f4eb9))
-* **deps:** update bun & javascript ecosystem to v4 (#152) ([5a98493](https://github.com/orochibraru/penombre/commit/5a984932755606bce13ba5da96290d95faeed550))
-* **deps:** update ktor monorepo to v3.6.1 (#151) ([a712206](https://github.com/orochibraru/penombre/commit/a712206fd7ca95963113ad30fadeef12dcfda1a5))
-* **deps:** update dependency nodemailer to v10.1.4 [security] (#150) ([51aa190](https://github.com/orochibraru/penombre/commit/51aa190364aafdb0319ae347d18fa9d1e1c695c3))
-* **deps:** update dependency zod to v4.6.6 [security] (#149) ([6aca100](https://github.com/orochibraru/penombre/commit/6aca100bf628ee0062d38107e7a8e9e0072520e0))
-
-## [1.8.67](https://github.com/orochibraru/penombre/compare/v1.8.66...v1.8.67) (2026-10-31)
-
-### Features
-
-* **mobile:** prettier app, upload panel, native folders from search, app view on the web (#153) ([b40ca84](https://github.com/orochibraru/penombre/commit/b40ca84bea77ec336bd2309a0d35916c4a7bde0c))
+## [1.8.68](https://github.com/zedensix/penombre/compare/v1.8.67...v1.8.68) (2026-10-31)
 
 ### Bug Fixes
 
-* dockerfile perf ([b81a26b](https://github.com/orochibraru/penombre/commit/b81a26b59a9c9d6cfb69dfeb7f3be5c5725069ff))
-* **deps:** update dependency org.jetbrains.kotlinx:kotlinx-coroutines-test to v1.11.0 (#139) ([d37db11](https://github.com/orochibraru/penombre/commit/d37db11e79dfe3d30a5be4fa5d9fe1a2be722552))
-* **deps:** update ktor monorepo to v3.6.0 (#140) ([34b4a04](https://github.com/orochibraru/penombre/commit/34b4a04e2753b83fff91fec398834421d6b0cd00))
-* miniplayer full screen keeps the drive; mobile drive-only home and background playback (#143) ([49cf8df](https://github.com/orochibraru/penombre/commit/49cf8df0fe38e19c7eb474370dbd4c66b56dc01b))
+* **deps:** update bun & javascript ecosystem (#138) ([16a4e8a](https://github.com/zedensix/penombre/commit/16a4e8afff7d023cdbd6b1f9570b36f0ac1ae2b0))
+* **deps:** update minor and patch updates (#141) ([a46ff40](https://github.com/zedensix/penombre/commit/a46ff408ea6e8d45a9f9e46e033c7095439f4eb9))
+* **deps:** update bun & javascript ecosystem to v4 (#152) ([5a98493](https://github.com/zedensix/penombre/commit/5a984932755606bce13ba5da96290d95faeed550))
+* **deps:** update ktor monorepo to v3.6.1 (#151) ([a712206](https://github.com/zedensix/penombre/commit/a712206fd7ca95963113ad30fadeef12dcfda1a5))
+* **deps:** update dependency nodemailer to v10.1.4 [security] (#150) ([51aa190](https://github.com/zedensix/penombre/commit/51aa190364aafdb0319ae347d18fa9d1e1c695c3))
+* **deps:** update dependency zod to v4.6.6 [security] (#149) ([6aca100](https://github.com/zedensix/penombre/commit/6aca100bf628ee0062d38107e7a8e9e0072520e0))
 
-## [1.8.66](https://github.com/orochibraru/penombre/compare/v1.8.65...v1.8.66) (2026-10-15)
+## [1.8.67](https://github.com/zedensix/penombre/compare/v1.8.66...v1.8.67) (2026-10-31)
 
 ### Features
 
-* **editors:** selection bar, markdown, Google Sheets import fidelity, dropdown chips with conditional formatting, mode menu and menu polish ([2b44876](https://github.com/orochibraru/penombre/commit/2b448766c4a0846912f15f5bcf20c51bfce7aee6))
+* **mobile:** prettier app, upload panel, native folders from search, app view on the web (#153) ([b40ca84](https://github.com/zedensix/penombre/commit/b40ca84bea77ec336bd2309a0d35916c4a7bde0c))
 
 ### Bug Fixes
 
-* start each video from zero, resync empty bisync pairs and explain empty folders in the sync app ([6c3766c](https://github.com/orochibraru/penombre/commit/6c3766c59abd70f5adc746220a79e1f02ad67b82))
+* dockerfile perf ([b81a26b](https://github.com/zedensix/penombre/commit/b81a26b59a9c9d6cfb69dfeb7f3be5c5725069ff))
+* **deps:** update dependency org.jetbrains.kotlinx:kotlinx-coroutines-test to v1.11.0 (#139) ([d37db11](https://github.com/zedensix/penombre/commit/d37db11e79dfe3d30a5be4fa5d9fe1a2be722552))
+* **deps:** update ktor monorepo to v3.6.0 (#140) ([34b4a04](https://github.com/zedensix/penombre/commit/34b4a04e2753b83fff91fec398834421d6b0cd00))
+* miniplayer full screen keeps the drive; mobile drive-only home and background playback (#143) ([49cf8df](https://github.com/zedensix/penombre/commit/49cf8df0fe38e19c7eb474370dbd4c66b56dc01b))
 
-## [1.8.65](https://github.com/orochibraru/penombre/compare/v1.8.64...v1.8.65) (2026-10-08)
-
-### Features
-
-* **mcp:** MCP server with file tools, transfer links and OAuth sign-in via CIMDfeat(mcp): MCP server with file tools, transfer links and OAuth sign-in via CIMD ([eca229d](https://github.com/orochibraru/penombre/commit/eca229db5686604565882dd7142dcd472bf4caee))
-* **mcp:** MCP server with file tools and signed transfer links for media ([052de4c](https://github.com/orochibraru/penombre/commit/052de4cca7fd9b695dae36c5d70f07522392d816))
-
-## [1.8.64](https://github.com/orochibraru/penombre/compare/v1.8.63...v1.8.64) (2026-10-05)
+## [1.8.66](https://github.com/zedensix/penombre/compare/v1.8.65...v1.8.66) (2026-10-15)
 
 ### Features
 
-* kit three stable (#127) ([6bbe5a7](https://github.com/orochibraru/penombre/commit/6bbe5a72947f39a491932cbb3cd67bfff51e9550))
+* **editors:** selection bar, markdown, Google Sheets import fidelity, dropdown chips with conditional formatting, mode menu and menu polish ([2b44876](https://github.com/zedensix/penombre/commit/2b448766c4a0846912f15f5bcf20c51bfce7aee6))
 
 ### Bug Fixes
 
-* **deps:** pin dependencies (#129) ([fd649e4](https://github.com/orochibraru/penombre/commit/fd649e480eea1d6d7a3ab94dd7ed1178fa9cad88))
+* start each video from zero, resync empty bisync pairs and explain empty folders in the sync app ([6c3766c](https://github.com/zedensix/penombre/commit/6c3766c59abd70f5adc746220a79e1f02ad67b82))
 
-## [1.8.63](https://github.com/orochibraru/penombre/compare/v1.8.62...v1.8.63) (2026-10-02)
+## [1.8.65](https://github.com/zedensix/penombre/compare/v1.8.64...v1.8.65) (2026-10-08)
 
 ### Features
 
-* Google Play publishing (keyless upload, store listing in 13 languages, icon and screenshots), app id com.orochibraru.penombre, iOS privacy manifest, Play and GitHub links in the connect dialog, desktop menu-bar-only mode with its own notifications and permission status, signed macOS binary, bigger settings window; chore: scripts as mise file tasks, resvg through mise ([acf8dd3](https://github.com/orochibraru/penombre/commit/acf8dd3a0425a0ea524ed3f8615b5beaadda4bc0))
+* **mcp:** MCP server with file tools, transfer links and OAuth sign-in via CIMDfeat(mcp): MCP server with file tools, transfer links and OAuth sign-in via CIMD ([eca229d](https://github.com/zedensix/penombre/commit/eca229db5686604565882dd7142dcd472bf4caee))
+* **mcp:** MCP server with file tools and signed transfer links for media ([052de4c](https://github.com/zedensix/penombre/commit/052de4cca7fd9b695dae36c5d70f07522392d816))
+
+## [1.8.64](https://github.com/zedensix/penombre/compare/v1.8.63...v1.8.64) (2026-10-05)
+
+### Features
+
+* kit three stable (#127) ([6bbe5a7](https://github.com/zedensix/penombre/commit/6bbe5a72947f39a491932cbb3cd67bfff51e9550))
 
 ### Bug Fixes
 
-* **ci:** sign the macOS binary by certificate hash, with its keychain in the search list ([50d6eda](https://github.com/orochibraru/penombre/commit/50d6eda1b4398ed177dba069ba38ea9cb26d7957))
+* **deps:** pin dependencies (#129) ([fd649e4](https://github.com/zedensix/penombre/commit/fd649e480eea1d6d7a3ab94dd7ed1178fa9cad88))
+
+## [1.8.63](https://github.com/zedensix/penombre/compare/v1.8.62...v1.8.63) (2026-10-02)
+
+### Features
+
+* Google Play publishing (keyless upload, store listing in 13 languages, icon and screenshots), app id com.zedensix.penombre, iOS privacy manifest, Play and GitHub links in the connect dialog, desktop menu-bar-only mode with its own notifications and permission status, signed macOS binary, bigger settings window; chore: scripts as mise file tasks, resvg through mise ([acf8dd3](https://github.com/zedensix/penombre/commit/acf8dd3a0425a0ea524ed3f8615b5beaadda4bc0))
+
+### Bug Fixes
+
+* **ci:** sign the macOS binary by certificate hash, with its keychain in the search list ([50d6eda](https://github.com/zedensix/penombre/commit/50d6eda1b4398ed177dba069ba38ea9cb26d7957))
 
 ### Code Refactoring
 
-* apps under apps/ (mobile, desktop, worker as its own Go module), Playwright into tests/e2e, Docker files into tools/docker, Homebrew formula with the desktop app, Renovate config into .github; chore: mise tasks per app with test and build across all apps, hooks call the task files, go vet as its own hook ([389d82d](https://github.com/orochibraru/penombre/commit/389d82dad64d645f7440dee2ad774f43fcbaeaae))
+* apps under apps/ (mobile, desktop, worker as its own Go module), Playwright into tests/e2e, Docker files into tools/docker, Homebrew formula with the desktop app, Renovate config into .github; chore: mise tasks per app with test and build across all apps, hooks call the task files, go vet as its own hook ([389d82d](https://github.com/zedensix/penombre/commit/389d82dad64d645f7440dee2ad774f43fcbaeaae))
 
-## [1.8.62](https://github.com/orochibraru/penombre/compare/v1.8.61...v1.8.62) (2026-10-01)
+## [1.8.62](https://github.com/zedensix/penombre/compare/v1.8.61...v1.8.62) (2026-10-01)
 
 ### Bug Fixes
 
-* code quality ([c6bee73](https://github.com/orochibraru/penombre/commit/c6bee73124cd8a4afa7d63657424be6bbc6718f2))
-* prek ([d6a001c](https://github.com/orochibraru/penombre/commit/d6a001c3235d2a53a469aa40d184d3ad8a624351))
-* showcasing ([9ca23b4](https://github.com/orochibraru/penombre/commit/9ca23b47182cbcae1569345cb7aba87e4af53b7b))
-* showcase ([3f7d2c8](https://github.com/orochibraru/penombre/commit/3f7d2c8ba42aa9fd0b21ec4ec50b93b8bc103356))
+* code quality ([c6bee73](https://github.com/zedensix/penombre/commit/c6bee73124cd8a4afa7d63657424be6bbc6718f2))
+* prek ([d6a001c](https://github.com/zedensix/penombre/commit/d6a001c3235d2a53a469aa40d184d3ad8a624351))
+* showcasing ([9ca23b4](https://github.com/zedensix/penombre/commit/9ca23b47182cbcae1569345cb7aba87e4af53b7b))
+* showcase ([3f7d2c8](https://github.com/zedensix/penombre/commit/3f7d2c8ba42aa9fd0b21ec4ec50b93b8bc103356))
 
-## [1.8.61](https://github.com/orochibraru/penombre/compare/v1.8.60...v1.8.61) (2026-10-01)
+## [1.8.61](https://github.com/zedensix/penombre/compare/v1.8.60...v1.8.61) (2026-10-01)
 
 ### Features
 
-* **mobile:** native account and settings, notifications, Shared tab, place selector, search as you type and skeleton loaders, in 13 languages with an in-app picker; address change and verification, notification settings and sign-in with an emailed code ([265034e](https://github.com/orochibraru/penombre/commit/265034e5170f5c4b530c48dd811aa3d1fe1e3b95))
-* **i18n:** the interface language is an account preference, shared by the web and the app ([133a2fa](https://github.com/orochibraru/penombre/commit/133a2faff4151c48b130b2ac133aaba33c7e506b))
-* **account:** change and verify the address with emailed codes, an account API for the app, and the gate for administrator-required strong authentication; fix: password rules apply to a changed password ([610082b](https://github.com/orochibraru/penombre/commit/610082b90d2ea1b922b0cea59240ebb07237fe9b))
-* **notifications:** choose for each kind whether a notification reaches the app, email or the phone ([4d47e40](https://github.com/orochibraru/penombre/commit/4d47e40ea2e20a967b0bce78d494719ee72341bd))
-* **signatures:** request signatures on a document, sign through one-time links, a signed PDF with its certificate, and notifications when it completes or is declined ([3efcfcd](https://github.com/orochibraru/penombre/commit/3efcfcdd06a8191e47348b51ea935cc1dd7b8fbb))
-* **slides:** WYSIWYG PowerPoint editor with ten templates, shapes, pictures, freehand drawing, themes, presenter view, PDF export and public link preview ([3450733](https://github.com/orochibraru/penombre/commit/345073319b019dee275e1b051dbebe99fb2863e9))
-* **editor:** one File menu across editors, view and edit modes with view-only sharing, comment threads and who else has the file open ([339d011](https://github.com/orochibraru/penombre/commit/339d011c441e26e32581ab2b327cfffba6f310b1))
-* **decks:** Markdown decks follow Marp, with speaker notes, presenter view, audience window and printing ([9dc140a](https://github.com/orochibraru/penombre/commit/9dc140a2a827f98ec18f23f792cbad9dc413cb16))
-* **sheets:** own formula engine with Excel's functions, workbooks with sheet tabs, ranges, fill, clipboard, undo and references that follow inserts and deletes ([83f8ab9](https://github.com/orochibraru/penombre/commit/83f8ab901b66551b9c65f3142215a49e2ebd589b))
-* **editor:** document editor with menus, fonts, sizes, colours, highlighting, code blocks, find and replace, pictures, word count and shortcuts ([b25371c](https://github.com/orochibraru/penombre/commit/b25371c8b6fbd9510ab3aadf47d1c571bec51fe9))
-* **documents:** new documents and sheets are Word and Excel files edited in place, with Download as PDF, Word, web page, Markdown, text and CSV ([2a4e593](https://github.com/orochibraru/penombre/commit/2a4e593cc861356ecd3222503a49c188761aae31))
-* **i18n:** strings for the editors, slides, signatures, account, notifications and language in all 13 languages ([f33f7ff](https://github.com/orochibraru/penombre/commit/f33f7ff59454f6a113082d048ef05625ab8abfa4))
+* **mobile:** native account and settings, notifications, Shared tab, place selector, search as you type and skeleton loaders, in 13 languages with an in-app picker; address change and verification, notification settings and sign-in with an emailed code ([265034e](https://github.com/zedensix/penombre/commit/265034e5170f5c4b530c48dd811aa3d1fe1e3b95))
+* **i18n:** the interface language is an account preference, shared by the web and the app ([133a2fa](https://github.com/zedensix/penombre/commit/133a2faff4151c48b130b2ac133aaba33c7e506b))
+* **account:** change and verify the address with emailed codes, an account API for the app, and the gate for administrator-required strong authentication; fix: password rules apply to a changed password ([610082b](https://github.com/zedensix/penombre/commit/610082b90d2ea1b922b0cea59240ebb07237fe9b))
+* **notifications:** choose for each kind whether a notification reaches the app, email or the phone ([4d47e40](https://github.com/zedensix/penombre/commit/4d47e40ea2e20a967b0bce78d494719ee72341bd))
+* **signatures:** request signatures on a document, sign through one-time links, a signed PDF with its certificate, and notifications when it completes or is declined ([3efcfcd](https://github.com/zedensix/penombre/commit/3efcfcdd06a8191e47348b51ea935cc1dd7b8fbb))
+* **slides:** WYSIWYG PowerPoint editor with ten templates, shapes, pictures, freehand drawing, themes, presenter view, PDF export and public link preview ([3450733](https://github.com/zedensix/penombre/commit/345073319b019dee275e1b051dbebe99fb2863e9))
+* **editor:** one File menu across editors, view and edit modes with view-only sharing, comment threads and who else has the file open ([339d011](https://github.com/zedensix/penombre/commit/339d011c441e26e32581ab2b327cfffba6f310b1))
+* **decks:** Markdown decks follow Marp, with speaker notes, presenter view, audience window and printing ([9dc140a](https://github.com/zedensix/penombre/commit/9dc140a2a827f98ec18f23f792cbad9dc413cb16))
+* **sheets:** own formula engine with Excel's functions, workbooks with sheet tabs, ranges, fill, clipboard, undo and references that follow inserts and deletes ([83f8ab9](https://github.com/zedensix/penombre/commit/83f8ab901b66551b9c65f3142215a49e2ebd589b))
+* **editor:** document editor with menus, fonts, sizes, colours, highlighting, code blocks, find and replace, pictures, word count and shortcuts ([b25371c](https://github.com/zedensix/penombre/commit/b25371c8b6fbd9510ab3aadf47d1c571bec51fe9))
+* **documents:** new documents and sheets are Word and Excel files edited in place, with Download as PDF, Word, web page, Markdown, text and CSV ([2a4e593](https://github.com/zedensix/penombre/commit/2a4e593cc861356ecd3222503a49c188761aae31))
+* **i18n:** strings for the editors, slides, signatures, account, notifications and language in all 13 languages ([f33f7ff](https://github.com/zedensix/penombre/commit/f33f7ff59454f6a113082d048ef05625ab8abfa4))
 
 ### Bug Fixes
 
-* **auth:** an emailed sign-in code or link no longer skips two-factor ([84c9da4](https://github.com/orochibraru/penombre/commit/84c9da443217774b1d8a3ec556b92eccb9e1a1b2))
-* **files:** single-file downloads 404'd on a full-mode personal drive ([040032c](https://github.com/orochibraru/penombre/commit/040032c6749232a717ed88b271718da458788cc3))
-* **pwa:** the manifest link 404'd on every nested route ([0ddf78b](https://github.com/orochibraru/penombre/commit/0ddf78b08a1952334439804e0ff15cdb25f7c69d))
+* **auth:** an emailed sign-in code or link no longer skips two-factor ([84c9da4](https://github.com/zedensix/penombre/commit/84c9da443217774b1d8a3ec556b92eccb9e1a1b2))
+* **files:** single-file downloads 404'd on a full-mode personal drive ([040032c](https://github.com/zedensix/penombre/commit/040032c6749232a717ed88b271718da458788cc3))
+* **pwa:** the manifest link 404'd on every nested route ([0ddf78b](https://github.com/zedensix/penombre/commit/0ddf78b08a1952334439804e0ff15cdb25f7c69d))
 
 ### Documentation
 
-* documents, sheets, presentations, sharing, notifications, two-factor and the mobile app; CLAUDE.md gotchas ([8149ee9](https://github.com/orochibraru/penombre/commit/8149ee9208dec703ab34be009a9b6240ce9574bd))
+* documents, sheets, presentations, sharing, notifications, two-factor and the mobile app; CLAUDE.md gotchas ([8149ee9](https://github.com/zedensix/penombre/commit/8149ee9208dec703ab34be009a9b6240ce9574bd))
 
-## [1.8.60](https://github.com/orochibraru/penombre/compare/v1.8.59...v1.8.60) (2026-09-30)
+## [1.8.60](https://github.com/zedensix/penombre/compare/v1.8.59...v1.8.60) (2026-09-30)
 
 ### Features
 
-* **mobile:** Home tab returns to the drive root; chore: ktlint prek hook for Kotlin and Gradle scripts ([d00a308](https://github.com/orochibraru/penombre/commit/d00a30876e45c4fb48eddc8b1f685367b4e88816))
-* mobile app goes native (bottom bar, trash, shared drives, settings, versions, photo viewer, music and video players with preview drawer, pull to refresh, rename/move/copy/duplicate/download/new folder/search, camera and document scan uploads, QR code sign-in), video renditions with a quality picker and convert-and-play for unplayable formats, progressive picture previews, "Get the apps" dialog with QR pairing replacing the desktop settings tab, phone banner, app icons for light and dark, feature graphics, mobile release builds in CI, invite link dialog without SMTP, accent-coloured context menu, thin sidebar scrollbar, icon tiles in listings; fix: /account/sessions 500 on sessions older than a day, desktop update check hitting GitHub's API rate limit, unhandled play() rejections in the web players, suffix byte ranges served from the wrong end, /view 404 for media outside the personal drive, nested folder paths in the mobile app; chore: Maestro flows with seeded data, uqr dependency ([395521d](https://github.com/orochibraru/penombre/commit/395521d7dc0c0ec6c2ab0506481bb843ea2da0cd))
-* mobile toolchain through mise (Android SDK, emulator, iOS simulator, Maestro) with mobile:setup/doctor/android/ios tasks, iOS host project, Material You on Android, shared unit tests and a first Maestro flow; fix: sign-in screen drew no background and lost the typed address on recreation; chore: pin dependencies to exact versions ([8eadd5c](https://github.com/orochibraru/penombre/commit/8eadd5c284c1b42b2c8057a1176102a8c71b1e18))
+* **mobile:** Home tab returns to the drive root; chore: ktlint prek hook for Kotlin and Gradle scripts ([d00a308](https://github.com/zedensix/penombre/commit/d00a30876e45c4fb48eddc8b1f685367b4e88816))
+* mobile app goes native (bottom bar, trash, shared drives, settings, versions, photo viewer, music and video players with preview drawer, pull to refresh, rename/move/copy/duplicate/download/new folder/search, camera and document scan uploads, QR code sign-in), video renditions with a quality picker and convert-and-play for unplayable formats, progressive picture previews, "Get the apps" dialog with QR pairing replacing the desktop settings tab, phone banner, app icons for light and dark, feature graphics, mobile release builds in CI, invite link dialog without SMTP, accent-coloured context menu, thin sidebar scrollbar, icon tiles in listings; fix: /account/sessions 500 on sessions older than a day, desktop update check hitting GitHub's API rate limit, unhandled play() rejections in the web players, suffix byte ranges served from the wrong end, /view 404 for media outside the personal drive, nested folder paths in the mobile app; chore: Maestro flows with seeded data, uqr dependency ([395521d](https://github.com/zedensix/penombre/commit/395521d7dc0c0ec6c2ab0506481bb843ea2da0cd))
+* mobile toolchain through mise (Android SDK, emulator, iOS simulator, Maestro) with mobile:setup/doctor/android/ios tasks, iOS host project, Material You on Android, shared unit tests and a first Maestro flow; fix: sign-in screen drew no background and lost the typed address on recreation; chore: pin dependencies to exact versions ([8eadd5c](https://github.com/zedensix/penombre/commit/8eadd5c284c1b42b2c8057a1176102a8c71b1e18))
 
 ### Bug Fixes
 
-* search & versions ([59a7127](https://github.com/orochibraru/penombre/commit/59a7127de59c1e312d7e29fce051ba932e15cfba))
-* desktop app download followed the server's version instead of the instance's release channel ([568dadc](https://github.com/orochibraru/penombre/commit/568dadc56b277a7ce23bb1c4bcae4389e9a4e189))
+* search & versions ([59a7127](https://github.com/zedensix/penombre/commit/59a7127de59c1e312d7e29fce051ba932e15cfba))
+* desktop app download followed the server's version instead of the instance's release channel ([568dadc](https://github.com/zedensix/penombre/commit/568dadc56b277a7ce23bb1c4bcae4389e9a4e189))
 
-## [1.8.59](https://github.com/orochibraru/penombre/compare/v1.8.58...v1.8.59) (2026-09-29)
-
-### Features
-
-* mobile app MVP (Kotlin Multiplatform, PKCE sign-in to a real session), desktop .dmg/.exe/.AppImage downloads with AppImage self-update; fix: API key lockout refused valid keys, invalid x-api-key answered 500, unit coverage under threshold ([f5f3afb](https://github.com/orochibraru/penombre/commit/f5f3afb3902d29e883b8da55f4524a4a8d161678))
-* mobile base ([9b104f1](https://github.com/orochibraru/penombre/commit/9b104f1a1ba44eea882286b2dfa81ff006ebe654))
-
-## [1.8.58](https://github.com/orochibraru/penombre/compare/v1.8.57...v1.8.58) (2026-09-29)
+## [1.8.59](https://github.com/zedensix/penombre/compare/v1.8.58...v1.8.59) (2026-09-29)
 
 ### Features
 
-* plain text files (New → Text file, Edit action), API key lockout per address, sign-in button icons; fix drive trash crash on duplicate names, upload dialog duplicate keys, editor 404 for new documents on volumes ([5711e8f](https://github.com/orochibraru/penombre/commit/5711e8fd0f6676ae1fc561a70a659e50a9a2afb4))
-* drive-only accounts, desktop updater, release channel, exclusions and tray progress; CI images on ghcr.io; fix nested transfers into drives and unreachable folders ([6da0b3f](https://github.com/orochibraru/penombre/commit/6da0b3f855837827aac3fe8c3190afa00f9024f5))
-* desktop updater, release channel, exclusions and tray progress; fix nested transfers into drives ([934fa2a](https://github.com/orochibraru/penombre/commit/934fa2a0a28b635bd6d98a13b2abbf32321814a8))
-* sync client (#119) ([63be0e8](https://github.com/orochibraru/penombre/commit/63be0e847e32d870fcacf132735f464df04ec27f))
+* mobile app MVP (Kotlin Multiplatform, PKCE sign-in to a real session), desktop .dmg/.exe/.AppImage downloads with AppImage self-update; fix: API key lockout refused valid keys, invalid x-api-key answered 500, unit coverage under threshold ([f5f3afb](https://github.com/zedensix/penombre/commit/f5f3afb3902d29e883b8da55f4524a4a8d161678))
+* mobile base ([9b104f1](https://github.com/zedensix/penombre/commit/9b104f1a1ba44eea882286b2dfa81ff006ebe654))
+
+## [1.8.58](https://github.com/zedensix/penombre/compare/v1.8.57...v1.8.58) (2026-09-29)
+
+### Features
+
+* plain text files (New → Text file, Edit action), API key lockout per address, sign-in button icons; fix drive trash crash on duplicate names, upload dialog duplicate keys, editor 404 for new documents on volumes ([5711e8f](https://github.com/zedensix/penombre/commit/5711e8fd0f6676ae1fc561a70a659e50a9a2afb4))
+* drive-only accounts, desktop updater, release channel, exclusions and tray progress; CI images on ghcr.io; fix nested transfers into drives and unreachable folders ([6da0b3f](https://github.com/zedensix/penombre/commit/6da0b3f855837827aac3fe8c3190afa00f9024f5))
+* desktop updater, release channel, exclusions and tray progress; fix nested transfers into drives ([934fa2a](https://github.com/zedensix/penombre/commit/934fa2a0a28b635bd6d98a13b2abbf32321814a8))
+* sync client (#119) ([63be0e8](https://github.com/zedensix/penombre/commit/63be0e847e32d870fcacf132735f464df04ec27f))
 
 ### Bug Fixes
 
-* svelte adapter ([573212d](https://github.com/orochibraru/penombre/commit/573212d9d47c5bdb9fd65370a88322e2441762ee))
-* drive managers can create share links (403 toast for the rest), rate-limited API keys no longer trip the lockout, sync client notifies when a folder pair can't start; pin svelte-smol <1.8 (ignored ORIGIN, every form POST failed CSRF on HTTP) ([0d5d033](https://github.com/orochibraru/penombre/commit/0d5d0337012618245d08d784910f1a80b1c9f742))
-* ci ([63a4cd0](https://github.com/orochibraru/penombre/commit/63a4cd094765ae117b6dfe1979ac66cf09fc8528))
-* onboarding lost its errors, invited accounts had no way in; add password reset, return-to after sign-in, email templates ([6cdba33](https://github.com/orochibraru/penombre/commit/6cdba332b4f9c226daf801f1e45401d01141a641))
-* user search on SQLite (template literal turned escape '\' into an empty ESCAPE) ([9adf1bc](https://github.com/orochibraru/penombre/commit/9adf1bc1f439252f07d3faa025ffe8cdf75ee017))
+* svelte adapter ([573212d](https://github.com/zedensix/penombre/commit/573212d9d47c5bdb9fd65370a88322e2441762ee))
+* drive managers can create share links (403 toast for the rest), rate-limited API keys no longer trip the lockout, sync client notifies when a folder pair can't start; pin svelte-smol <1.8 (ignored ORIGIN, every form POST failed CSRF on HTTP) ([0d5d033](https://github.com/zedensix/penombre/commit/0d5d0337012618245d08d784910f1a80b1c9f742))
+* ci ([63a4cd0](https://github.com/zedensix/penombre/commit/63a4cd094765ae117b6dfe1979ac66cf09fc8528))
+* onboarding lost its errors, invited accounts had no way in; add password reset, return-to after sign-in, email templates ([6cdba33](https://github.com/zedensix/penombre/commit/6cdba332b4f9c226daf801f1e45401d01141a641))
+* user search on SQLite (template literal turned escape '\' into an empty ESCAPE) ([9adf1bc](https://github.com/zedensix/penombre/commit/9adf1bc1f439252f07d3faa025ffe8cdf75ee017))
 
-## [1.8.58](https://github.com/orochibraru/penombre/compare/v1.8.57...v1.8.58) (2026-09-29)
-
-### Features
-
-* desktop updater, release channel, exclusions and tray progress; fix nested transfers into drives ([934fa2a](https://github.com/orochibraru/penombre/commit/934fa2a0a28b635bd6d98a13b2abbf32321814a8))
-* sync client (#119) ([63be0e8](https://github.com/orochibraru/penombre/commit/63be0e847e32d870fcacf132735f464df04ec27f))
-
-## [1.8.57](https://github.com/orochibraru/penombre/compare/v1.8.56...v1.8.57) (2026-09-29)
+## [1.8.58](https://github.com/zedensix/penombre/compare/v1.8.57...v1.8.58) (2026-09-29)
 
 ### Features
 
-* dav (#118) ([f209fdc](https://github.com/orochibraru/penombre/commit/f209fdc5b538f24213b4928b5f9bf60f53b0b298))
+* desktop updater, release channel, exclusions and tray progress; fix nested transfers into drives ([934fa2a](https://github.com/zedensix/penombre/commit/934fa2a0a28b635bd6d98a13b2abbf32321814a8))
+* sync client (#119) ([63be0e8](https://github.com/zedensix/penombre/commit/63be0e847e32d870fcacf132735f464df04ec27f))
+
+## [1.8.57](https://github.com/zedensix/penombre/compare/v1.8.56...v1.8.57) (2026-09-29)
+
+### Features
+
+* dav (#118) ([f209fdc](https://github.com/zedensix/penombre/commit/f209fdc5b538f24213b4928b5f9bf60f53b0b298))
 
 ### Bug Fixes
 
-* dnd upload ([8f4d0c3](https://github.com/orochibraru/penombre/commit/8f4d0c3510dca72ad72ad638e39caaded85380b3))
+* dnd upload ([8f4d0c3](https://github.com/zedensix/penombre/commit/8f4d0c3510dca72ad72ad638e39caaded85380b3))
 
-## [1.8.56](https://github.com/orochibraru/penombre/compare/v1.8.55...v1.8.56) (2026-09-28)
-
-### Features
-
-* sidebar folder shortcuts, merge files with their versions, fix outside renders duplicating renamed files ([30921f1](https://github.com/orochibraru/penombre/commit/30921f12ed9714d1340b7c11c0094a2b364b3aca))
-
-## [1.8.55](https://github.com/orochibraru/penombre/compare/v1.8.54...v1.8.55) (2026-09-25)
-
-## [1.8.54](https://github.com/orochibraru/penombre/compare/v1.8.53...v1.8.54) (2026-09-25)
+## [1.8.56](https://github.com/zedensix/penombre/compare/v1.8.55...v1.8.56) (2026-09-28)
 
 ### Features
 
-* restore versions as zips ([e0d0478](https://github.com/orochibraru/penombre/commit/e0d0478aed8b4e74c8740dafe0b0813aba5fe00d))
-* synced files from disk get versioning too ([9189ed5](https://github.com/orochibraru/penombre/commit/9189ed53e43b3c25f1e5565b684ed82c8cb79f55))
+* sidebar folder shortcuts, merge files with their versions, fix outside renders duplicating renamed files ([30921f1](https://github.com/zedensix/penombre/commit/30921f12ed9714d1340b7c11c0094a2b364b3aca))
+
+## [1.8.55](https://github.com/zedensix/penombre/compare/v1.8.54...v1.8.55) (2026-09-25)
+
+## [1.8.54](https://github.com/zedensix/penombre/compare/v1.8.53...v1.8.54) (2026-09-25)
+
+### Features
+
+* restore versions as zips ([e0d0478](https://github.com/zedensix/penombre/commit/e0d0478aed8b4e74c8740dafe0b0813aba5fe00d))
+* synced files from disk get versioning too ([9189ed5](https://github.com/zedensix/penombre/commit/9189ed53e43b3c25f1e5565b684ed82c8cb79f55))
 
 ### Bug Fixes
 
-* rename on disk ([46a6ed4](https://github.com/orochibraru/penombre/commit/46a6ed4cac5335075150e3ce4390fd90bb3447a1))
+* rename on disk ([46a6ed4](https://github.com/zedensix/penombre/commit/46a6ed4cac5335075150e3ce4390fd90bb3447a1))
 
-## [1.8.53](https://github.com/orochibraru/penombre/compare/v1.8.52...v1.8.53) (2026-09-24)
+## [1.8.53](https://github.com/zedensix/penombre/compare/v1.8.52...v1.8.53) (2026-09-24)
 
 ### Features
 
-* merge files as versions, real names and dates on disk, player controls ([e3d0e0c](https://github.com/orochibraru/penombre/commit/e3d0e0c210bec01d3a176a9a40822ef66dc08d67))
-* file versioning ([66927af](https://github.com/orochibraru/penombre/commit/66927afd6a83df3684dd1ec39805dd23ffeafa6d))
-* bordeaux theme, penumbra logo, folder links and upload pill; fix duplicate rows and category 404s ([e2bae55](https://github.com/orochibraru/penombre/commit/e2bae5595c39d32ac3a56727011c4500729073b3))
-* **listings:** keyset pagination and virtualized rendering ([b35573f](https://github.com/orochibraru/penombre/commit/b35573f1d4871ef0de459154ab10fc1d14352705))
-* **storage:** opt-in encryption at rest ([cedc38f](https://github.com/orochibraru/penombre/commit/cedc38f49b84e66df4c14ff1ac1b1790f8ddf413))
-* **i18n:** nine new locales, native plurals, parity lint ([884b30b](https://github.com/orochibraru/penombre/commit/884b30b0afbd42b2e41cdbd2ac126cf6ecd65c16))
-* **db:** migrations for invites, activity scrub, note FK and listing indexes ([0395439](https://github.com/orochibraru/penombre/commit/03954398ad7d2956b5a8d3d84554b2ee6537d563))
+* merge files as versions, real names and dates on disk, player controls ([e3d0e0c](https://github.com/zedensix/penombre/commit/e3d0e0c210bec01d3a176a9a40822ef66dc08d67))
+* file versioning ([66927af](https://github.com/zedensix/penombre/commit/66927afd6a83df3684dd1ec39805dd23ffeafa6d))
+* bordeaux theme, penumbra logo, folder links and upload pill; fix duplicate rows and category 404s ([e2bae55](https://github.com/zedensix/penombre/commit/e2bae5595c39d32ac3a56727011c4500729073b3))
+* **listings:** keyset pagination and virtualized rendering ([b35573f](https://github.com/zedensix/penombre/commit/b35573f1d4871ef0de459154ab10fc1d14352705))
+* **storage:** opt-in encryption at rest ([cedc38f](https://github.com/zedensix/penombre/commit/cedc38f49b84e66df4c14ff1ac1b1790f8ddf413))
+* **i18n:** nine new locales, native plurals, parity lint ([884b30b](https://github.com/zedensix/penombre/commit/884b30b0afbd42b2e41cdbd2ac126cf6ecd65c16))
+* **db:** migrations for invites, activity scrub, note FK and listing indexes ([0395439](https://github.com/zedensix/penombre/commit/03954398ad7d2956b5a8d3d84554b2ee6537d563))
 
 ### Bug Fixes
 
-* e2e again ([1cca7f2](https://github.com/orochibraru/penombre/commit/1cca7f263aca2a30478dc0aa7520363ab2c6c56f))
-* ci again ([a3543d5](https://github.com/orochibraru/penombre/commit/a3543d56e54880d68fbf240de65021da059b9f96))
-* **e2e:** move the pointer off a freshly opened context menu ([fed6883](https://github.com/orochibraru/penombre/commit/fed688385cde2a88dbc636f45d4d715cb9a6771d))
-* bulk actions e2E ([f8b7624](https://github.com/orochibraru/penombre/commit/f8b7624d0c2ebf5db44e1cc084c03572a21f6814))
-* e2E ([1f97336](https://github.com/orochibraru/penombre/commit/1f973364da1a5fd8164f267becf1d0c4db880b92))
-* creating an empty folder gets cleaned up if left empty for a minute => create physical folder on disk ([f114f19](https://github.com/orochibraru/penombre/commit/f114f193d39d5ec77846c3d293ec9ec57a01a1a2))
-* releaser version ([664f6cb](https://github.com/orochibraru/penombre/commit/664f6cb2a9b26165e144b202c60648f32d2e40cf))
-* tests ([78cb028](https://github.com/orochibraru/penombre/commit/78cb0282fb529ce47d04ffd359e2c77b14b95adc))
-* auto merge shit ([2fb140e](https://github.com/orochibraru/penombre/commit/2fb140e2e32c1d52c6fa4f2bec73149622578d94))
-* drive leaking into My Drive, links from drives and volumes, and report browser errors to the server ([ccdcec9](https://github.com/orochibraru/penombre/commit/ccdcec96c486c2e77f33fb5eaf617ebf31161e0a))
-* **e2e:** the provider row no longer says "not yet loaded" ([2966157](https://github.com/orochibraru/penombre/commit/2966157ad40975bb403c8e2c878130f89aa0ce70))
-* **rate-limit:** rebuild the redis store per call ([0add2a3](https://github.com/orochibraru/penombre/commit/0add2a3783c2e8237687506c931cf65d39997911))
-* **ui:** accessibility, theming and interaction fixes ([434f9b5](https://github.com/orochibraru/penombre/commit/434f9b5a86080f17b2dda565757160ee7a2cb49e))
-* **security:** lock down admin actions, onboarding, raw files and data leaks ([a609994](https://github.com/orochibraru/penombre/commit/a609994f8c0cb95bafd0d09ea9e75f649a657e51))
+* e2e again ([1cca7f2](https://github.com/zedensix/penombre/commit/1cca7f263aca2a30478dc0aa7520363ab2c6c56f))
+* ci again ([a3543d5](https://github.com/zedensix/penombre/commit/a3543d56e54880d68fbf240de65021da059b9f96))
+* **e2e:** move the pointer off a freshly opened context menu ([fed6883](https://github.com/zedensix/penombre/commit/fed688385cde2a88dbc636f45d4d715cb9a6771d))
+* bulk actions e2E ([f8b7624](https://github.com/zedensix/penombre/commit/f8b7624d0c2ebf5db44e1cc084c03572a21f6814))
+* e2E ([1f97336](https://github.com/zedensix/penombre/commit/1f973364da1a5fd8164f267becf1d0c4db880b92))
+* creating an empty folder gets cleaned up if left empty for a minute => create physical folder on disk ([f114f19](https://github.com/zedensix/penombre/commit/f114f193d39d5ec77846c3d293ec9ec57a01a1a2))
+* releaser version ([664f6cb](https://github.com/zedensix/penombre/commit/664f6cb2a9b26165e144b202c60648f32d2e40cf))
+* tests ([78cb028](https://github.com/zedensix/penombre/commit/78cb0282fb529ce47d04ffd359e2c77b14b95adc))
+* auto merge shit ([2fb140e](https://github.com/zedensix/penombre/commit/2fb140e2e32c1d52c6fa4f2bec73149622578d94))
+* drive leaking into My Drive, links from drives and volumes, and report browser errors to the server ([ccdcec9](https://github.com/zedensix/penombre/commit/ccdcec96c486c2e77f33fb5eaf617ebf31161e0a))
+* **e2e:** the provider row no longer says "not yet loaded" ([2966157](https://github.com/zedensix/penombre/commit/2966157ad40975bb403c8e2c878130f89aa0ce70))
+* **rate-limit:** rebuild the redis store per call ([0add2a3](https://github.com/zedensix/penombre/commit/0add2a3783c2e8237687506c931cf65d39997911))
+* **ui:** accessibility, theming and interaction fixes ([434f9b5](https://github.com/zedensix/penombre/commit/434f9b5a86080f17b2dda565757160ee7a2cb49e))
+* **security:** lock down admin actions, onboarding, raw files and data leaks ([a609994](https://github.com/zedensix/penombre/commit/a609994f8c0cb95bafd0d09ea9e75f649a657e51))
 
 ### Documentation
 
-* **todo:** e2e spec isolation and redis in unit tests ([4074b74](https://github.com/orochibraru/penombre/commit/4074b74fd51044c323348ae53751d488006d470d))
-* light and dark screenshots, CLAUDE.md ([4f09ee1](https://github.com/orochibraru/penombre/commit/4f09ee12528f45bf41f71467c96f7d1a92d79355))
+* **todo:** e2e spec isolation and redis in unit tests ([4074b74](https://github.com/zedensix/penombre/commit/4074b74fd51044c323348ae53751d488006d470d))
+* light and dark screenshots, CLAUDE.md ([4f09ee1](https://github.com/zedensix/penombre/commit/4f09ee12528f45bf41f71467c96f7d1a92d79355))
 
-## [1.8.53](https://github.com/orochibraru/penombre/compare/v1.8.52...v1.8.53) (2026-09-24)
+## [1.8.53](https://github.com/zedensix/penombre/compare/v1.8.52...v1.8.53) (2026-09-24)
 
 ### Features
 
-* merge files as versions, real names and dates on disk, player controls ([e3d0e0c](https://github.com/orochibraru/penombre/commit/e3d0e0c210bec01d3a176a9a40822ef66dc08d67))
-* file versioning ([66927af](https://github.com/orochibraru/penombre/commit/66927afd6a83df3684dd1ec39805dd23ffeafa6d))
-* bordeaux theme, penumbra logo, folder links and upload pill; fix duplicate rows and category 404s ([e2bae55](https://github.com/orochibraru/penombre/commit/e2bae5595c39d32ac3a56727011c4500729073b3))
-* **listings:** keyset pagination and virtualized rendering ([b35573f](https://github.com/orochibraru/penombre/commit/b35573f1d4871ef0de459154ab10fc1d14352705))
-* **storage:** opt-in encryption at rest ([cedc38f](https://github.com/orochibraru/penombre/commit/cedc38f49b84e66df4c14ff1ac1b1790f8ddf413))
-* **i18n:** nine new locales, native plurals, parity lint ([884b30b](https://github.com/orochibraru/penombre/commit/884b30b0afbd42b2e41cdbd2ac126cf6ecd65c16))
-* **db:** migrations for invites, activity scrub, note FK and listing indexes ([0395439](https://github.com/orochibraru/penombre/commit/03954398ad7d2956b5a8d3d84554b2ee6537d563))
+* merge files as versions, real names and dates on disk, player controls ([e3d0e0c](https://github.com/zedensix/penombre/commit/e3d0e0c210bec01d3a176a9a40822ef66dc08d67))
+* file versioning ([66927af](https://github.com/zedensix/penombre/commit/66927afd6a83df3684dd1ec39805dd23ffeafa6d))
+* bordeaux theme, penumbra logo, folder links and upload pill; fix duplicate rows and category 404s ([e2bae55](https://github.com/zedensix/penombre/commit/e2bae5595c39d32ac3a56727011c4500729073b3))
+* **listings:** keyset pagination and virtualized rendering ([b35573f](https://github.com/zedensix/penombre/commit/b35573f1d4871ef0de459154ab10fc1d14352705))
+* **storage:** opt-in encryption at rest ([cedc38f](https://github.com/zedensix/penombre/commit/cedc38f49b84e66df4c14ff1ac1b1790f8ddf413))
+* **i18n:** nine new locales, native plurals, parity lint ([884b30b](https://github.com/zedensix/penombre/commit/884b30b0afbd42b2e41cdbd2ac126cf6ecd65c16))
+* **db:** migrations for invites, activity scrub, note FK and listing indexes ([0395439](https://github.com/zedensix/penombre/commit/03954398ad7d2956b5a8d3d84554b2ee6537d563))
 
 ### Bug Fixes
 
-* e2e again ([1cca7f2](https://github.com/orochibraru/penombre/commit/1cca7f263aca2a30478dc0aa7520363ab2c6c56f))
-* ci again ([a3543d5](https://github.com/orochibraru/penombre/commit/a3543d56e54880d68fbf240de65021da059b9f96))
-* **e2e:** move the pointer off a freshly opened context menu ([fed6883](https://github.com/orochibraru/penombre/commit/fed688385cde2a88dbc636f45d4d715cb9a6771d))
-* bulk actions e2E ([f8b7624](https://github.com/orochibraru/penombre/commit/f8b7624d0c2ebf5db44e1cc084c03572a21f6814))
-* e2E ([1f97336](https://github.com/orochibraru/penombre/commit/1f973364da1a5fd8164f267becf1d0c4db880b92))
-* creating an empty folder gets cleaned up if left empty for a minute => create physical folder on disk ([f114f19](https://github.com/orochibraru/penombre/commit/f114f193d39d5ec77846c3d293ec9ec57a01a1a2))
-* releaser version ([664f6cb](https://github.com/orochibraru/penombre/commit/664f6cb2a9b26165e144b202c60648f32d2e40cf))
-* tests ([78cb028](https://github.com/orochibraru/penombre/commit/78cb0282fb529ce47d04ffd359e2c77b14b95adc))
-* auto merge shit ([2fb140e](https://github.com/orochibraru/penombre/commit/2fb140e2e32c1d52c6fa4f2bec73149622578d94))
-* drive leaking into My Drive, links from drives and volumes, and report browser errors to the server ([ccdcec9](https://github.com/orochibraru/penombre/commit/ccdcec96c486c2e77f33fb5eaf617ebf31161e0a))
-* **e2e:** the provider row no longer says "not yet loaded" ([2966157](https://github.com/orochibraru/penombre/commit/2966157ad40975bb403c8e2c878130f89aa0ce70))
-* **rate-limit:** rebuild the redis store per call ([0add2a3](https://github.com/orochibraru/penombre/commit/0add2a3783c2e8237687506c931cf65d39997911))
-* **ui:** accessibility, theming and interaction fixes ([434f9b5](https://github.com/orochibraru/penombre/commit/434f9b5a86080f17b2dda565757160ee7a2cb49e))
-* **security:** lock down admin actions, onboarding, raw files and data leaks ([a609994](https://github.com/orochibraru/penombre/commit/a609994f8c0cb95bafd0d09ea9e75f649a657e51))
+* e2e again ([1cca7f2](https://github.com/zedensix/penombre/commit/1cca7f263aca2a30478dc0aa7520363ab2c6c56f))
+* ci again ([a3543d5](https://github.com/zedensix/penombre/commit/a3543d56e54880d68fbf240de65021da059b9f96))
+* **e2e:** move the pointer off a freshly opened context menu ([fed6883](https://github.com/zedensix/penombre/commit/fed688385cde2a88dbc636f45d4d715cb9a6771d))
+* bulk actions e2E ([f8b7624](https://github.com/zedensix/penombre/commit/f8b7624d0c2ebf5db44e1cc084c03572a21f6814))
+* e2E ([1f97336](https://github.com/zedensix/penombre/commit/1f973364da1a5fd8164f267becf1d0c4db880b92))
+* creating an empty folder gets cleaned up if left empty for a minute => create physical folder on disk ([f114f19](https://github.com/zedensix/penombre/commit/f114f193d39d5ec77846c3d293ec9ec57a01a1a2))
+* releaser version ([664f6cb](https://github.com/zedensix/penombre/commit/664f6cb2a9b26165e144b202c60648f32d2e40cf))
+* tests ([78cb028](https://github.com/zedensix/penombre/commit/78cb0282fb529ce47d04ffd359e2c77b14b95adc))
+* auto merge shit ([2fb140e](https://github.com/zedensix/penombre/commit/2fb140e2e32c1d52c6fa4f2bec73149622578d94))
+* drive leaking into My Drive, links from drives and volumes, and report browser errors to the server ([ccdcec9](https://github.com/zedensix/penombre/commit/ccdcec96c486c2e77f33fb5eaf617ebf31161e0a))
+* **e2e:** the provider row no longer says "not yet loaded" ([2966157](https://github.com/zedensix/penombre/commit/2966157ad40975bb403c8e2c878130f89aa0ce70))
+* **rate-limit:** rebuild the redis store per call ([0add2a3](https://github.com/zedensix/penombre/commit/0add2a3783c2e8237687506c931cf65d39997911))
+* **ui:** accessibility, theming and interaction fixes ([434f9b5](https://github.com/zedensix/penombre/commit/434f9b5a86080f17b2dda565757160ee7a2cb49e))
+* **security:** lock down admin actions, onboarding, raw files and data leaks ([a609994](https://github.com/zedensix/penombre/commit/a609994f8c0cb95bafd0d09ea9e75f649a657e51))
 
 ### Documentation
 
-* **todo:** e2e spec isolation and redis in unit tests ([4074b74](https://github.com/orochibraru/penombre/commit/4074b74fd51044c323348ae53751d488006d470d))
-* light and dark screenshots, CLAUDE.md ([4f09ee1](https://github.com/orochibraru/penombre/commit/4f09ee12528f45bf41f71467c96f7d1a92d79355))
+* **todo:** e2e spec isolation and redis in unit tests ([4074b74](https://github.com/zedensix/penombre/commit/4074b74fd51044c323348ae53751d488006d470d))
+* light and dark screenshots, CLAUDE.md ([4f09ee1](https://github.com/zedensix/penombre/commit/4f09ee12528f45bf41f71467c96f7d1a92d79355))
 
-## [1.8.53](https://github.com/orochibraru/penombre/compare/v1.8.52...v1.8.53) (2026-09-24)
+## [1.8.53](https://github.com/zedensix/penombre/compare/v1.8.52...v1.8.53) (2026-09-24)
 
 ### Features
 
-* **listings:** keyset pagination and virtualized rendering ([b35573f](https://github.com/orochibraru/penombre/commit/b35573f1d4871ef0de459154ab10fc1d14352705))
-* **storage:** opt-in encryption at rest ([cedc38f](https://github.com/orochibraru/penombre/commit/cedc38f49b84e66df4c14ff1ac1b1790f8ddf413))
-* **i18n:** nine new locales, native plurals, parity lint ([884b30b](https://github.com/orochibraru/penombre/commit/884b30b0afbd42b2e41cdbd2ac126cf6ecd65c16))
-* **db:** migrations for invites, activity scrub, note FK and listing indexes ([0395439](https://github.com/orochibraru/penombre/commit/03954398ad7d2956b5a8d3d84554b2ee6537d563))
+* **listings:** keyset pagination and virtualized rendering ([b35573f](https://github.com/zedensix/penombre/commit/b35573f1d4871ef0de459154ab10fc1d14352705))
+* **storage:** opt-in encryption at rest ([cedc38f](https://github.com/zedensix/penombre/commit/cedc38f49b84e66df4c14ff1ac1b1790f8ddf413))
+* **i18n:** nine new locales, native plurals, parity lint ([884b30b](https://github.com/zedensix/penombre/commit/884b30b0afbd42b2e41cdbd2ac126cf6ecd65c16))
+* **db:** migrations for invites, activity scrub, note FK and listing indexes ([0395439](https://github.com/zedensix/penombre/commit/03954398ad7d2956b5a8d3d84554b2ee6537d563))
 
 ### Bug Fixes
 
-* auto merge shit ([2fb140e](https://github.com/orochibraru/penombre/commit/2fb140e2e32c1d52c6fa4f2bec73149622578d94))
-* drive leaking into My Drive, links from drives and volumes, and report browser errors to the server ([ccdcec9](https://github.com/orochibraru/penombre/commit/ccdcec96c486c2e77f33fb5eaf617ebf31161e0a))
-* **e2e:** the provider row no longer says "not yet loaded" ([2966157](https://github.com/orochibraru/penombre/commit/2966157ad40975bb403c8e2c878130f89aa0ce70))
-* **rate-limit:** rebuild the redis store per call ([0add2a3](https://github.com/orochibraru/penombre/commit/0add2a3783c2e8237687506c931cf65d39997911))
-* **ui:** accessibility, theming and interaction fixes ([434f9b5](https://github.com/orochibraru/penombre/commit/434f9b5a86080f17b2dda565757160ee7a2cb49e))
-* **security:** lock down admin actions, onboarding, raw files and data leaks ([a609994](https://github.com/orochibraru/penombre/commit/a609994f8c0cb95bafd0d09ea9e75f649a657e51))
+* auto merge shit ([2fb140e](https://github.com/zedensix/penombre/commit/2fb140e2e32c1d52c6fa4f2bec73149622578d94))
+* drive leaking into My Drive, links from drives and volumes, and report browser errors to the server ([ccdcec9](https://github.com/zedensix/penombre/commit/ccdcec96c486c2e77f33fb5eaf617ebf31161e0a))
+* **e2e:** the provider row no longer says "not yet loaded" ([2966157](https://github.com/zedensix/penombre/commit/2966157ad40975bb403c8e2c878130f89aa0ce70))
+* **rate-limit:** rebuild the redis store per call ([0add2a3](https://github.com/zedensix/penombre/commit/0add2a3783c2e8237687506c931cf65d39997911))
+* **ui:** accessibility, theming and interaction fixes ([434f9b5](https://github.com/zedensix/penombre/commit/434f9b5a86080f17b2dda565757160ee7a2cb49e))
+* **security:** lock down admin actions, onboarding, raw files and data leaks ([a609994](https://github.com/zedensix/penombre/commit/a609994f8c0cb95bafd0d09ea9e75f649a657e51))
 
 ### Documentation
 
-* **todo:** e2e spec isolation and redis in unit tests ([4074b74](https://github.com/orochibraru/penombre/commit/4074b74fd51044c323348ae53751d488006d470d))
-* light and dark screenshots, CLAUDE.md ([4f09ee1](https://github.com/orochibraru/penombre/commit/4f09ee12528f45bf41f71467c96f7d1a92d79355))
+* **todo:** e2e spec isolation and redis in unit tests ([4074b74](https://github.com/zedensix/penombre/commit/4074b74fd51044c323348ae53751d488006d470d))
+* light and dark screenshots, CLAUDE.md ([4f09ee1](https://github.com/zedensix/penombre/commit/4f09ee12528f45bf41f71467c96f7d1a92d79355))
 
-## [1.8.52](https://github.com/orochibraru/penombre/compare/v1.8.51...v1.8.52) (2026-09-23)
-
-### Features
-
-* app polishing (#108) ([4f8fa98](https://github.com/orochibraru/penombre/commit/4f8fa98d9b2e2f7f29bea26325acd1f4fa809efc))
-
-## [1.8.51](https://github.com/orochibraru/penombre/compare/v1.8.50...v1.8.51) (2026-09-22)
-
-### Bug Fixes
-
-* go version ([cea7ab7](https://github.com/orochibraru/penombre/commit/cea7ab7ba19efc8ed36c4c28f918fb769a93302c))
-
-## [1.8.50](https://github.com/orochibraru/penombre/compare/v1.8.49...v1.8.50) (2026-09-21)
-
+## [1.8.52](https://github.com/zedensix/penombre/compare/v1.8.51...v1.8.52) (2026-09-23)
 
 ### Features
 
-* go worker ([#102](https://github.com/orochibraru/penombre/issues/102)) ([cd1c5f8](https://github.com/orochibraru/penombre/commit/cd1c5f84078d8d87176ee95651e79b25e055f736))
-* prek from bun ([23b7dde](https://github.com/orochibraru/penombre/commit/23b7ddecc07c38f9c884e89583abb88888ccaa3d))
-* prek in bun ([e290268](https://github.com/orochibraru/penombre/commit/e2902687fadad52a9201244247f51956f4349fd8))
+* app polishing (#108) ([4f8fa98](https://github.com/zedensix/penombre/commit/4f8fa98d9b2e2f7f29bea26325acd1f4fa809efc))
 
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.50
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.49](https://github.com/orochibraru/penombre/compare/v1.8.48...v1.8.49) (2026-09-19)
-
+## [1.8.51](https://github.com/zedensix/penombre/compare/v1.8.50...v1.8.51) (2026-09-22)
 
 ### Bug Fixes
 
-* tooling [skip ci] ([617807b](https://github.com/orochibraru/penombre/commit/617807b4041317633b29deec38504759e07b7735))
+* go version ([cea7ab7](https://github.com/zedensix/penombre/commit/cea7ab7ba19efc8ed36c4c28f918fb769a93302c))
+
+## [1.8.50](https://github.com/zedensix/penombre/compare/v1.8.49...v1.8.50) (2026-09-21)
 
 
 ### Features
 
-* better tooling ([bea00ba](https://github.com/orochibraru/penombre/commit/bea00ba4aa6ad1bf4c7a1f0c5b158135bf8d490a))
+* go worker ([#102](https://github.com/zedensix/penombre/issues/102)) ([cd1c5f8](https://github.com/zedensix/penombre/commit/cd1c5f84078d8d87176ee95651e79b25e055f736))
+* prek from bun ([23b7dde](https://github.com/zedensix/penombre/commit/23b7ddecc07c38f9c884e89583abb88888ccaa3d))
+* prek in bun ([e290268](https://github.com/zedensix/penombre/commit/e2902687fadad52a9201244247f51956f4349fd8))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.49
+docker pull zedensix/penombre:1.8.50
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.48](https://github.com/orochibraru/penombre/compare/v1.8.47...v1.8.48) (2026-09-19)
+## [1.8.49](https://github.com/zedensix/penombre/compare/v1.8.48...v1.8.49) (2026-09-19)
 
 
 ### Bug Fixes
 
-* e2E ([11b357a](https://github.com/orochibraru/penombre/commit/11b357a448acfcea93d59329890694043b1923c5))
-
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.48
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.47](https://github.com/orochibraru/penombre/compare/v1.8.46...v1.8.47) (2026-09-18)
+* tooling [skip ci] ([617807b](https://github.com/zedensix/penombre/commit/617807b4041317633b29deec38504759e07b7735))
 
 
 ### Features
 
-* sveltekit 3 ([#101](https://github.com/orochibraru/penombre/issues/101)) ([c330b11](https://github.com/orochibraru/penombre/commit/c330b1197eb48458991b420b1cac66e9139c3d2f))
+* better tooling ([bea00ba](https://github.com/zedensix/penombre/commit/bea00ba4aa6ad1bf4c7a1f0c5b158135bf8d490a))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.47
+docker pull zedensix/penombre:1.8.49
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.46](https://github.com/orochibraru/penombre/compare/v1.8.45...v1.8.46) (2026-09-17)
+## [1.8.48](https://github.com/zedensix/penombre/compare/v1.8.47...v1.8.48) (2026-09-19)
 
 
 ### Bug Fixes
 
-* handle form errors ([11f2bd9](https://github.com/orochibraru/penombre/commit/11f2bd9481a2e1e5006934471c2302d8deee0450))
+* e2E ([11b357a](https://github.com/zedensix/penombre/commit/11b357a448acfcea93d59329890694043b1923c5))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.46
+docker pull zedensix/penombre:1.8.48
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.45](https://github.com/orochibraru/penombre/compare/v1.8.44...v1.8.45) (2026-09-17)
+## [1.8.47](https://github.com/zedensix/penombre/compare/v1.8.46...v1.8.47) (2026-09-18)
 
 
 ### Features
 
-* docs config ([ed931af](https://github.com/orochibraru/penombre/commit/ed931af2de3887d02c7820c09543c569b953db28))
+* sveltekit 3 ([#101](https://github.com/zedensix/penombre/issues/101)) ([c330b11](https://github.com/zedensix/penombre/commit/c330b1197eb48458991b420b1cac66e9139c3d2f))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.45
+docker pull zedensix/penombre:1.8.47
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.44](https://github.com/orochibraru/penombre/compare/v1.8.43...v1.8.44) (2026-09-16)
+## [1.8.46](https://github.com/zedensix/penombre/compare/v1.8.45...v1.8.46) (2026-09-17)
 
 
 ### Bug Fixes
 
-* folder display on mobile & dead docs links ([66a4134](https://github.com/orochibraru/penombre/commit/66a41342d9d58a74efa0dde2f14a13e7f3a013e4))
+* handle form errors ([11f2bd9](https://github.com/zedensix/penombre/commit/11f2bd9481a2e1e5006934471c2302d8deee0450))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.44
+docker pull zedensix/penombre:1.8.46
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.43](https://github.com/orochibraru/penombre/compare/v1.8.42...v1.8.43) (2026-09-16)
+## [1.8.45](https://github.com/zedensix/penombre/compare/v1.8.44...v1.8.45) (2026-09-17)
 
 
 ### Features
 
-* better ui & rescan ([0187181](https://github.com/orochibraru/penombre/commit/0187181ceaab89e06cd116fd2d7c69a1abdb99a0))
+* docs config ([ed931af](https://github.com/zedensix/penombre/commit/ed931af2de3887d02c7820c09543c569b953db28))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.43
+docker pull zedensix/penombre:1.8.45
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.42](https://github.com/orochibraru/penombre/compare/v1.8.41...v1.8.42) (2026-09-16)
+## [1.8.44](https://github.com/zedensix/penombre/compare/v1.8.43...v1.8.44) (2026-09-16)
 
 
 ### Bug Fixes
 
-* 404s on mounted drives ([ee40190](https://github.com/orochibraru/penombre/commit/ee40190f01b0a0ed2efebc70d536a6b56a2fa84c))
+* folder display on mobile & dead docs links ([66a4134](https://github.com/zedensix/penombre/commit/66a41342d9d58a74efa0dde2f14a13e7f3a013e4))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.42
+docker pull zedensix/penombre:1.8.44
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.41](https://github.com/orochibraru/penombre/compare/v1.8.40...v1.8.41) (2026-09-15)
-
-
-### Bug Fixes
-
-* ux on shared drives & scanning ([2a410a7](https://github.com/orochibraru/penombre/commit/2a410a7b5917dfd16ba2d399d7611bed6c59122b))
-
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.41
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.40](https://github.com/orochibraru/penombre/compare/v1.8.39...v1.8.40) (2026-09-15)
+## [1.8.43](https://github.com/zedensix/penombre/compare/v1.8.42...v1.8.43) (2026-09-16)
 
 
 ### Features
 
-* shared drives ([#100](https://github.com/orochibraru/penombre/issues/100)) ([4dafa46](https://github.com/orochibraru/penombre/commit/4dafa464b5a2348b91c76e4b580f04e912794a78))
+* better ui & rescan ([0187181](https://github.com/zedensix/penombre/commit/0187181ceaab89e06cd116fd2d7c69a1abdb99a0))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.40
+docker pull zedensix/penombre:1.8.43
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.39](https://github.com/orochibraru/penombre/compare/v1.8.38...v1.8.39) (2026-09-15)
+## [1.8.42](https://github.com/zedensix/penombre/compare/v1.8.41...v1.8.42) (2026-09-16)
 
 
 ### Bug Fixes
 
-* tests ([346fe8c](https://github.com/orochibraru/penombre/commit/346fe8ca91a5fb0513f4af125774fcee18c09657))
+* 404s on mounted drives ([ee40190](https://github.com/zedensix/penombre/commit/ee40190f01b0a0ed2efebc70d536a6b56a2fa84c))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.42
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.41](https://github.com/zedensix/penombre/compare/v1.8.40...v1.8.41) (2026-09-15)
+
+
+### Bug Fixes
+
+* ux on shared drives & scanning ([2a410a7](https://github.com/zedensix/penombre/commit/2a410a7b5917dfd16ba2d399d7611bed6c59122b))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.41
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.40](https://github.com/zedensix/penombre/compare/v1.8.39...v1.8.40) (2026-09-15)
 
 
 ### Features
 
-* support msft docs ([#99](https://github.com/orochibraru/penombre/issues/99)) ([e83d2e1](https://github.com/orochibraru/penombre/commit/e83d2e1eb1f09a32902acebe16fee7918f127fb4))
+* shared drives ([#100](https://github.com/zedensix/penombre/issues/100)) ([4dafa46](https://github.com/zedensix/penombre/commit/4dafa464b5a2348b91c76e4b580f04e912794a78))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.39
+docker pull zedensix/penombre:1.8.40
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.38](https://github.com/orochibraru/penombre/compare/v1.8.37...v1.8.38) (2026-09-15)
+## [1.8.39](https://github.com/zedensix/penombre/compare/v1.8.38...v1.8.39) (2026-09-15)
 
 
 ### Bug Fixes
 
-* emptying trash / Putting items in trash ([#98](https://github.com/orochibraru/penombre/issues/98)) ([81cc443](https://github.com/orochibraru/penombre/commit/81cc443efad0bf302afe7373a521e7541fdeebf2))
-
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.38
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.37](https://github.com/orochibraru/penombre/compare/v1.8.36...v1.8.37) (2026-09-14)
+* tests ([346fe8c](https://github.com/zedensix/penombre/commit/346fe8ca91a5fb0513f4af125774fcee18c09657))
 
 
 ### Features
 
-* docs trigger flow ([8734d3f](https://github.com/orochibraru/penombre/commit/8734d3fc222373a4119fbbec28b157802f26c238))
+* support msft docs ([#99](https://github.com/zedensix/penombre/issues/99)) ([e83d2e1](https://github.com/zedensix/penombre/commit/e83d2e1eb1f09a32902acebe16fee7918f127fb4))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.37
+docker pull zedensix/penombre:1.8.39
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.36](https://github.com/orochibraru/penombre/compare/v1.8.35...v1.8.36) (2026-09-14)
+## [1.8.38](https://github.com/zedensix/penombre/compare/v1.8.37...v1.8.38) (2026-09-15)
 
 
 ### Bug Fixes
 
-* notes display & oauth providers from ui ([#97](https://github.com/orochibraru/penombre/issues/97)) ([43580f4](https://github.com/orochibraru/penombre/commit/43580f4bfab8a07086675fd01dd984335f4e600e))
+* emptying trash / Putting items in trash ([#98](https://github.com/zedensix/penombre/issues/98)) ([81cc443](https://github.com/zedensix/penombre/commit/81cc443efad0bf302afe7373a521e7541fdeebf2))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.36
+docker pull zedensix/penombre:1.8.38
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.35](https://github.com/orochibraru/penombre/compare/v1.8.34...v1.8.35) (2026-09-14)
-
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.35
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.34](https://github.com/orochibraru/penombre/compare/v1.8.33...v1.8.34) (2026-09-13)
+## [1.8.37](https://github.com/zedensix/penombre/compare/v1.8.36...v1.8.37) (2026-09-14)
 
 
 ### Features
 
-* notifications & auth fix ([#95](https://github.com/orochibraru/penombre/issues/95)) ([14eab23](https://github.com/orochibraru/penombre/commit/14eab2320d4e53a0cf5b07ed72d1ebea88a2bef9))
+* docs trigger flow ([8734d3f](https://github.com/zedensix/penombre/commit/8734d3fc222373a4119fbbec28b157802f26c238))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.34
+docker pull zedensix/penombre:1.8.37
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.33](https://github.com/orochibraru/penombre/compare/v1.8.32...v1.8.33) (2026-09-13)
+## [1.8.36](https://github.com/zedensix/penombre/compare/v1.8.35...v1.8.36) (2026-09-14)
 
 
 ### Bug Fixes
 
-* **documents:** create in the current folder, rename without a 500 ([#94](https://github.com/orochibraru/penombre/issues/94)) ([29afa8f](https://github.com/orochibraru/penombre/commit/29afa8f229e8c8ad1ec33be2d7d91858b9c32d41))
+* notes display & oauth providers from ui ([#97](https://github.com/zedensix/penombre/issues/97)) ([43580f4](https://github.com/zedensix/penombre/commit/43580f4bfab8a07086675fd01dd984335f4e600e))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.33
+docker pull zedensix/penombre:1.8.36
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.32](https://github.com/orochibraru/penombre/compare/v1.8.31...v1.8.32) (2026-09-12)
-
-
-### Bug Fixes
-
-* simple mode file sharing ([4d08ffd](https://github.com/orochibraru/penombre/commit/4d08ffddaa4d013d8922b148cdf746d7e5558b38))
+## [1.8.35](https://github.com/zedensix/penombre/compare/v1.8.34...v1.8.35) (2026-09-14)
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.32
+docker pull zedensix/penombre:1.8.35
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.31](https://github.com/orochibraru/penombre/compare/v1.8.30...v1.8.31) (2026-09-11)
-
-
-### Bug Fixes
-
-* mini and maxi player ([#89](https://github.com/orochibraru/penombre/issues/89)) ([71e4a85](https://github.com/orochibraru/penombre/commit/71e4a85b78e1efc14dcc5dca76896ddce4636452))
-
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.31
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.30](https://github.com/orochibraru/penombre/compare/v1.8.29...v1.8.30) (2026-09-11)
+## [1.8.34](https://github.com/zedensix/penombre/compare/v1.8.33...v1.8.34) (2026-09-13)
 
 
 ### Features
 
-* UI improvements ([#88](https://github.com/orochibraru/penombre/issues/88)) ([f96131b](https://github.com/orochibraru/penombre/commit/f96131b73ba40d458b2d75051b79625c9093890a))
+* notifications & auth fix ([#95](https://github.com/zedensix/penombre/issues/95)) ([14eab23](https://github.com/zedensix/penombre/commit/14eab2320d4e53a0cf5b07ed72d1ebea88a2bef9))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.30
+docker pull zedensix/penombre:1.8.34
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.29](https://github.com/orochibraru/penombre/compare/v1.8.28...v1.8.29) (2026-09-11)
-
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.29
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.28](https://github.com/orochibraru/penombre/compare/v1.8.27...v1.8.28) (2026-09-11)
+## [1.8.33](https://github.com/zedensix/penombre/compare/v1.8.32...v1.8.33) (2026-09-13)
 
 
 ### Bug Fixes
 
-* storage path, ui bugs ([#86](https://github.com/orochibraru/penombre/issues/86)) ([8e5346b](https://github.com/orochibraru/penombre/commit/8e5346b57182be31ff700bcbe586865aa31d9dfe))
+* **documents:** create in the current folder, rename without a 500 ([#94](https://github.com/zedensix/penombre/issues/94)) ([29afa8f](https://github.com/zedensix/penombre/commit/29afa8f229e8c8ad1ec33be2d7d91858b9c32d41))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.28
+docker pull zedensix/penombre:1.8.33
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.27](https://github.com/orochibraru/penombre/compare/v1.8.26...v1.8.27) (2026-09-09)
+## [1.8.32](https://github.com/zedensix/penombre/compare/v1.8.31...v1.8.32) (2026-09-12)
 
 
 ### Bug Fixes
 
-* docs ([4d5e122](https://github.com/orochibraru/penombre/commit/4d5e1220b41fd979ee9eb0c68c0e8ca6d7f09274))
+* simple mode file sharing ([4d08ffd](https://github.com/zedensix/penombre/commit/4d08ffddaa4d013d8922b148cdf746d7e5558b38))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.27
+docker pull zedensix/penombre:1.8.32
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.26](https://github.com/orochibraru/penombre/compare/v1.8.25...v1.8.26) (2026-09-09)
+## [1.8.31](https://github.com/zedensix/penombre/compare/v1.8.30...v1.8.31) (2026-09-11)
 
 
 ### Bug Fixes
 
-* cache control on updated files outside the app ([7f304df](https://github.com/orochibraru/penombre/commit/7f304dff5aff303bf7c92d7182e703a8d158b942))
+* mini and maxi player ([#89](https://github.com/zedensix/penombre/issues/89)) ([71e4a85](https://github.com/zedensix/penombre/commit/71e4a85b78e1efc14dcc5dca76896ddce4636452))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.26
+docker pull zedensix/penombre:1.8.31
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.25](https://github.com/orochibraru/penombre/compare/v1.8.24...v1.8.25) (2026-09-09)
-
-
-### Bug Fixes
-
-* scan & links ([2d741ce](https://github.com/orochibraru/penombre/commit/2d741cea1115cf2de46c7448e98385492132ebf0))
-
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.25
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.24](https://github.com/orochibraru/penombre/compare/v1.8.23...v1.8.24) (2026-09-09)
-
-
-### Bug Fixes
-
-* sql dialect ([3730da8](https://github.com/orochibraru/penombre/commit/3730da86f1eb6e0d92966732da21ec20e826dfe4))
-
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.24
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.23](https://github.com/orochibraru/penombre/compare/v1.8.22...v1.8.23) (2026-09-09)
-
-
-### Bug Fixes
-
-* release mechanism ([1147a7d](https://github.com/orochibraru/penombre/commit/1147a7d9f11b7ddaa99326b87414824b0ae0e308))
-
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.23
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.22](https://github.com/orochibraru/penombre/compare/v1.8.21...v1.8.22) (2026-09-09)
-
-
-### Bug Fixes
-
-* disable pages in simple mode ([3b00dec](https://github.com/orochibraru/penombre/commit/3b00dec80464572b39a578ad1acb22bad1370fbb))
-
----
-
-## 🐳 Docker
-
-```sh
-docker pull orochibraru/penombre:1.8.22
-```
-
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
-
-## [1.8.21](https://github.com/orochibraru/penombre/compare/v1.8.20...v1.8.21) (2026-09-09)
-
-
-### Bug Fixes
-
-* don't display user & settings when auth is bypassed ([bacb9d7](https://github.com/orochibraru/penombre/commit/bacb9d7ca35264f28b48f4f8a8e77f10d3d0fc2e))
+## [1.8.30](https://github.com/zedensix/penombre/compare/v1.8.29...v1.8.30) (2026-09-11)
 
 
 ### Features
 
-* simple mode ([#85](https://github.com/orochibraru/penombre/issues/85)) ([51dd88c](https://github.com/orochibraru/penombre/commit/51dd88c08aee59e58eb30638a69266621ce98f37))
+* UI improvements ([#88](https://github.com/zedensix/penombre/issues/88)) ([f96131b](https://github.com/zedensix/penombre/commit/f96131b73ba40d458b2d75051b79625c9093890a))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.21
+docker pull zedensix/penombre:1.8.30
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.20](https://github.com/orochibraru/penombre/compare/v1.8.19...v1.8.20) (2026-09-08)
+## [1.8.29](https://github.com/zedensix/penombre/compare/v1.8.28...v1.8.29) (2026-09-11)
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.29
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.28](https://github.com/zedensix/penombre/compare/v1.8.27...v1.8.28) (2026-09-11)
+
+
+### Bug Fixes
+
+* storage path, ui bugs ([#86](https://github.com/zedensix/penombre/issues/86)) ([8e5346b](https://github.com/zedensix/penombre/commit/8e5346b57182be31ff700bcbe586865aa31d9dfe))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.28
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.27](https://github.com/zedensix/penombre/compare/v1.8.26...v1.8.27) (2026-09-09)
+
+
+### Bug Fixes
+
+* docs ([4d5e122](https://github.com/zedensix/penombre/commit/4d5e1220b41fd979ee9eb0c68c0e8ca6d7f09274))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.27
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.26](https://github.com/zedensix/penombre/compare/v1.8.25...v1.8.26) (2026-09-09)
+
+
+### Bug Fixes
+
+* cache control on updated files outside the app ([7f304df](https://github.com/zedensix/penombre/commit/7f304dff5aff303bf7c92d7182e703a8d158b942))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.26
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.25](https://github.com/zedensix/penombre/compare/v1.8.24...v1.8.25) (2026-09-09)
+
+
+### Bug Fixes
+
+* scan & links ([2d741ce](https://github.com/zedensix/penombre/commit/2d741cea1115cf2de46c7448e98385492132ebf0))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.25
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.24](https://github.com/zedensix/penombre/compare/v1.8.23...v1.8.24) (2026-09-09)
+
+
+### Bug Fixes
+
+* sql dialect ([3730da8](https://github.com/zedensix/penombre/commit/3730da86f1eb6e0d92966732da21ec20e826dfe4))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.24
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.23](https://github.com/zedensix/penombre/compare/v1.8.22...v1.8.23) (2026-09-09)
+
+
+### Bug Fixes
+
+* release mechanism ([1147a7d](https://github.com/zedensix/penombre/commit/1147a7d9f11b7ddaa99326b87414824b0ae0e308))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.23
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.22](https://github.com/zedensix/penombre/compare/v1.8.21...v1.8.22) (2026-09-09)
+
+
+### Bug Fixes
+
+* disable pages in simple mode ([3b00dec](https://github.com/zedensix/penombre/commit/3b00dec80464572b39a578ad1acb22bad1370fbb))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.22
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.21](https://github.com/zedensix/penombre/compare/v1.8.20...v1.8.21) (2026-09-09)
+
+
+### Bug Fixes
+
+* don't display user & settings when auth is bypassed ([bacb9d7](https://github.com/zedensix/penombre/commit/bacb9d7ca35264f28b48f4f8a8e77f10d3d0fc2e))
 
 
 ### Features
 
-* new code style rules & org ([#84](https://github.com/orochibraru/penombre/issues/84)) ([db7967d](https://github.com/orochibraru/penombre/commit/db7967d115102405f6b287bc11d777de8cba2ba1))
+* simple mode ([#85](https://github.com/zedensix/penombre/issues/85)) ([51dd88c](https://github.com/zedensix/penombre/commit/51dd88c08aee59e58eb30638a69266621ce98f37))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.20
+docker pull zedensix/penombre:1.8.21
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.19](https://github.com/orochibraru/penombre/compare/v1.8.18...v1.8.19) (2026-08-29)
+## [1.8.20](https://github.com/zedensix/penombre/compare/v1.8.19...v1.8.20) (2026-09-08)
+
+
+### Features
+
+* new code style rules & org ([#84](https://github.com/zedensix/penombre/issues/84)) ([db7967d](https://github.com/zedensix/penombre/commit/db7967d115102405f6b287bc11d777de8cba2ba1))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull zedensix/penombre:1.8.20
+```
+
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
+
+## [1.8.19](https://github.com/zedensix/penombre/compare/v1.8.18...v1.8.19) (2026-08-29)
 
 ### Bug Fixes
 
 - bump svelte smol
-  ([e5824be](https://github.com/orochibraru/penombre/commit/e5824be193344b9d913ac36f060e6a43fb08b11d))
+  ([e5824be](https://github.com/zedensix/penombre/commit/e5824be193344b9d913ac36f060e6a43fb08b11d))
 - formatting
-  ([b04e5d7](https://github.com/orochibraru/penombre/commit/b04e5d7867884effeca3da8ce4193c11dea62d95))
+  ([b04e5d7](https://github.com/zedensix/penombre/commit/b04e5d7867884effeca3da8ce4193c11dea62d95))
 - tailwind & biome
-  ([89b5a67](https://github.com/orochibraru/penombre/commit/89b5a67524875d1810f50f4b941224a2945985f2))
+  ([89b5a67](https://github.com/zedensix/penombre/commit/89b5a67524875d1810f50f4b941224a2945985f2))
 
 ### Features
 
-- replace svelte-adapter-bun with @orochibraru/svelte-smol
-  ([b5d7569](https://github.com/orochibraru/penombre/commit/b5d756952e0eceeb7984b97dd38aa78901b3232c))
+- replace svelte-adapter-bun with @zedensix/svelte-smol
+  ([b5d7569](https://github.com/zedensix/penombre/commit/b5d756952e0eceeb7984b97dd38aa78901b3232c))
 - use bun 1.4
-  ([2dbf8a6](https://github.com/orochibraru/penombre/commit/2dbf8a630d04ce3abaad0bcb1fe7489a2fada398))
+  ([2dbf8a6](https://github.com/zedensix/penombre/commit/2dbf8a630d04ce3abaad0bcb1fe7489a2fada398))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.19
+docker pull zedensix/penombre:1.8.19
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.18](https://github.com/orochibraru/penombre/compare/v1.8.17...v1.8.18) (2026-07-01)
+## [1.8.18](https://github.com/zedensix/penombre/compare/v1.8.17...v1.8.18) (2026-07-01)
 
 ### Bug Fixes
 
 - semantic release packages
-  ([9b82473](https://github.com/orochibraru/penombre/commit/9b824730a0f0a39861a474fca641cbe002b98ca2))
+  ([9b82473](https://github.com/zedensix/penombre/commit/9b824730a0f0a39861a474fca641cbe002b98ca2))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.18
+docker pull zedensix/penombre:1.8.18
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.17](https://github.com/orochibraru/penombre/compare/v1.8.16...v1.8.17) (2026-06-29)
+## [1.8.17](https://github.com/zedensix/penombre/compare/v1.8.16...v1.8.17) (2026-06-29)
 
 ### Bug Fixes
 
 - pass tag to docker build
-  ([4829235](https://github.com/orochibraru/penombre/commit/482923502790ed424059b0ba2d30a93229d9970f))
+  ([4829235](https://github.com/zedensix/penombre/commit/482923502790ed424059b0ba2d30a93229d9970f))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.17
+docker pull zedensix/penombre:1.8.17
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.16](https://github.com/orochibraru/penombre/compare/v1.8.15...v1.8.16) (2026-06-29)
+## [1.8.16](https://github.com/zedensix/penombre/compare/v1.8.15...v1.8.16) (2026-06-29)
 
 ### Bug Fixes
 
 - deps + openapi
-  ([ccf9450](https://github.com/orochibraru/penombre/commit/ccf945045afe4ae2cfccebf8b3046e5d15f5db53))
+  ([ccf9450](https://github.com/zedensix/penombre/commit/ccf945045afe4ae2cfccebf8b3046e5d15f5db53))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.16
+docker pull zedensix/penombre:1.8.16
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.15](https://github.com/orochibraru/penombre/compare/v1.8.14...v1.8.15) (2026-05-29)
+## [1.8.15](https://github.com/zedensix/penombre/compare/v1.8.14...v1.8.15) (2026-05-29)
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.15
+docker pull zedensix/penombre:1.8.15
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.14](https://github.com/orochibraru/penombre/compare/v1.8.13...v1.8.14) (2026-05-29)
+## [1.8.14](https://github.com/zedensix/penombre/compare/v1.8.13...v1.8.14) (2026-05-29)
 
 ### Bug Fixes
 
 - don't run dependabot automerge on main
-  ([829d283](https://github.com/orochibraru/penombre/commit/829d28317c5bb2b7efe77c149f8ddaba0dbb646c))
+  ([829d283](https://github.com/zedensix/penombre/commit/829d28317c5bb2b7efe77c149f8ddaba0dbb646c))
 - test cfg
-  ([2ad5c97](https://github.com/orochibraru/penombre/commit/2ad5c9796f6dd136268a606bdab38889f866ab1d))
+  ([2ad5c97](https://github.com/zedensix/penombre/commit/2ad5c9796f6dd136268a606bdab38889f866ab1d))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.14
+docker pull zedensix/penombre:1.8.14
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.13](https://github.com/orochibraru/penombre/compare/v1.8.12...v1.8.13) (2026-04-14)
+## [1.8.13](https://github.com/zedensix/penombre/compare/v1.8.12...v1.8.13) (2026-04-14)
 
 ### Bug Fixes
 
 - better auth types AGAIN
-  ([5c50b38](https://github.com/orochibraru/penombre/commit/5c50b387f57cba299c8ed6cca95349bdf8cec0b1))
+  ([5c50b38](https://github.com/zedensix/penombre/commit/5c50b387f57cba299c8ed6cca95349bdf8cec0b1))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.13
+docker pull zedensix/penombre:1.8.13
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.12](https://github.com/orochibraru/penombre/compare/v1.8.11...v1.8.12) (2026-04-08)
+## [1.8.12](https://github.com/zedensix/penombre/compare/v1.8.11...v1.8.12) (2026-04-08)
 
 ### Bug Fixes
 
 - release system
-  ([22bb1ba](https://github.com/orochibraru/penombre/commit/22bb1ba32126947105274018468bd8c64ebbfe35))
+  ([22bb1ba](https://github.com/zedensix/penombre/commit/22bb1ba32126947105274018468bd8c64ebbfe35))
 
 ### Features
 
-- mobile app features ([#56](https://github.com/orochibraru/penombre/issues/56))
-  ([726cf84](https://github.com/orochibraru/penombre/commit/726cf84427e43129951d6b79622d5bf4267662df))
+- mobile app features ([#56](https://github.com/zedensix/penombre/issues/56))
+  ([726cf84](https://github.com/zedensix/penombre/commit/726cf84427e43129951d6b79622d5bf4267662df))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.12
+docker pull zedensix/penombre:1.8.12
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.11](https://github.com/orochibraru/penombre/compare/v1.8.10...v1.8.11) (2026-04-03)
+## [1.8.11](https://github.com/zedensix/penombre/compare/v1.8.10...v1.8.11) (2026-04-03)
 
 ### Bug Fixes
 
 - workflow permissions
-  ([f0f11bf](https://github.com/orochibraru/penombre/commit/f0f11bf41115b4a70ec46fd9896f0a993de8930a))
+  ([f0f11bf](https://github.com/zedensix/penombre/commit/f0f11bf41115b4a70ec46fd9896f0a993de8930a))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.11
+docker pull zedensix/penombre:1.8.11
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.10](https://github.com/orochibraru/penombre/compare/v1.8.9...v1.8.10) (2026-04-03)
+## [1.8.10](https://github.com/zedensix/penombre/compare/v1.8.9...v1.8.10) (2026-04-03)
 
 ### Bug Fixes
 
 - cache import
-  ([831f669](https://github.com/orochibraru/penombre/commit/831f669ee5d4abdfe3a4cb2bd4dfda76134f0660))
+  ([831f669](https://github.com/zedensix/penombre/commit/831f669ee5d4abdfe3a4cb2bd4dfda76134f0660))
 - checkout for automerge
-  ([19d4114](https://github.com/orochibraru/penombre/commit/19d41146d648b5dfc2037e2760d7254bc6640c5f))
+  ([19d4114](https://github.com/zedensix/penombre/commit/19d41146d648b5dfc2037e2760d7254bc6640c5f))
 - ci
-  ([72e794e](https://github.com/orochibraru/penombre/commit/72e794eb286e0d6ab3376285bb86792ac633a1ef))
+  ([72e794e](https://github.com/zedensix/penombre/commit/72e794eb286e0d6ab3376285bb86792ac633a1ef))
 - Docker flow name
-  ([11535e5](https://github.com/orochibraru/penombre/commit/11535e52d5f7b23955be5b1ab5c71b88675332ee))
+  ([11535e5](https://github.com/zedensix/penombre/commit/11535e52d5f7b23955be5b1ab5c71b88675332ee))
 - docker manifest meta job
-  ([34694ff](https://github.com/orochibraru/penombre/commit/34694ff1e93d4164b988f2c984d631e05bc7f58e))
+  ([34694ff](https://github.com/zedensix/penombre/commit/34694ff1e93d4164b988f2c984d631e05bc7f58e))
 - metadata refs
-  ([f3397e2](https://github.com/orochibraru/penombre/commit/f3397e2ede97241a54f5cecc9f58b661593784a8))
+  ([f3397e2](https://github.com/zedensix/penombre/commit/f3397e2ede97241a54f5cecc9f58b661593784a8))
 - new pg volume
-  ([021e6ff](https://github.com/orochibraru/penombre/commit/021e6ffb1df73d0b8a97787c15541d57a58ef618))
+  ([021e6ff](https://github.com/zedensix/penombre/commit/021e6ffb1df73d0b8a97787c15541d57a58ef618))
 - publish flow
-  ([d4504d8](https://github.com/orochibraru/penombre/commit/d4504d8809ea5193ff01439cd94de23e846b59a5))
+  ([d4504d8](https://github.com/zedensix/penombre/commit/d4504d8809ea5193ff01439cd94de23e846b59a5))
 - types
-  ([8a338aa](https://github.com/orochibraru/penombre/commit/8a338aa45a094c620a5c310516003a53a4c5835a))
+  ([8a338aa](https://github.com/zedensix/penombre/commit/8a338aa45a094c620a5c310516003a53a4c5835a))
 - workflow triggers
-  ([774e774](https://github.com/orochibraru/penombre/commit/774e77452551ea1b07950d2f81c1860a2beffa6e))
+  ([774e774](https://github.com/zedensix/penombre/commit/774e77452551ea1b07950d2f81c1860a2beffa6e))
 
 ### Features
 
 - automerge on workflow dispatch
-  ([d301460](https://github.com/orochibraru/penombre/commit/d3014603c0af1ac700430ee1c9605b5d42e47ef6))
+  ([d301460](https://github.com/zedensix/penombre/commit/d3014603c0af1ac700430ee1c9605b5d42e47ef6))
 - bundle dependabot
-  ([3930804](https://github.com/orochibraru/penombre/commit/393080441e83bbfa1c4f8e5af667cc0479bd0c0a))
+  ([3930804](https://github.com/zedensix/penombre/commit/393080441e83bbfa1c4f8e5af667cc0479bd0c0a))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.10
+docker pull zedensix/penombre:1.8.10
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.9](https://github.com/orochibraru/penombre/compare/v1.8.8...v1.8.9) (2026-03-30)
+## [1.8.9](https://github.com/zedensix/penombre/compare/v1.8.8...v1.8.9) (2026-03-30)
 
 ### Bug Fixes
 
 - don't trigger releases unless a package changed
-  ([f5dc5e9](https://github.com/orochibraru/penombre/commit/f5dc5e9aa682d949ab6def4d3482f7f35c8e1db7))
+  ([f5dc5e9](https://github.com/zedensix/penombre/commit/f5dc5e9aa682d949ab6def4d3482f7f35c8e1db7))
 - trigger releases on dockerfile changes
-  ([f5b7c72](https://github.com/orochibraru/penombre/commit/f5b7c7223ce1b94287a5b489ae9b8f50301b7b0e))
+  ([f5b7c72](https://github.com/zedensix/penombre/commit/f5b7c7223ce1b94287a5b489ae9b8f50301b7b0e))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.9
+docker pull zedensix/penombre:1.8.9
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.8](https://github.com/orochibraru/penombre/compare/v1.8.7...v1.8.8) (2026-03-30)
+## [1.8.8](https://github.com/zedensix/penombre/compare/v1.8.7...v1.8.8) (2026-03-30)
 
 ### Bug Fixes
 
 - ci schedule
-  ([03e78ff](https://github.com/orochibraru/penombre/commit/03e78ff8aa67aad8e8096ac9dbdddbc16b098516))
+  ([03e78ff](https://github.com/zedensix/penombre/commit/03e78ff8aa67aad8e8096ac9dbdddbc16b098516))
 - dependabot conditions
-  ([13596bb](https://github.com/orochibraru/penombre/commit/13596bb2696a8b834e9b63bd976f43ff557c5305))
+  ([13596bb](https://github.com/zedensix/penombre/commit/13596bb2696a8b834e9b63bd976f43ff557c5305))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.8
+docker pull zedensix/penombre:1.8.8
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.7](https://github.com/orochibraru/penombre/compare/v1.8.6...v1.8.7) (2026-03-28)
+## [1.8.7](https://github.com/zedensix/penombre/compare/v1.8.6...v1.8.7) (2026-03-28)
 
 ### Bug Fixes
 
 - automerge cron
-  ([b4e041f](https://github.com/orochibraru/penombre/commit/b4e041f88e2d00e8cd37b9ab229e48c02c566143))
+  ([b4e041f](https://github.com/zedensix/penombre/commit/b4e041f88e2d00e8cd37b9ab229e48c02c566143))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.7
+docker pull zedensix/penombre:1.8.7
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.6](https://github.com/orochibraru/penombre/compare/v1.8.5...v1.8.6) (2026-03-28)
+## [1.8.6](https://github.com/zedensix/penombre/compare/v1.8.5...v1.8.6) (2026-03-28)
 
 ### Features
 
 - add support for docker, github-actions, and docker-compose in dependabot
   configuration
-  ([c48cc27](https://github.com/orochibraru/penombre/commit/c48cc2784fbb37fb7a238b8511b59887c9cc6de9))
+  ([c48cc27](https://github.com/zedensix/penombre/commit/c48cc2784fbb37fb7a238b8511b59887c9cc6de9))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.6
+docker pull zedensix/penombre:1.8.6
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.5](https://github.com/orochibraru/penombre/compare/v1.8.4...v1.8.5) (2026-03-28)
+## [1.8.5](https://github.com/zedensix/penombre/compare/v1.8.4...v1.8.5) (2026-03-28)
 
 ### Bug Fixes
 
 - dependabot automerge
-  ([cd5d8e3](https://github.com/orochibraru/penombre/commit/cd5d8e33ea3c8d6fe7e7977441a6d691b5e72c31))
+  ([cd5d8e3](https://github.com/zedensix/penombre/commit/cd5d8e33ea3c8d6fe7e7977441a6d691b5e72c31))
 
 ### Features
 
 - auto update branch
-  ([069e134](https://github.com/orochibraru/penombre/commit/069e134d22ab2a80c6dc95a3f7d3e736198b0fef))
+  ([069e134](https://github.com/zedensix/penombre/commit/069e134d22ab2a80c6dc95a3f7d3e736198b0fef))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.5
+docker pull zedensix/penombre:1.8.5
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.4](https://github.com/orochibraru/penombre/compare/v1.8.3...v1.8.4) (2026-03-25)
+## [1.8.4](https://github.com/zedensix/penombre/compare/v1.8.3...v1.8.4) (2026-03-25)
 
 ### Bug Fixes
 
-- tests ([#29](https://github.com/orochibraru/penombre/issues/29))
-  ([bfdf6eb](https://github.com/orochibraru/penombre/commit/bfdf6ebb4ea455006bd0a3ad10f7a689c277122c))
+- tests ([#29](https://github.com/zedensix/penombre/issues/29))
+  ([bfdf6eb](https://github.com/zedensix/penombre/commit/bfdf6ebb4ea455006bd0a3ad10f7a689c277122c))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.4
+docker pull zedensix/penombre:1.8.4
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.3](https://github.com/orochibraru/penombre/compare/v1.8.2...v1.8.3) (2026-03-20)
+## [1.8.3](https://github.com/zedensix/penombre/compare/v1.8.2...v1.8.3) (2026-03-20)
 
 ### Bug Fixes
 
 - publish flow
-  ([992a880](https://github.com/orochibraru/penombre/commit/992a8801ae3b32130d0ea410cded1f9d3fb1b16c))
+  ([992a880](https://github.com/zedensix/penombre/commit/992a8801ae3b32130d0ea410cded1f9d3fb1b16c))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.3
+docker pull zedensix/penombre:1.8.3
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-## [1.8.2](https://github.com/orochibraru/penombre/compare/v1.8.1...v1.8.2) (2026-03-20)
+## [1.8.2](https://github.com/zedensix/penombre/compare/v1.8.1...v1.8.2) (2026-03-20)
 
 ### Bug Fixes
 
 - bump semantic release action
-  ([8d94ec9](https://github.com/orochibraru/penombre/commit/8d94ec99143bd149a7a3b6be241b593bfe6fa4c1))
+  ([8d94ec9](https://github.com/zedensix/penombre/commit/8d94ec99143bd149a7a3b6be241b593bfe6fa4c1))
 
 ---
 
 ## 🐳 Docker
 
 ```sh
-docker pull orochibraru/penombre:1.8.2
+docker pull zedensix/penombre:1.8.2
 ```
 
-[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+[View on Docker Hub](https://hub.docker.com/r/zedensix/penombre)
 
-# [1.5.0](https://github.com/orochibraru/penombre/compare/v1.4.0...v1.5.0) (2026-03-18)
+# [1.5.0](https://github.com/zedensix/penombre/compare/v1.4.0...v1.5.0) (2026-03-18)
 
 ### Features
 
 - changelog plugin
-  ([25ec6c0](https://github.com/orochibraru/penombre/commit/25ec6c00bd38351eed36e3bc751eea9bd4dd8954))
+  ([25ec6c0](https://github.com/zedensix/penombre/commit/25ec6c00bd38351eed36e3bc751eea9bd4dd8954))
 
 # Changelog
 
@@ -1203,7 +1203,7 @@ docker pull orochibraru/penombre:1.8.2
 ### 🩹 Fixes
 
 - Db max retries
-  ([0e8ebfd](https://github.com/orochibraru/penombre/commit/0e8ebfd))
+  ([0e8ebfd](https://github.com/zedensix/penombre/commit/0e8ebfd))
 
 ### ❤️ Contributors
 
@@ -1214,7 +1214,7 @@ docker pull orochibraru/penombre:1.8.2
 ### 🩹 Fixes
 
 - Remove armV6/7
-  ([4a09c45](https://github.com/orochibraru/penombre/commit/4a09c45))
+  ([4a09c45](https://github.com/zedensix/penombre/commit/4a09c45))
 
 ### ❤️ Contributors
 
@@ -1227,7 +1227,7 @@ docker pull orochibraru/penombre:1.8.2
 ### 🩹 Fixes
 
 - Docker token
-  ([1f19b80](https://github.com/orochibraru/penombre/commit/1f19b80))
+  ([1f19b80](https://github.com/zedensix/penombre/commit/1f19b80))
 
 ### ❤️ Contributors
 
@@ -1345,7 +1345,7 @@ docker pull orochibraru/penombre:1.8.2
 
 ## v1.2.0
 
-[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.7...v1.2.0)
+[compare changes](https://github.com/zedensix/penombre/compare/v1.1.7...v1.2.0)
 
 ### 🚀 Enhancements
 
@@ -1371,7 +1371,7 @@ docker pull orochibraru/penombre:1.8.2
 
 ## v1.1.7
 
-[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.6...v1.1.7)
+[compare changes](https://github.com/zedensix/penombre/compare/v1.1.6...v1.1.7)
 
 ### 🩹 Fixes
 
@@ -1383,31 +1383,31 @@ docker pull orochibraru/penombre:1.8.2
 
 ## v1.1.6
 
-[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.5...v1.1.6)
+[compare changes](https://github.com/zedensix/penombre/compare/v1.1.5...v1.1.6)
 
 ## v1.1.5
 
-[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.4...v1.1.5)
+[compare changes](https://github.com/zedensix/penombre/compare/v1.1.4...v1.1.5)
 
 ## v1.1.4
 
-[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.3...v1.1.4)
+[compare changes](https://github.com/zedensix/penombre/compare/v1.1.3...v1.1.4)
 
 ## v1.1.3
 
-[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.2...v1.1.3)
+[compare changes](https://github.com/zedensix/penombre/compare/v1.1.2...v1.1.3)
 
 ## v1.1.2
 
-[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.1...v1.1.2)
+[compare changes](https://github.com/zedensix/penombre/compare/v1.1.1...v1.1.2)
 
 ## v1.1.1
 
-[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.0...v1.1.1)
+[compare changes](https://github.com/zedensix/penombre/compare/v1.1.0...v1.1.1)
 
 ## v1.1.0
 
-[compare changes](https://github.com/orochibraru/penombre/compare/v0.0.7...v1.1.0)
+[compare changes](https://github.com/zedensix/penombre/compare/v0.0.7...v1.1.0)
 
 ### 🚀 Enhancements
 

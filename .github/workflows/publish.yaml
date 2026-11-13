@@ -50,7 +50,7 @@ jobs:
 
       - name: Dry-run release to compute the next version
         id: releaser
-        uses: orochibraru/releaser@f4e670849b608549cd6ac88d32eeb41cab364709 # v1.7.1
+        uses: zedensix/releaser@ba23a5840fb7ec8db1aa81bff4d4478f6e499020 # v1.7.3
         with:
           branch: main
           rules: ${{ env.RELEASE_RULES }}
@@ -107,7 +107,7 @@ jobs:
         id: find
         env:
           GH_TOKEN: ${{ github.token }}
-          IMAGE: ghcr.io/orochibraru/penombre
+          IMAGE: ghcr.io/zedensix/penombre
         run: |
           pr="$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
             --jq '[.[] | select(.merged_at != null)][0].number // empty')"
@@ -146,7 +146,7 @@ jobs:
       image_tag: ${{ needs.version.outputs.version }}
       extra_tag: canary
       app_version: ${{ needs.version.outputs.version }}
-      image_name: orochibraru/penombre
+      image_name: zedensix/penombre
       registry_name: ghcr.io
       registry_username: ${{ github.actor }}
       bake_target: app
@@ -172,12 +172,12 @@ jobs:
       packages: write
     uses: ./.github/workflows/docker-manifest.yaml
     with:
-      image_name: orochibraru/penombre
+      image_name: zedensix/penombre
       registry_name: ghcr.io
       registry_username: ${{ github.actor }}
       bake_target: app
       mirror_registry: docker.io
-      mirror_username: orochibraru
+      mirror_username: zedensix
     secrets:
       mirror_password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
@@ -204,7 +204,7 @@ jobs:
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: docker.io
-          username: orochibraru
+          username: zedensix
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       # No RUN step, so both platforms build natively in seconds. The PR image
@@ -216,10 +216,10 @@ jobs:
         run: |
           printf 'FROM %s\nENV PENOMBRE_RELEASE_VERSION=%s\n' "$SOURCE" "$VERSION" \
             | docker buildx build --platform linux/amd64,linux/arm64 --push \
-              -t "docker.io/orochibraru/penombre:$VERSION" \
-              -t docker.io/orochibraru/penombre:canary \
-              -t "ghcr.io/orochibraru/penombre:$VERSION" \
-              -t ghcr.io/orochibraru/penombre:canary -
+              -t "docker.io/zedensix/penombre:$VERSION" \
+              -t docker.io/zedensix/penombre:canary \
+              -t "ghcr.io/zedensix/penombre:$VERSION" \
+              -t ghcr.io/zedensix/penombre:canary -
 
   stable-images:
     name: Promote Canary to ${{ needs.version.outputs.version }}
@@ -254,7 +254,7 @@ jobs:
             exit 1
           fi
           echo "Releasing $tag ($sha)."
-          echo "image=ghcr.io/orochibraru/penombre:${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/zedensix/penombre:${tag#v}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
@@ -270,7 +270,7 @@ jobs:
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: docker.io
-          username: orochibraru
+          username: zedensix
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Tag the canary image
@@ -280,12 +280,12 @@ jobs:
         run: |
           printf 'FROM %s\nENV PENOMBRE_RELEASE_VERSION=%s\n' "$SOURCE" "$VERSION" \
             | docker buildx build --platform linux/amd64,linux/arm64 --push \
-              -t "docker.io/orochibraru/penombre:$VERSION" \
-              -t docker.io/orochibraru/penombre:latest \
-              -t docker.io/orochibraru/penombre:canary \
-              -t "ghcr.io/orochibraru/penombre:$VERSION" \
-              -t ghcr.io/orochibraru/penombre:latest \
-              -t ghcr.io/orochibraru/penombre:canary -
+              -t "docker.io/zedensix/penombre:$VERSION" \
+              -t docker.io/zedensix/penombre:latest \
+              -t docker.io/zedensix/penombre:canary \
+              -t "ghcr.io/zedensix/penombre:$VERSION" \
+              -t ghcr.io/zedensix/penombre:latest \
+              -t ghcr.io/zedensix/penombre:canary -
 
   release:
     name: Release ${{ needs.version.outputs.version }}
@@ -310,7 +310,7 @@ jobs:
 
       - name: Tag, release and update the release PR
         id: releaser
-        uses: orochibraru/releaser@f4e670849b608549cd6ac88d32eeb41cab364709 # v1.7.1
+        uses: zedensix/releaser@ba23a5840fb7ec8db1aa81bff4d4478f6e499020 # v1.7.3
         with:
           branch: main
           rules: ${{ env.RELEASE_RULES }}
@@ -472,7 +472,7 @@ jobs:
       # A deploy key, not a token: it reaches the tap and nothing else. GitHub's
       # host keys come from its API over TLS rather than a first-use scan. The
       # fetch finds nothing on the tap's very first push.
-      - name: Push to orochibraru/homebrew-tap
+      - name: Push to zedensix/homebrew-tap
         env:
           DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
           VERSION: ${{ needs.version.outputs.version }}
@@ -485,7 +485,7 @@ jobs:
           export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts -o StrictHostKeyChecking=yes"
           cd "$RUNNER_TEMP/tap"
           git init -q -b main
-          git remote add origin git@github.com:orochibraru/homebrew-tap.git
+          git remote add origin git@github.com:zedensix/homebrew-tap.git
           if git fetch -q --depth 1 origin main; then
             git reset -q FETCH_HEAD
           fi

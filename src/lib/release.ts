@@ -44,9 +44,9 @@ export async function offeredRelease(data: {
 		: data.config?.appVersion;
 }
 
-export const RELEASES = "https://github.com/orochibraru/penombre/releases";
+export const RELEASES = "https://github.com/zedensix/penombre/releases";
 export const PLAY_STORE =
-	"https://play.google.com/store/apps/details?id=com.orochibraru.penombre";
+	"https://play.google.com/store/apps/details?id=com.zedensix.penombre";
 
 /** A release asset's download link. */
 export function assetUrl(version: string, file: string): string {

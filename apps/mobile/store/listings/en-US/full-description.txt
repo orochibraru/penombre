@@ -1,6 +1,6 @@
 Penombre is a drive you host yourself: your files, photos, music, videos and documents on your own server, with nobody renting you the disk. This is its app.
 
-You need a Penombre server to use it. Penombre is free and open source: one container on a home server, a NAS or a VPS. orochibraru.com/penombre says how to set one up.
+You need a Penombre server to use it. Penombre is free and open source: one container on a home server, a NAS or a VPS. zedensix.com/penombre says how to set one up.
 
 SIGN IN IN SECONDS
 • Scan the QR code your server shows under Get the apps, and you are in. No address to type.

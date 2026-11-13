@@ -369,8 +369,8 @@ Messages live in `messages/*.json`, compiled by `gen:paraglide` into
 **Every user-facing feature or env var ships with its docs in the same change.**
 The guides live in `docs/*.md` at the repo root. The docs site is built from
 those exact files by a separate repository
-([@orochibraru/docs](https://github.com/orochibraru/docs)), so there is nowhere
-else to write them and nothing in this repo renders them.
+([@zedensix/docs](https://github.com/zedensix/docs)), so there is nowhere else
+to write them and nothing in this repo renders them.
 
 - New/changed env var → add it to the relevant table in `docs/env.md` **and**
   the guide that explains the feature (`authentication.md`, `storage.md`,
@@ -378,7 +378,7 @@ else to write them and nothing in this repo renders them.
 - New behaviour with no env var → the guide it belongs to, or a new
   `docs/<slug>.md` **plus an entry in `docs/config.json`**, which sets the docs
   site's categories, order, titles and icons (schema:
-  `https://orochibraru.com/docs-config.schema.json`).
+  `https://zedensix.com/docs-config.schema.json`).
 - Also regenerate `.example.env` (`bun run gen:env`) when you touch
   `config.defaults.ts`.
 - `markdownlint` and `vale` must pass
@@ -1339,11 +1339,11 @@ read too. Unit needs neither a database nor an external binary (a temp dir is
 fine); integration is anything that opens SQLite/Postgres or execs
 `ffmpeg`/`ffprobe`/`pdftoppm` (a file mixing both gets split in two). Tests are
 external packages (`package worker_test`, importing
-`github.com/orochibraru/penombre/internal/worker`), so they can't reach
-unexported identifiers — `internal/worker`'s job types (`Spec`, `Result`, …) are
-exported for this reason, and `Config.ShutdownGrace` exists so a shutdown test
-can shorten the grace period without calling an unexported `runWithGrace`. A
-test needing the raw DB (seeding rows, reading internal state) opens a second
+`github.com/zedensix/penombre/internal/worker`), so they can't reach unexported
+identifiers — `internal/worker`'s job types (`Spec`, `Result`, …) are exported
+for this reason, and `Config.ShutdownGrace` exists so a shutdown test can
+shorten the grace period without calling an unexported `runWithGrace`. A test
+needing the raw DB (seeding rows, reading internal state) opens a second
 `*sql.DB` on the same SQLite file rather than reaching into `Store`'s private
 field. No `export_test.go` shims in `internal/`.
 
@@ -2061,7 +2061,7 @@ the promotion.
 **CI never pulls from Docker Hub.** It answered 429 mid-release, logged in or
 not: eight e2e shards, promotions and every build's base images add up. CI's own
 images (digests, `pr-<n>`, and a copy of every published tag, which the stable
-promotion reads) live on `ghcr.io/orochibraru/penombre`, reached with
+promotion reads) live on `ghcr.io/zedensix/penombre`, reached with
 `github.token`, so each calling job grants `packages`. Docker Hub only receives
 published tags: `docker-manifest.yaml` copies them over (`mirror_registry`), and
 the promotions push to both. Third-party images (base images in builds, postgres
@@ -2073,8 +2073,8 @@ arrives **empty** ("Password required"). The ghcr.io package must stay
 
 ### Every merge is a canary; merging the release PR is the release
 
-[releaser](https://github.com/orochibraru/releaser) (`publish.yaml`) tags each
-push to `main` `vX.Y.Z-canary.N`, publishes the image as that and `:canary`, and
+[releaser](https://github.com/zedensix/releaser) (`publish.yaml`) tags each push
+to `main` `vX.Y.Z-canary.N`, publishes the image as that and `:canary`, and
 keeps a `chore(release): X.Y.Z` PR open on `releaser/release`. Merging it
 re-tags that version's last canary as `:X.Y.Z` and `:latest` (`stable-images`),
 after refusing if the tree differs from the canary's beyond docs and the
@@ -2135,7 +2135,7 @@ Wayland and GL are dlopened; tray, keyring and file dialog speak D-Bus in Rust)
 the release's checksums, as `penombre-sync` for a stable release and
 `penombre-sync-canary` for a canary (`conflicts_with` each other; `foo@canary`
 is not usable, Homebrew only turns `@<digit>` into a class name), and pushes it
-with `apps/desktop/packaging/homebrew/README.md` to `orochibraru/homebrew-tap`
+with `apps/desktop/packaging/homebrew/README.md` to `zedensix/homebrew-tap`
 `main`, over the `HOMEBREW_TAP_DEPLOY_KEY` secret (a write deploy key on the
 tap; a PAT would reach every repo its owner can). Never edit the tap by hand. It
 is a **formula**, not a cask: a cask cannot declare `service`, and
@@ -2143,7 +2143,7 @@ is a **formula**, not a cask: a cask cannot declare `service`, and
 launchd finds Homebrew's rclone. `keep_alive crashed: true`, because quitting
 from the tray exits 0 and must stay quit.
 
-`fastframe-tray` comes from our fork (`orochibraru/fastframe`, pinned by rev in
+`fastframe-tray` comes from our fork (`zedensix/fastframe`, pinned by rev in
 `apps/desktop/Cargo.toml`'s `[patch]`) for `Tray::set_status`, the menu-bar
 percentage. Drop the patch once `crmne/fastframe` releases it; until then a
 fastframe bump must move the fork too.
@@ -2465,8 +2465,8 @@ attach to the draft before `publish-release`. A pull request touching
 `apps/mobile/` calls the same workflow without `upload`, as a build check: a
 Kotlin/Native link error only shows when the iOS framework is linked.
 
-- **The Play identity is `com.orochibraru.penombre`** (`applicationId`, and the
-  iOS bundle id, since the Maestro flows share one `appId`), while the Kotlin
+- **The Play identity is `com.zedensix.penombre`** (`applicationId`, and the iOS
+  bundle id, since the Maestro flows share one `appId`), while the Kotlin
   `namespace` stays `dev.penombre.app`. A component name's `.MainActivity`
   shorthand resolves against the applicationId, so `am start` spells the class
   out.

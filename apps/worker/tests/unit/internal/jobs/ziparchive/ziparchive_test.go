@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/orochibraru/penombre/internal/envelope"
-	"github.com/orochibraru/penombre/internal/jobs"
-	"github.com/orochibraru/penombre/internal/jobs/ziparchive"
+	"github.com/zedensix/penombre/internal/envelope"
+	"github.com/zedensix/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/jobs/ziparchive"
 )
 
 func writeTemp(t *testing.T, dir, name, content string) string {

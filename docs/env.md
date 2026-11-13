@@ -2,8 +2,7 @@
 
 Configure your Penombre instance with environment variables.
 
-See
-[.example.env](https://github.com/orochibraru/penombre/blob/main/.example.env)
+See [.example.env](https://github.com/zedensix/penombre/blob/main/.example.env)
 for a complete reference.
 
 ## Core

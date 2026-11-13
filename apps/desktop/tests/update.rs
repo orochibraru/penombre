@@ -31,7 +31,7 @@ fn each_channel_lists_what_is_newer_newest_first() {
 
 #[test]
 fn the_stable_channel_reads_where_latest_redirects() {
-    let location = "https://github.com/orochibraru/penombre/releases/tag/v1.8.59";
+    let location = "https://github.com/zedensix/penombre/releases/tag/v1.8.59";
     assert_eq!(newer(location, Channel::Stable, "1.8.58"), ["1.8.59"]);
     assert!(newer(location, Channel::Stable, "1.8.59").is_empty());
 }
@@ -101,6 +101,6 @@ fn switching_formula_under_homebrew_reinstalls() {
     );
     assert_eq!(
         brew_command("penombre-sync", Channel::Canary),
-        "brew uninstall penombre-sync && brew install orochibraru/tap/penombre-sync-canary"
+        "brew uninstall penombre-sync && brew install zedensix/tap/penombre-sync-canary"
     );
 }

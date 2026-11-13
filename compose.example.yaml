@@ -1,6 +1,6 @@
 services:
   app:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     depends_on:
       db:
         condition: service_healthy
@@ -17,7 +17,7 @@ services:
   # Optional: run the background worker in its own container.
   # Set WORKER_MODE=external on the app service when you enable this.
   # worker:
-  #   image: orochibraru/penombre:latest
+  #   image: zedensix/penombre:latest
   #   command: ["/usr/local/bin/penombre-worker"]
   #   restart: unless-stopped
   #   healthcheck:

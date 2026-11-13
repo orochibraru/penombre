@@ -29,13 +29,13 @@ the same image with the worker as its entrypoint:
 ```yaml
 services:
   app:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     environment:
       - WORKER_MODE=external
     # ...
 
   worker:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     command: ["/usr/local/bin/penombre-worker"]
     restart: unless-stopped
     healthcheck:

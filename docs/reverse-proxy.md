@@ -108,7 +108,7 @@ Add labels to the `app` service in your `compose.yaml`:
 ```yaml
 services:
   app:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.penombre.rule=Host(`cloud.example.com`)"
@@ -131,7 +131,7 @@ shared network so the proxy can reach the app container by service name:
 ```yaml
 services:
   app:
-    image: orochibraru/penombre:latest
+    image: zedensix/penombre:latest
     depends_on:
       db:
         condition: service_healthy

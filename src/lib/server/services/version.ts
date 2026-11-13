@@ -8,8 +8,7 @@ import {
 
 const logger = new Logger("VERSION_CHECK");
 
-const RELEASES_URL =
-	"https://api.github.com/repos/orochibraru/penombre/releases";
+const RELEASES_URL = "https://api.github.com/repos/zedensix/penombre/releases";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 /** A failed check (rate limited, network down, air-gapped) retries sooner
  * than a successful one, but still not on every page load. */

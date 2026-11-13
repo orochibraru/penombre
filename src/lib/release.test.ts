@@ -11,7 +11,7 @@ import {
 describe("release helpers", () => {
 	test("an asset is downloaded from its release", () => {
 		expect(assetUrl("1.9.0-canary.2", "penombre-android.apk")).toBe(
-			"https://github.com/orochibraru/penombre/releases/download/v1.9.0-canary.2/penombre-android.apk",
+			"https://github.com/zedensix/penombre/releases/download/v1.9.0-canary.2/penombre-android.apk",
 		);
 	});
 

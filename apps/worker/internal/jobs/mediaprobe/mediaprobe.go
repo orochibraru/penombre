@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/orochibraru/penombre/internal/envelope"
-	"github.com/orochibraru/penombre/internal/jobs"
+	"github.com/zedensix/penombre/internal/envelope"
+	"github.com/zedensix/penombre/internal/jobs"
 )
 
 type Spec struct {

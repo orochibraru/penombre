@@ -22,7 +22,7 @@
 			{#if resolved.updateAvailable && resolved.latestVersion}
 				<a
 					href={resolved.releaseUrl ??
-						"https://github.com/orochibraru/penombre/releases"}
+						"https://github.com/zedensix/penombre/releases"}
 					target="_blank"
 					rel="noopener noreferrer"
 					class="mt-1.5 flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"

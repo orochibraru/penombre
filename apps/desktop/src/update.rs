@@ -16,12 +16,12 @@ const UNSTAMPED: &str = "0.1.0";
 // anonymous requests an hour, shared with everything else behind it, and then
 // answers 403. These are what a browser reads, and have no such budget.
 /// Redirects to the newest stable release's page.
-const LATEST: &str = "https://github.com/orochibraru/penombre/releases/latest";
+const LATEST: &str = "https://github.com/zedensix/penombre/releases/latest";
 /// The ten newest releases of any kind.
-const FEED: &str = "https://github.com/orochibraru/penombre/releases.atom";
-const PAGES: &str = "https://github.com/orochibraru/penombre/releases/tag";
+const FEED: &str = "https://github.com/zedensix/penombre/releases.atom";
+const PAGES: &str = "https://github.com/zedensix/penombre/releases/tag";
 const EVERY: Duration = Duration::from_secs(6 * 60 * 60);
-const DOWNLOADS: &str = "https://github.com/orochibraru/penombre/releases/download";
+const DOWNLOADS: &str = "https://github.com/zedensix/penombre/releases/download";
 /// Passed to the new binary, which then waits for this one to let go.
 pub const RESTARTED: &str = "--updated";
 
@@ -363,7 +363,7 @@ pub fn brew_command(installed: &str, channel: Channel) -> String {
     if installed == wanted {
         format!("brew upgrade {wanted}")
     } else {
-        format!("brew uninstall {installed} && brew install orochibraru/tap/{wanted}")
+        format!("brew uninstall {installed} && brew install zedensix/tap/{wanted}")
     }
 }
 

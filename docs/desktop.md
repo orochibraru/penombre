@@ -119,7 +119,7 @@ app.
 On macOS (Apple silicon or Intel) and Linux (x86_64):
 
 ```bash
-brew install orochibraru/tap/penombre-sync
+brew install zedensix/tap/penombre-sync
 brew services start penombre-sync
 ```
 
@@ -131,7 +131,7 @@ stable release.
 Canary builds are their own formula, updated on every merge:
 
 ```bash
-brew install orochibraru/tap/penombre-sync-canary
+brew install zedensix/tap/penombre-sync-canary
 brew services start penombre-sync-canary
 ```
 
@@ -141,8 +141,8 @@ channel in **Settings** shows the exact command.
 ## Download
 
 Every Penombre release on
-[GitHub](https://github.com/orochibraru/penombre/releases) carries the app, with
-a `.sha256` checksum beside each file:
+[GitHub](https://github.com/zedensix/penombre/releases) carries the app, with a
+`.sha256` checksum beside each file:
 
 | System                | Download                                   |
 | --------------------- | ------------------------------------------ |
@@ -186,7 +186,7 @@ Linux. Linux needs no other development package: X11, Wayland and OpenGL are
 loaded at run time, and D-Bus is spoken in Rust.
 
 ```bash
-git clone https://github.com/orochibraru/penombre.git
+git clone https://github.com/zedensix/penombre.git
 cd penombre/desktop
 cargo build --release --locked
 ```

@@ -23,7 +23,7 @@ target "app" {
   inherits   = ["base"]
   target     = "app"
   args       = { APP_VERSION = "${APP_VERSION}" }
-  tags       = ["docker.io/orochibraru/penombre:latest", "docker.io/orochibraru/penombre:${TAG}"]
+  tags       = ["docker.io/zedensix/penombre:latest", "docker.io/zedensix/penombre:${TAG}"]
   cache-from = ["type=gha,scope=app"]
   cache-to   = ["type=gha,mode=max,scope=app"]
 }

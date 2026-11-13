@@ -52,7 +52,7 @@ follow-up plan built on the `jobs` table and `awaitJob` from here.
 ## File Structure
 
 ```text
-go.mod / go.sum                         # module github.com/orochibraru/penombre
+go.mod / go.sum                         # module github.com/zedensix/penombre
 cmd/worker/main.go                      # flags, signals, wiring
 internal/jobs/job.go                    # Job, Executor
 internal/jobs/thumbnail/thumbnail.go    # image/video/pdf/audio executor
@@ -443,7 +443,7 @@ reruns, per `bunfig.toml`). Run: `bun run lint:ts` Expected: PASS.
 - [ ] **Step 1: Init the module**
 
 ```bash
-go mod init github.com/orochibraru/penombre
+go mod init github.com/zedensix/penombre
 go mod edit -go=1.26
 go get modernc.org/sqlite@latest github.com/jackc/pgx/v5@latest
 ```
@@ -731,7 +731,7 @@ import (
  _ "github.com/jackc/pgx/v5/stdlib"
  _ "modernc.org/sqlite"
 
- "github.com/orochibraru/penombre/internal/jobs"
+ "github.com/zedensix/penombre/internal/jobs"
 )
 
 // MaxAttempts bounds re-leasing a job whose worker died mid-run.
@@ -868,7 +868,7 @@ import (
  "testing"
  "time"
 
- "github.com/orochibraru/penombre/internal/jobs"
+ "github.com/zedensix/penombre/internal/jobs"
 )
 
 func TestRunExecutesAndRecords(t *testing.T) {
@@ -929,7 +929,7 @@ Run: `go test ./internal/worker/` Expected: FAIL, `Run` undefined.
 ```go
 package worker
 
-import "github.com/orochibraru/penombre/internal/jobs"
+import "github.com/zedensix/penombre/internal/jobs"
 
 // Registry maps a job type to its executor. Wired in cmd/worker.
 type Registry map[string]jobs.Executor
@@ -946,7 +946,7 @@ import (
  "sync"
  "time"
 
- "github.com/orochibraru/penombre/internal/jobs"
+ "github.com/zedensix/penombre/internal/jobs"
 )
 
 const (
@@ -1088,7 +1088,7 @@ import (
  "syscall"
  "time"
 
- "github.com/orochibraru/penombre/internal/worker"
+ "github.com/zedensix/penombre/internal/worker"
 )
 
 var version = "dev"
@@ -1277,7 +1277,7 @@ import (
  "strings"
  "testing"
 
- "github.com/orochibraru/penombre/internal/jobs"
+ "github.com/zedensix/penombre/internal/jobs"
 )
 
 func needFFmpeg(t *testing.T) {
@@ -1403,7 +1403,7 @@ import (
  "os/exec"
  "path/filepath"
 
- "github.com/orochibraru/penombre/internal/jobs"
+ "github.com/zedensix/penombre/internal/jobs"
 )
 
 type Spec struct {
@@ -1518,7 +1518,7 @@ Run: `go test ./internal/jobs/thumbnail/` Expected: PASS (or SKIP for the ffmpeg
 tests where it is missing — install it: `brew install ffmpeg poppler`).
 
 - [ ] **Step 5: Register it** — in `cmd/worker/main.go`, import
-      `"github.com/orochibraru/penombre/internal/jobs/thumbnail"` and pass
+      `"github.com/zedensix/penombre/internal/jobs/thumbnail"` and pass
       `worker.Registry{"thumbnail": thumbnail.Run}`.
 
 Run: `go vet ./... && go test -race ./...` Expected: PASS.
@@ -1983,7 +1983,7 @@ re-check.
 # Optional: run the background worker in its own container.
 # Set WORKER_MODE=external on the app service when you enable this.
 # worker:
-#   image: orochibraru/penombre:latest
+#   image: zedensix/penombre:latest
 #   command: ["/usr/local/bin/penombre-worker"]
 #   restart: unless-stopped
 #   healthcheck:
