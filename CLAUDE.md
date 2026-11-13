@@ -2465,8 +2465,8 @@ attach to the draft before `publish-release`. A pull request touching
 `apps/mobile/` calls the same workflow without `upload`, as a build check: a
 Kotlin/Native link error only shows when the iOS framework is linked.
 
-- **The Play identity is `com.zedensix.penombre`** (`applicationId`, and the iOS
-  bundle id, since the Maestro flows share one `appId`), while the Kotlin
+- **The Play identity is `com.orochibraru.penombre`** (`applicationId`, and the
+  iOS bundle id, since the Maestro flows share one `appId`), while the Kotlin
   `namespace` stays `dev.penombre.app`. A component name's `.MainActivity`
   shorthand resolves against the applicationId, so `am start` spells the class
   out.

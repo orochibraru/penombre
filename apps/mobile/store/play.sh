@@ -9,7 +9,7 @@
 # validate the edit, then discards it.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
-app=applications/com.zedensix.penombre
+app=applications/com.orochibraru.penombre
 api="https://androidpublisher.googleapis.com/androidpublisher/v3/$app"
 upload="https://androidpublisher.googleapis.com/upload/androidpublisher/v3/$app"
 dry=

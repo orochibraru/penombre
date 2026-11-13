@@ -12,6 +12,6 @@ if [ -z "$device" ]; then
   xcrun simctl boot "$device"
 fi
 xcrun simctl install "$device" build/Build/Products/Debug-iphonesimulator/Penombre.app
-xcrun simctl launch "$device" com.zedensix.penombre
+xcrun simctl launch "$device" com.orochibraru.penombre
 # The simulator's window: Simulator.app, or Device Hub from Xcode 27.
 open -a Simulator 2>/dev/null || open -b com.apple.dt.Devices 2>/dev/null || true

@@ -15,7 +15,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.zedensix.penombre"
+        applicationId = "com.orochibraru.penombre"
         minSdk = 29
         targetSdk = 36
         versionCode = releaseCode

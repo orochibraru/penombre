@@ -86,7 +86,7 @@
 
 ### Features
 
-* Google Play publishing (keyless upload, store listing in 13 languages, icon and screenshots), app id com.zedensix.penombre, iOS privacy manifest, Play and GitHub links in the connect dialog, desktop menu-bar-only mode with its own notifications and permission status, signed macOS binary, bigger settings window; chore: scripts as mise file tasks, resvg through mise ([acf8dd3](https://github.com/zedensix/penombre/commit/acf8dd3a0425a0ea524ed3f8615b5beaadda4bc0))
+* Google Play publishing (keyless upload, store listing in 13 languages, icon and screenshots), app id com.orochibraru.penombre, iOS privacy manifest, Play and GitHub links in the connect dialog, desktop menu-bar-only mode with its own notifications and permission status, signed macOS binary, bigger settings window; chore: scripts as mise file tasks, resvg through mise ([acf8dd3](https://github.com/zedensix/penombre/commit/acf8dd3a0425a0ea524ed3f8615b5beaadda4bc0))
 
 ### Bug Fixes
 
