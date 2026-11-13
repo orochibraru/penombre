@@ -130,9 +130,15 @@
 		if (!item.read) {
 			await markRead([item.id]);
 		}
-		if (item.link) {
-			await goto(item.link);
+		if (!item.link) {
+			return;
 		}
+		// `/go/…` links are server redirects, which `goto` refuses.
+		if (item.link.startsWith("/go/")) {
+			window.location.assign(item.link);
+			return;
+		}
+		await goto(item.link);
 	}
 
 	onMount(() => {

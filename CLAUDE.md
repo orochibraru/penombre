@@ -1715,9 +1715,9 @@ cell. Pictures are embedded, scaled to 1600px.
   ranges through edits; a collapsed range means the text is gone.
 - **Presence is a table, not the cache**: the in-memory cache is per process.
   Each heartbeat prunes every stale row.
-- **Notification links are resolved per recipient** (`fileHref`). A `/go/...`
-  `+server.ts` redirect cannot be one: notifications `goto()` their link, and
-  Kit 3's `goto` refuses non-page routes.
+- **Notification links are resolved per recipient** (`fileHref`), through
+  `/go/file/<id>` and `/go/folder/<id>`, server redirects. Kit 3's `goto`
+  refuses those, so the bell sends `/go/` links through `window.location`.
 - **The shell is keyed on `data.fileId`, the editors inside on `generation`**,
   bumped after a version restore, because each editor reads its content once.
 - **A read-only ProseMirror view makes links live.** `defineSafeLinks` opens
