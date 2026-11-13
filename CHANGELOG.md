@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.70](https://github.com/zedensix/penombre/compare/v1.8.69...v1.8.70) (2026-11-13)
+
+### Bug Fixes
+
+* note notifications link to a route that exists (#170) ([62add46](https://github.com/zedensix/penombre/commit/62add46019f90300e023fefc7c9d348f969b853b))
+* docs & refs (oro to zn6) ([bea652d](https://github.com/zedensix/penombre/commit/bea652d8babd8e99805331cf61b1b54e09e5922f))
+
 ## [1.8.69](https://github.com/zedensix/penombre/compare/v1.8.68...v1.8.69) (2026-11-09)
 
 ### Features
